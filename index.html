@@ -15,10 +15,15 @@
             <button id="sidebar-toggle" aria-label="사이드바 토글">
                 <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
             </button>
-            <a href="/" class="logo">
+            <a href="#home" class="logo">
                 <img src="https://youshouyan.miraheze.org/w/images/thumb/7/7b/Logo.png/300px-Logo.png" alt="Logo" class="logo-img">
                 <span>유수연 위키</span>
             </a>
+            <nav class="top-nav">
+                <a href="#home" class="nav-link active">홈</a>
+                <a href="#watch" class="nav-link">애니 보기</a>
+                <a href="#characters" class="nav-link">캐릭터</a>
+            </nav>
             <div class="search-container">
                 <input type="text" placeholder="문서 검색..." id="wiki-search" autocomplete="off">
             </div>
@@ -34,117 +39,79 @@
                 <section>
                     <h3>탐색</h3>
                     <ul>
-                        <li><a href="#" class="active">대문</a></li>
-                        <li><a href="#">최근 바뀜</a></li>
-                        <li><a href="#">임의의 문서로</a></li>
+                        <li><a href="#home">대문</a></li>
+                        <li><a href="#watch">최신 에피소드</a></li>
+                        <li><a href="#characters">캐릭터 도감</a></li>
                     </ul>
                 </section>
                 <section>
-                    <h3>만화 & 애니메이션</h3>
-                    <ul>
-                        <li><a href="#">만화 (Manhua)</a></li>
-                        <li><a href="#">캐릭터 목록</a></li>
-                        <li><a href="#">에피소드 가이드</a></li>
-                        <li><a href="#">종족 (Species)</a></li>
-                    </ul>
-                </section>
-                <section>
-                    <h3>외부 링크</h3>
+                    <h3>공식 채널</h3>
                     <ul>
                         <li><a href="https://manga.bilibili.com/detail/mc24237" target="_blank">Bilibili 만화</a></li>
-                        <li><a href="#" target="_blank">공식 트위터</a></li>
-                        <li><a href="#" target="_blank">YouTube 채널</a></li>
+                        <li><a href="https://www.youtube.com/@AllSaintsStreet" target="_blank">YouTube 공식</a></li>
                     </ul>
                 </section>
             </nav>
         </aside>
 
-        <main class="content-area">
-            <section class="hero-banner">
-                <div class="hero-text">
-                    <h1>유수연 (有兽焉) 위키에 오신 것을 환영합니다!</h1>
-                    <p>현대 사회에 살고 있는 신수들의 일상을 다룬 '유수연' 시리즈의 모든 정보를 담고 있는 팬 위키입니다.</p>
-                </div>
-            </section>
+        <main class="content-area" id="main-content">
+            <!-- Content will be injected by main.js -->
+            <div id="view-home" class="view">
+                <section class="hero-banner">
+                    <div class="hero-text">
+                        <h1>유수연 (有兽焉) 위키</h1>
+                        <p>신수들의 유쾌한 현대 적응기! 애니메이션 시청과 캐릭터 정보를 한곳에서 확인하세요.</p>
+                        <div class="hero-actions">
+                            <a href="#watch" class="btn-primary">지금 바로 시청하기</a>
+                            <a href="#characters" class="btn-secondary">캐릭터 알아보기</a>
+                        </div>
+                    </div>
+                </section>
 
-            <article class="wiki-article">
-                <h2 class="section-title">주요 캐릭터</h2>
-                <div class="character-grid">
-                    <div class="character-card" data-name="티엔루">
-                        <div class="card-image">
-                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfI_E8-M4H4nS_8KzXQjI-S_W_jX-S_W_jX-S_W_jX-S_W_jX" alt="Tianlu">
-                        </div>
-                        <div class="card-content">
-                            <h3>티엔루 (Tianlu)</h3>
-                            <p>금품을 먹는 어린 벽사. 항상 배고파하며 행운을 가져다준다고 믿어집니다.</p>
-                            <a href="#" class="btn-more">자세히 보기</a>
-                        </div>
-                    </div>
-                    <div class="character-card" data-name="시부샹">
-                        <div class="card-image">
-                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_Dq5Ym_N0f3D_x_B_m_B_m_B_m_B_m_B_m_B_m_B_m_B" alt="Sibuxiang">
-                        </div>
-                        <div class="card-content">
-                            <h3>시부샹 (Sibuxiang)</h3>
-                            <p>"루렌디엔" 유물 가게의 주인. 다른 이들을 돕기 위해 지상으로 내려온 상서로운 짐승입니다.</p>
-                            <a href="#" class="btn-more">자세히 보기</a>
-                        </div>
-                    </div>
-                    <div class="character-card" data-name="토니">
-                        <div class="card-image">
-                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E" alt="Tony">
-                        </div>
-                        <div class="card-content">
-                            <h3>토니 (Tony)</h3>
-                            <p>달토끼이자 부유한 기업가. 시부샹의 마음을 얻기 위해 노력합니다.</p>
-                            <a href="#" class="btn-more">자세히 보기</a>
-                        </div>
+                <h2 class="section-title">추천 에피소드</h2>
+                <div class="featured-video-preview">
+                    <img src="https://i.ytimg.com/vi/qS80GidYyvM/maxresdefault.jpg" alt="Episode Preview">
+                    <div class="preview-overlay">
+                        <h3>시즌 1 시작하기</h3>
+                        <p>티엔루와 룸메이트들의 첫 만남</p>
                     </div>
                 </div>
+            </div>
 
-                <h2 class="section-title">주요 페이지</h2>
-                <div class="quick-links-grid">
-                    <a href="#" class="quick-link-box">
-                        <span class="icon">📖</span>
-                        <div class="text">
-                            <h4>만화 정보</h4>
-                            <p>연재 정보 및 스토리 개요</p>
-                        </div>
-                    </a>
-                    <a href="#" class="quick-link-box">
-                        <span class="icon">🌍</span>
-                        <div class="text">
-                            <h4>세계관</h4>
-                            <p>등장 장소 및 배경 설정</p>
-                        </div>
-                    </a>
-                    <a href="#" class="quick-link-box">
-                        <span class="icon">🐾</span>
-                        <div class="text">
-                            <h4>종족 가이드</h4>
-                            <p>벽사, 사불상, 달토끼 등</p>
-                        </div>
-                    </a>
-                    <a href="#" class="quick-link-box">
-                        <span class="icon">💬</span>
-                        <div class="text">
-                            <h4>커뮤니티</h4>
-                            <p>편집 도움말 및 게시판</p>
-                        </div>
-                    </a>
+            <div id="view-watch" class="view" style="display: none;">
+                <h2 class="section-title">애니메이션 시청실</h2>
+                <div class="video-theater">
+                    <div class="video-container">
+                        <iframe id="main-player" src="https://www.youtube.com/embed/videoseries?list=PLpZ3p9y8W2F8m_m_K_K_K_K_K_K_K" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="video-sidebar">
+                        <h3>에피소드 목록</h3>
+                        <ul class="playlist">
+                            <li class="active" data-video="PLpZ3p9y8W2F8m_m_K_K_K_K_K_K">시즌 1 (전체)</li>
+                            <li data-video="PLpZ3p9y8W2F8n_n_L_L_L_L_L_L">시즌 2 (전체)</li>
+                            <li data-video="PLpZ3p9y8W2F9o_o_M_M_M_M_M_M">특별편</li>
+                        </ul>
+                    </div>
                 </div>
-            </article>
+            </div>
+
+            <div id="view-characters" class="view" style="display: none;">
+                <h2 class="section-title">캐릭터 도감</h2>
+                <div class="character-grid" id="char-grid">
+                    <!-- Character cards will be dynamically enhanced -->
+                </div>
+            </div>
+
+            <div id="view-char-detail" class="view" style="display: none;">
+                <button class="btn-back" onclick="location.hash='characters'">← 목록으로 돌아가기</button>
+                <div id="char-detail-content"></div>
+            </div>
         </main>
     </div>
 
     <footer class="site-footer">
         <div class="footer-content">
-            <p>© 2026 You Shou Yan Wiki. 별도의 언급이 없는 한 내용은 CC BY-SA 4.0 라이선스에 따라 사용할 수 있습니다.</p>
-            <div class="footer-links">
-                <a href="#">개인정보 처리방침</a>
-                <a href="#">유수연 위키 소개</a>
-                <a href="#">면책 조항</a>
-            </div>
+            <p>© 2026 You Shou Yan Wiki Hub. 모든 영상의 저작권은 공식 제작사에 있습니다.</p>
         </div>
     </footer>
 

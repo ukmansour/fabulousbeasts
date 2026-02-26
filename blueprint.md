@@ -1,24 +1,19 @@
-# You Shou Yan Wiki Remake Blueprint
+# You Shou Yan Wiki: Media & Character Hub Blueprint
 
 ## Overview
-A high-fidelity recreation of the "You Shou Yan" (All Saints Street) Wiki landing page. This version focuses on a professional, card-based UI that mirrors the Citizen skin but with enhanced interactivity and modern CSS techniques.
+Expanding the wiki into a comprehensive media hub. This update introduces a dedicated "Watch Anime" theater mode and interactive character dossiers.
 
-## Structure
-- **Global Navigation**: Top-fixed bar with Logo, Search, and Theme Toggle.
-- **Sidebar**: Collapsible navigation with categories (Manhua, Characters, World, Community).
-- **Hero Section**: Welcoming banner with a brief series introduction.
-- **Character Spotlight**: A grid of beautifully designed cards for main characters (Tianlu, Sibuxiang, Tony, etc.).
-- **Quick Links**: Section for important external links and social media.
+## New Features
+- **Anime Theater**: A dedicated section with an embedded YouTube player and a playlist selector for "All Saints Street" (You Shou Yan) seasons.
+- **Character Dossiers**: Detailed, tabbed views for characters including lore, personality, and relationships.
+- **Dynamic Content Switching**: A simple JavaScript-based router to switch between "Home", "Watch", and "Characters" without page reloads.
 
-## Design Decisions
-- **Typography**: Inter for primary text, system-ui for performance.
-- **Colors**: Refined CSS variables for Light and Dark modes.
+## Technical Implementation
 - **Components**:
-  - `CharacterCard`: Web component for character profiles.
-  - `WikiSidebar`: Web component for structured navigation.
-  - `ThemeToggle`: Enhanced theme switcher.
+  - `VideoPlayer`: A responsive wrapper for YouTube embeds.
+  - `CharacterDossier`: A full-screen or modal-style detailed view.
+- **State Management**: Simple URL hash tracking (`#home`, `#watch`, `#characters`) for navigation.
 
-## Steps
-1. **Core Layout**: Semantic HTML5 structure.
-2. **Modern CSS**: Baseline features (Cascade Layers, :has selector, Logical Properties).
-3. **Dynamic Elements**: JavaScript for sidebar toggling and theme persistence.
+## Design
+- **Cinematic Mode**: Darkened background when viewing videos.
+- **Tabbed Information**: Using CSS `:has` or JS to switch between 'Overview', 'Lore', and 'Gallery' in character details.
