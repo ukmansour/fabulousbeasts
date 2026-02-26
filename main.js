@@ -58,24 +58,113 @@ class ThemeToggle extends HTMLElement {
 }
 customElements.define('theme-toggle', ThemeToggle);
 
+class CharacterModal extends HTMLElement {
+    constructor() {
+        super();
+        this.innerHTML = `
+            <div class="modal-backdrop" id="modal-backdrop">
+                <div class="modal-window">
+                    <button class="modal-close" id="modal-close">&times;</button>
+                    <div class="modal-content" id="modal-body"></div>
+                </div>
+            </div>
+        `;
+    }
+    connectedCallback() {
+        this.querySelector('#modal-close').onclick = () => this.close();
+        this.querySelector('#modal-backdrop').onclick = (e) => {
+            if (e.target.id === 'modal-backdrop') this.close();
+        };
+    }
+    open(char) {
+        const body = this.querySelector('#modal-body');
+        body.innerHTML = `
+            <div class="char-modal-layout">
+                <div class="char-modal-image">
+                    <img src="${char.image}" alt="${char.name}">
+                </div>
+                <div class="char-modal-info">
+                    <h2 style="font-size: 2.5rem; margin-bottom: 0.5rem;">${char.name}</h2>
+                    <p style="color: var(--primary-color); font-weight: 700; margin-bottom: 1.5rem;">${char.title}</p>
+                    <div class="info-tabs">
+                        <button class="tab-btn active">상세 설명</button>
+                    </div>
+                    <div class="tab-content">
+                        <p style="font-size: 1.1rem; line-height: 1.8;">${char.desc}</p>
+                        <div style="margin-top: 2rem; padding: 1.5rem; background: var(--accent-color); border-radius: 12px;">
+                            <h4 style="margin-bottom: 0.5rem;">배경 스토리</h4>
+                            <p style="opacity: 0.9;">${char.lore}</p>
+                            <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">성격</h4>
+                            <p style="opacity: 0.9;">${char.personality}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        this.querySelector('#modal-backdrop').classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+    close() {
+        this.querySelector('#modal-backdrop').classList.remove('active');
+        document.body.style.overflow = '';
+        // Remove hash without trigger navigation if possible, or just go back to characters
+        if (window.location.hash.startsWith('#char/')) {
+            window.location.hash = '#characters';
+        }
+    }
+}
+customElements.define('character-modal', CharacterModal);
+
 // Routing & View Logic
 function navigate() {
     const hash = window.location.hash || '#home';
     const views = document.querySelectorAll('.view');
     const navLinks = document.querySelectorAll('.nav-link');
+    const modal = document.querySelector('character-modal');
+
+    // Handle Modal
+    if (hash.startsWith('#char/')) {
+        const charId = hash.split('/')[1];
+        const char = CHARACTERS.find(c => c.id === charId);
+        if (char && modal) {
+            modal.open(char);
+        }
+        
+        // Ensure character grid is visible in the background
+        if (Array.from(views).every(v => v.style.display === 'none')) {
+            document.getElementById('view-characters').style.display = 'block';
+            renderCharGrid();
+            document.querySelector('.nav-link[href="#characters"]')?.classList.add('active');
+        }
+        return;
+    }
+
+    // Close modal if open and we navigated away
+    if (modal && !hash.startsWith('#char/')) {
+        modal.querySelector('#modal-backdrop').classList.remove('active');
+        document.body.style.overflow = '';
+    }
 
     views.forEach(v => v.style.display = 'none');
     navLinks.forEach(l => l.classList.remove('active'));
 
-    if (hash.startsWith('#char-detail/')) {
-        const charId = hash.split('/')[1];
-        showCharDetail(charId);
-        document.getElementById('view-char-detail').style.display = 'block';
-    } else {
-        const targetView = document.getElementById(`view-${hash.substring(1)}`);
-        if (targetView) targetView.style.display = 'block';
-        const activeLink = document.querySelector(`.nav-link[href="${hash}"]`);
-        if (activeLink) activeLink.classList.add('active');
+    const targetViewId = `view-${hash.substring(1)}`;
+    const targetView = document.getElementById(targetViewId);
+    
+    if (targetView) {
+        targetView.style.display = 'block';
+    } else if (hash === '#home') {
+        document.getElementById('view-home').style.display = 'block';
+    } else if (hash === '#privacy') {
+        document.getElementById('view-privacy').style.display = 'block';
+    }
+
+    const activeLink = document.querySelector(`.nav-link[href="${hash}"]`);
+    if (activeLink) activeLink.classList.add('active');
+    
+    // Auto-active characters link for detail views
+    if (hash.startsWith('#char/')) {
+        document.querySelector('.nav-link[href="#characters"]')?.classList.add('active');
     }
 
     if (hash === '#characters') {
@@ -100,7 +189,7 @@ function setupSearch() {
 function renderCharGrid() {
     const grid = document.getElementById('char-grid');
     grid.innerHTML = CHARACTERS.map(char => `
-        <div class="character-card" onclick="location.hash='#char-detail/${char.id}'">
+        <div class="character-card" onclick="location.hash='#char/${char.id}'">
             <div class="card-img-wrap"><img src="${char.image}" alt="${char.name}"></div>
             <div class="card-info">
                 <h3>${char.name}</h3>
@@ -108,34 +197,6 @@ function renderCharGrid() {
             </div>
         </div>
     `).join('');
-}
-
-function showCharDetail(id) {
-    const char = CHARACTERS.find(c => c.id === id);
-    const container = document.getElementById('char-detail-content');
-    if (!char) return;
-
-    container.innerHTML = `
-        <div class="char-detail-layout">
-            <div class="detail-image"><img src="${char.image}" alt="${char.name}"></div>
-            <div class="detail-info">
-                <h2>${char.name}</h2>
-                <p class="tagline">${char.title}</p>
-                <div class="info-tabs">
-                    <button class="tab-btn active">개요</button>
-                    <button class="tab-btn">배경 스토리</button>
-                    <button class="tab-btn">성격</button>
-                </div>
-                <div class="tab-content">
-                    <p>${char.desc}</p>
-                    <hr style="margin: 1.5rem 0; opacity: 0.1;">
-                    <h4>상세 정보</h4>
-                    <p>${char.lore}</p>
-                    <p style="margin-top: 1rem;"><strong>성격:</strong> ${char.personality}</p>
-                </div>
-            </div>
-        </div>
-    `;
 }
 
 // Initial Setup

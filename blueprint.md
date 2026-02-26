@@ -5,14 +5,17 @@ Expanding the wiki into a comprehensive media hub. This update introduces a dedi
 
 ## New Features
 - **Anime Theater**: A dedicated section with an embedded YouTube player and a playlist selector for "All Saints Street" (You Shou Yan) seasons.
-- **Character Dossiers**: Detailed, tabbed views for characters including lore, personality, and relationships.
-- **Dynamic Content Switching**: A simple JavaScript-based router to switch between "Home", "Watch", and "Characters" without page reloads.
+- **Character Modal (Description Window)**: An elegant overlay window that pops up when a character card is clicked.
+- **AdSense Optimization Pack**: 
+  - Essential Pages: Privacy Policy, About, Contact.
+  - SEO Meta Tags & Semantic Structure.
+  - Content Hub: A "News & Updates" section for textual content depth.
+  - Ad Placeholders: Pre-styled slots for future advertisements.
 
 ## Technical Implementation
-- **Components**:
-  - `VideoPlayer`: A responsive wrapper for YouTube embeds.
-  - `CharacterDossier`: A full-screen or modal-style detailed view.
-- **State Management**: Simple URL hash tracking (`#home`, `#watch`, `#characters`) for navigation.
+- **SEO**: Integrated JSON-LD for character data and improved meta tags.
+- **Navigation**: Enhanced footer with legal links.
+- **Modals**: Reusable modal system for characters and legal documents.
 
 ## Design
 - **Cinematic Mode**: Darkened background when viewing videos.
