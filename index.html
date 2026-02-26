@@ -1,14 +1,109 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hello World</title>
-  <link href='/style.css' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>유수연 위키 (You Shou Yan Wiki)</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
-  <h1>Hello, world!</h1>
-  <button onclick="console.log('hello');">Press me</button>
-  <script defer type="text/javascript" src="/main.js"></script>
+<body class="light-mode">
+    <header class="site-header">
+        <div class="header-content">
+            <button id="sidebar-toggle" aria-label="Toggle Sidebar">
+                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </button>
+            <div class="logo">
+                <img src="https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/40062a110052955.5fe902099307c.png" alt="Logo" class="logo-img">
+                <span>유수연 위키</span>
+            </div>
+            <div class="search-container">
+                <input type="text" placeholder="검색어 입력..." id="wiki-search">
+            </div>
+            <div class="user-tools">
+                <theme-toggle></theme-toggle>
+            </div>
+        </div>
+    </header>
+
+    <div class="page-container">
+        <aside class="sidebar" id="main-sidebar">
+            <nav class="sidebar-nav">
+                <section>
+                    <h3>탐색</h3>
+                    <ul>
+                        <li><a href="#" class="active">대문</a></li>
+                        <li><a href="#">최근 바뀜</a></li>
+                        <li><a href="#">임의의 문서로</a></li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>커뮤니티</h3>
+                    <ul>
+                        <li><a href="#">도움말</a></li>
+                        <li><a href="#">커뮤니티 포털</a></li>
+                        <li><a href="#">게시판</a></li>
+                    </ul>
+                </section>
+            </nav>
+        </aside>
+
+        <main class="content-area">
+            <nav class="breadcrumbs">
+                <a href="#">위키</a> &gt; <a href="#">캐릭터</a> &gt; <span>티엔루</span>
+            </nav>
+
+            <article class="wiki-article">
+                <header class="article-header">
+                    <h1>티엔루 (Tianlu)</h1>
+                    <div class="article-actions">
+                        <button>편집</button>
+                        <button>역사 보기</button>
+                    </div>
+                </header>
+
+                <div class="article-body">
+                    <wiki-infobox>
+                        <span slot="title">티엔루</span>
+                        <img slot="image" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfI_E8-M4H4nS_8KzXQjI-S_W_jX-S_W_jX-S_W_jX-S_W_jX" alt="Tianlu">
+                        <div slot="stats">
+                            <div class="stat-row"><strong>이름</strong> <span>티엔루 (天禄)</span></div>
+                            <div class="stat-row"><strong>종족</strong> <span>벽사</span></div>
+                            <div class="stat-row"><strong>나이</strong> <span>약 2000세</span></div>
+                            <div class="stat-row"><strong>특징</strong> <span>금품을 좋아함</span></div>
+                        </div>
+                    </wiki-infobox>
+
+                    <p><strong>티엔루(Tianlu)</strong>는 유수연(All Saints Street)의 주요 캐릭터 중 하나입니다. 고대 신화 속의 벽사(Pi Xiu)로, 금품을 먹는 성질이 있습니다.</p>
+
+                    <h2 id="overview">개요</h2>
+                    <p>현대 사회에 적응하여 살아가고 있는 신수 중 하나로, 주로 돈과 관련된 일에 민감하며 귀여운 외모와 달리 엄청난 식탐을 자랑합니다.</p>
+
+                    <h2 id="personality">성격</h2>
+                    <p>매우 낙천적이지만 돈 앞에서는 철저한 면모를 보입니다. 동생인 피슈와 함께 지내며 가끔 소동을 피우기도 합니다.</p>
+
+                    <div class="card-grid">
+                        <div class="wiki-card">
+                            <h3>관련 인물</h3>
+                            <p>피슈, 시부샹, 닉</p>
+                        </div>
+                        <div class="wiki-card">
+                            <h3>주요 에피소드</h3>
+                            <p>에피소드 1: 룸메이트들과의 만남</p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </main>
+    </div>
+
+    <footer class="site-footer">
+        <p>© 2026 You Shou Yan Wiki. Content is available under CC BY-SA 4.0 unless otherwise noted.</p>
+    </footer>
+
+    <script src="main.js" type="module"></script>
 </body>
 </html>
