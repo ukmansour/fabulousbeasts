@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>유수연 위키 (You Shou Yan Wiki)</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -13,15 +12,15 @@
 <body class="light-mode">
     <header class="site-header">
         <div class="header-content">
-            <button id="sidebar-toggle" aria-label="Toggle Sidebar">
+            <button id="sidebar-toggle" aria-label="사이드바 토글">
                 <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
             </button>
-            <div class="logo">
-                <img src="https://mir-s3-cdn-cf.behance.net/project_modules/max_1200/40062a110052955.5fe902099307c.png" alt="Logo" class="logo-img">
+            <a href="/" class="logo">
+                <img src="https://youshouyan.miraheze.org/w/images/thumb/7/7b/Logo.png/300px-Logo.png" alt="Logo" class="logo-img">
                 <span>유수연 위키</span>
-            </div>
+            </a>
             <div class="search-container">
-                <input type="text" placeholder="검색어 입력..." id="wiki-search">
+                <input type="text" placeholder="문서 검색..." id="wiki-search" autocomplete="off">
             </div>
             <div class="user-tools">
                 <theme-toggle></theme-toggle>
@@ -41,67 +40,112 @@
                     </ul>
                 </section>
                 <section>
-                    <h3>커뮤니티</h3>
+                    <h3>만화 & 애니메이션</h3>
                     <ul>
-                        <li><a href="#">도움말</a></li>
-                        <li><a href="#">커뮤니티 포털</a></li>
-                        <li><a href="#">게시판</a></li>
+                        <li><a href="#">만화 (Manhua)</a></li>
+                        <li><a href="#">캐릭터 목록</a></li>
+                        <li><a href="#">에피소드 가이드</a></li>
+                        <li><a href="#">종족 (Species)</a></li>
+                    </ul>
+                </section>
+                <section>
+                    <h3>외부 링크</h3>
+                    <ul>
+                        <li><a href="https://manga.bilibili.com/detail/mc24237" target="_blank">Bilibili 만화</a></li>
+                        <li><a href="#" target="_blank">공식 트위터</a></li>
+                        <li><a href="#" target="_blank">YouTube 채널</a></li>
                     </ul>
                 </section>
             </nav>
         </aside>
 
         <main class="content-area">
-            <nav class="breadcrumbs">
-                <a href="#">위키</a> &gt; <a href="#">캐릭터</a> &gt; <span>티엔루</span>
-            </nav>
+            <section class="hero-banner">
+                <div class="hero-text">
+                    <h1>유수연 (有兽焉) 위키에 오신 것을 환영합니다!</h1>
+                    <p>현대 사회에 살고 있는 신수들의 일상을 다룬 '유수연' 시리즈의 모든 정보를 담고 있는 팬 위키입니다.</p>
+                </div>
+            </section>
 
             <article class="wiki-article">
-                <header class="article-header">
-                    <h1>티엔루 (Tianlu)</h1>
-                    <div class="article-actions">
-                        <button>편집</button>
-                        <button>역사 보기</button>
-                    </div>
-                </header>
-
-                <div class="article-body">
-                    <wiki-infobox>
-                        <span slot="title">티엔루</span>
-                        <img slot="image" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfI_E8-M4H4nS_8KzXQjI-S_W_jX-S_W_jX-S_W_jX-S_W_jX" alt="Tianlu">
-                        <div slot="stats">
-                            <div class="stat-row"><strong>이름</strong> <span>티엔루 (天禄)</span></div>
-                            <div class="stat-row"><strong>종족</strong> <span>벽사</span></div>
-                            <div class="stat-row"><strong>나이</strong> <span>약 2000세</span></div>
-                            <div class="stat-row"><strong>특징</strong> <span>금품을 좋아함</span></div>
+                <h2 class="section-title">주요 캐릭터</h2>
+                <div class="character-grid">
+                    <div class="character-card" data-name="티엔루">
+                        <div class="card-image">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSfI_E8-M4H4nS_8KzXQjI-S_W_jX-S_W_jX-S_W_jX-S_W_jX" alt="Tianlu">
                         </div>
-                    </wiki-infobox>
-
-                    <p><strong>티엔루(Tianlu)</strong>는 유수연(All Saints Street)의 주요 캐릭터 중 하나입니다. 고대 신화 속의 벽사(Pi Xiu)로, 금품을 먹는 성질이 있습니다.</p>
-
-                    <h2 id="overview">개요</h2>
-                    <p>현대 사회에 적응하여 살아가고 있는 신수 중 하나로, 주로 돈과 관련된 일에 민감하며 귀여운 외모와 달리 엄청난 식탐을 자랑합니다.</p>
-
-                    <h2 id="personality">성격</h2>
-                    <p>매우 낙천적이지만 돈 앞에서는 철저한 면모를 보입니다. 동생인 피슈와 함께 지내며 가끔 소동을 피우기도 합니다.</p>
-
-                    <div class="card-grid">
-                        <div class="wiki-card">
-                            <h3>관련 인물</h3>
-                            <p>피슈, 시부샹, 닉</p>
-                        </div>
-                        <div class="wiki-card">
-                            <h3>주요 에피소드</h3>
-                            <p>에피소드 1: 룸메이트들과의 만남</p>
+                        <div class="card-content">
+                            <h3>티엔루 (Tianlu)</h3>
+                            <p>금품을 먹는 어린 벽사. 항상 배고파하며 행운을 가져다준다고 믿어집니다.</p>
+                            <a href="#" class="btn-more">자세히 보기</a>
                         </div>
                     </div>
+                    <div class="character-card" data-name="시부샹">
+                        <div class="card-image">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_Dq5Ym_N0f3D_x_B_m_B_m_B_m_B_m_B_m_B_m_B_m_B" alt="Sibuxiang">
+                        </div>
+                        <div class="card-content">
+                            <h3>시부샹 (Sibuxiang)</h3>
+                            <p>"루렌디엔" 유물 가게의 주인. 다른 이들을 돕기 위해 지상으로 내려온 상서로운 짐승입니다.</p>
+                            <a href="#" class="btn-more">자세히 보기</a>
+                        </div>
+                    </div>
+                    <div class="character-card" data-name="토니">
+                        <div class="card-image">
+                            <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E_E" alt="Tony">
+                        </div>
+                        <div class="card-content">
+                            <h3>토니 (Tony)</h3>
+                            <p>달토끼이자 부유한 기업가. 시부샹의 마음을 얻기 위해 노력합니다.</p>
+                            <a href="#" class="btn-more">자세히 보기</a>
+                        </div>
+                    </div>
+                </div>
+
+                <h2 class="section-title">주요 페이지</h2>
+                <div class="quick-links-grid">
+                    <a href="#" class="quick-link-box">
+                        <span class="icon">📖</span>
+                        <div class="text">
+                            <h4>만화 정보</h4>
+                            <p>연재 정보 및 스토리 개요</p>
+                        </div>
+                    </a>
+                    <a href="#" class="quick-link-box">
+                        <span class="icon">🌍</span>
+                        <div class="text">
+                            <h4>세계관</h4>
+                            <p>등장 장소 및 배경 설정</p>
+                        </div>
+                    </a>
+                    <a href="#" class="quick-link-box">
+                        <span class="icon">🐾</span>
+                        <div class="text">
+                            <h4>종족 가이드</h4>
+                            <p>벽사, 사불상, 달토끼 등</p>
+                        </div>
+                    </a>
+                    <a href="#" class="quick-link-box">
+                        <span class="icon">💬</span>
+                        <div class="text">
+                            <h4>커뮤니티</h4>
+                            <p>편집 도움말 및 게시판</p>
+                        </div>
+                    </a>
                 </div>
             </article>
         </main>
     </div>
 
     <footer class="site-footer">
-        <p>© 2026 You Shou Yan Wiki. Content is available under CC BY-SA 4.0 unless otherwise noted.</p>
+        <div class="footer-content">
+            <p>© 2026 You Shou Yan Wiki. 별도의 언급이 없는 한 내용은 CC BY-SA 4.0 라이선스에 따라 사용할 수 있습니다.</p>
+            <div class="footer-links">
+                <a href="#">개인정보 처리방침</a>
+                <a href="#">유수연 위키 소개</a>
+                <a href="#">면책 조항</a>
+            </div>
+        </div>
     </footer>
 
     <script src="main.js" type="module"></script>

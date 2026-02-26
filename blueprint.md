@@ -1,17 +1,24 @@
-# You Shou Yan Style Wiki Blueprint
+# You Shou Yan Wiki Remake Blueprint
 
 ## Overview
-A modern, responsive wiki-style application inspired by the "You Shou Yan" Miraheze wiki. This site features a clean aesthetic, character infoboxes, and a hierarchical navigation system suitable for documenting characters, stories, and lore.
+A high-fidelity recreation of the "You Shou Yan" (All Saints Street) Wiki landing page. This version focuses on a professional, card-based UI that mirrors the Citizen skin but with enhanced interactivity and modern CSS techniques.
 
-## Project Outline
-- **Layout**: Sticky header with search, collapsible left sidebar, main content area, and right-aligned infoboxes for characters.
-- **Styling**: Modern CSS using variables for theming, logical properties, and container queries. Supports light/dark modes.
-- **Components**: Custom Web Components for Infoboxes, Wiki-cards, and Toggle buttons.
-- **Interactivity**: Smooth sidebar transitions, theme switching, and dynamic content loading (prototype).
+## Structure
+- **Global Navigation**: Top-fixed bar with Logo, Search, and Theme Toggle.
+- **Sidebar**: Collapsible navigation with categories (Manhua, Characters, World, Community).
+- **Hero Section**: Welcoming banner with a brief series introduction.
+- **Character Spotlight**: A grid of beautifully designed cards for main characters (Tianlu, Sibuxiang, Tony, etc.).
+- **Quick Links**: Section for important external links and social media.
 
-## Current Plan: Initial Wiki Prototype
-1. **Scaffold Structure**: Update `index.html` with a semantic wiki layout (header, aside, main, footer).
-2. **Global Styles**: Define a color palette and typography in `style.css` using CSS variables.
-3. **Web Components**: Implement `WikiInfobox` and `ThemeToggle` in `main.js`.
-4. **Content Layout**: Create a sample character page (e.g., Tianlu) with an infobox and markdown-like sections.
-5. **Responsive Design**: Ensure the sidebar collapses on mobile and infoboxes stack correctly.
+## Design Decisions
+- **Typography**: Inter for primary text, system-ui for performance.
+- **Colors**: Refined CSS variables for Light and Dark modes.
+- **Components**:
+  - `CharacterCard`: Web component for character profiles.
+  - `WikiSidebar`: Web component for structured navigation.
+  - `ThemeToggle`: Enhanced theme switcher.
+
+## Steps
+1. **Core Layout**: Semantic HTML5 structure.
+2. **Modern CSS**: Baseline features (Cascade Layers, :has selector, Logical Properties).
+3. **Dynamic Elements**: JavaScript for sidebar toggling and theme persistence.
