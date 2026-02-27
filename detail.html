@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>캐릭터 상세 정보 - 유수언 위키</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .detail-page {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 2rem;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow-md);
+        }
+        .detail-header {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 3rem;
+            margin-bottom: 3rem;
+        }
+        .detail-image img {
+            width: 100%;
+            border-radius: 20px;
+            box-shadow: var(--shadow-md);
+            aspect-ratio: 1;
+            object-fit: cover;
+        }
+        .profile-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+        }
+        .profile-table th, .profile-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            text-align: left;
+        }
+        .profile-table th {
+            width: 120px;
+            background: var(--accent-color);
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+        .detail-section {
+            margin-bottom: 3rem;
+        }
+        .detail-section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        .detail-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--text-color);
+        }
+        @media (max-width: 768px) {
+            .detail-header { grid-template-columns: 1fr; }
+            .detail-image { max-width: 300px; margin: 0 auto; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo" class="logo-img">
+                <span>유수언 위키</span>
+            </a>
+            <nav class="top-nav">
+                <a href="index.html#home" class="nav-link">홈</a>
+                <a href="index.html#characters" class="nav-link">캐릭터</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="detail-page" id="detail-container">
+        <!-- Content will be loaded by JS -->
+        <p>캐릭터 정보를 불러오는 중...</p>
+    </main>
+
+    <script type="module">
+        import { CHARACTERS } from './main.js';
+
+        function loadDetail() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const charId = urlParams.get('id');
+            const char = CHARACTERS.find(c => c.id === charId);
+
+            if (!char) {
+                document.getElementById('detail-container').innerHTML = '<h2>캐릭터를 찾을 수 없습니다.</h2><a href="index.html">홈으로 돌아가기</a>';
+                return;
+            }
+
+            document.title = `${char.name} - 유수언 위키`;
+
+            document.getElementById('detail-container').innerHTML = `
+                <div class="detail-header">
+                    <div class="detail-image">
+                        <img src="${char.image}" alt="${char.name}">
+                    </div>
+                    <div class="detail-info">
+                        <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">${char.name}</h1>
+                        <p style="color: var(--primary-color); font-weight: 700; font-size: 1.2rem; margin-bottom: 1rem;">${char.title}</p>
+                        
+                        <table class="profile-table">
+                            <tr><th>이름</th><td>${char.name || '-'}</td></tr>
+                            <tr><th>별명</th><td>${char.nickname || '-'}</td></tr>
+                            <tr><th>성별</th><td>${char.gender || '-'}</td></tr>
+                            <tr><th>종</th><td>${char.species || '-'}</td></tr>
+                            <tr><th>키</th><td>${char.height || '-'}</td></tr>
+                            <tr><th>털색</th><td>${char.furColor || '-'}</td></tr>
+                            <tr><th>눈색</th><td>${char.eyeColor || '-'}</td></tr>
+                            <tr><th>국적</th><td>${char.nationality || '-'}</td></tr>
+                            <tr><th>생일</th><td>${char.birthday || '-'}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h2>상세 설명</h2>
+                    <div class="detail-content">
+                        <p>${char.desc}</p>
+                        <p>${char.personality ? '성격: ' + char.personality : ''}</p>
+                    </div>
+                </div>
+
+                <div class="detail-section">
+                    <h2>스토리</h2>
+                    <div class="detail-content">
+                        <p>${char.lore}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        window.onload = loadDetail;
+    </script>
+</body>
+</html>
