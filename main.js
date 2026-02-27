@@ -5,10 +5,27 @@ const CATEGORIES = [
 
 const CHARACTERS = [
     // 메인 캐릭터
-    { id: 'tianlu', category: '메인 캐릭터', name: '천록 (天禄)', title: '행운의 신수', image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbcXQoT%2FdJMcadA2rAc%2FAAAAAAAAAAAAAAAAAAAAAIL2JD45iIL4id-sqMYSQvlK0xdRWR-RaQhfhIvNqqnY%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3DuIV48xImOA7ML2o92NQPjf764VI%253D', desc: '금품을 먹는 어린 벽사. 행운을 가져다줍니다.', lore: '고대 신화 속의 벽사(Pi Xiu)입니다.', personality: '천진난만하고 낙천적입니다.' },
+    { 
+        id: 'tianlu', 
+        category: '메인 캐릭터', 
+        name: '천록 (天禄)', 
+        title: '부를 불러와주는 비휴', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbcXQoT%2FdJMcadA2rAc%2FAAAAAAAAAAAAAAAAAAAAAIL2JD45iIL4id-sqMYSQvlK0xdRWR-RaQhfhIvNqqnY%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3DuIV48xImOA7ML2o92NQPjf764VI%253D', 
+        desc: '금품을 먹는 어린 벽사. 부와 행운을 불러옵니다.', 
+        lore: '고대 신화 속의 벽사(Pi Xiu)입니다.', 
+        personality: '천진난만하고 낙천적입니다.',
+        nickname: '천록이',
+        gender: '남성',
+        species: '비휴 (벽사)',
+        height: '약 40cm (변신 전)',
+        furColor: '하얀색/옥색',
+        eyeColor: '노란색',
+        nationality: '중국 (신화계)',
+        birthday: '알 수 없음'
+    },
     { id: 'pixiu', category: '메인 캐릭터', name: '벽사 (辟邪)', title: '수호의 신수', image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMjE5/MDAxNzcyMTc1OTg0OTU3.OyQB3R7OC-15vRNB79JX8r6Wd5JxTUiHvsZxAqq5nLMg.YuP3_LtcBn5f7tcsxYnFY1UDKFE-haIuNSxbbhihH3gg.JPEG/%EB%B2%BD%EC%82%AC.jpg?type=w966', desc: '천록의 형. 더 성숙하고 강력한 힘을 지니고 있습니다.', lore: '동생을 끔찍이 아끼는 보호자입니다.', personality: '조용하고 신중합니다.' },
-    { id: 'sibuxiang', category: '메인 캐릭터', name: '사불상 (四不像)', title: '유물 가게 주인', image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTIy/MDAxNzcyMTc1OTg0OTU4.eNx-UZfaw5GDPBCH-UKakyA5MFfA3CohXvdFTOxGjIsg.UNtOLmvRpzkPR_MzspYX-eJpmhmfz8CaNp9p1FYXSFwg.JPEG/%EC%82%AC%EB%B6%88%EC%83%81.jpg?type=w966', desc: '루렌디엔 유물 가게의 주인입니다.', lore: '기린의 첫째 아들로 강력한 신통력을 가졌습니다.', personality: '침착하고 현명합니다.' },
-    { id: 'tony', category: '메인 캐릭터', name: '투예 (兔爷)', title: '달토끼 기업가', image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTkz/MDAxNzcyMTc1OTg0OTcy.zFn5rtmshGqNNQ6Qf6ePLRq7zL6EwXu4rrNoE2KiDdMg.vHAay7aMCSFXQH6EegUe90CydWs7RMzmzB4gqF-M_fEg.JPEG/%ED%88%AC%EC%98%88.jpg?type=w966', desc: '달에서 온 부유한 사업가입니다.', lore: '사불상을 짝사랑하여 항상 구애합니다.', personality: '자신감 넘치고 화려합니다.' },
+    { id: 'sibuxiang', category: '메인 캐릭터', name: '사불상 (四不像)', title: '유물 가게 주인', image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbD0eLx%2FdJMcafr9eyx%2FAAAAAAAAAAAAAAAAAAAAAAjZQRaTjqxLHFq1C_vz2DjDAmpHr_i6HehWlH-4obHD%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3D9D2sgrhZJBp%252BVyeDIj5nf1TMJN8%253D', desc: '루렌디엔 유물 가게의 주인입니다.', lore: '기린의 첫째 아들로 강력한 신통력을 가졌습니다.', personality: '침착하고 현명합니다.' },
+    { id: 'tony', category: '메인 캐릭터', name: '투예 (兔爷)', title: '달토끼 기업가', image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FKcUIj%2FdJMcaflokNh%2FAAAAAAAAAAAAAAAAAAAAAGSQRnO0c8CI22cpfXLpydcTTRVnKqg4FgAas4yhvs0Y%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3DNaFtgpU5vmas1VzvSRfUJ%252Fvn7zw%253D', desc: '달에서 온 부유한 사업가입니다.', lore: '사불상을 짝사랑하여 항상 구애합니다.', personality: '자신감 넘치고 화려합니다.' },
 
     // 녹인점
     ...["금각", "은각", "호두", "후쿠", "쇼타", "마키", "전호", "메이메이", "파릉군", "파혁", "영야"].map(name => ({
@@ -22,7 +39,7 @@ const CHARACTERS = [
 
     // 지옥
     ...["체청", "소루", "칭훠", "지마"].map(name => ({
-        id: `hell-${name}`, category: '지옥', name, title: '지옥 거주자', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `지옥에서 온 ${name}입니다.`, lore: '지옥의 질서를 유지합니다.', personality: '냉철하거나 독특합니다.'
+        id: `hell-${name}`, category: '지옥', name, title: '지옥 거주자', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `지옥에서 온 ${name}입니다.`, lore: '지옥의 질서를 유지합니다.', personality: '냉철하거나 독특합니다.' },
     })),
 
     // 토보서
@@ -71,114 +88,21 @@ const CHARACTERS = [
     { id: 'pandada', category: '기타', name: '판다다 (Pandada)', title: '아이돌 판다', image: 'https://i.pinimg.com/564x/e7/73/77/e77377d61083e956b68514106b12ba94.jpg', desc: '인기 많은 방송인 판다입니다.', lore: '지상의 아이돌입니다.', personality: '까칠하지만 속은 따뜻합니다.' }
 ];
 
-class ThemeToggle extends HTMLElement {
-    constructor() {
-        super();
-        this.attachShadow({ mode: 'open' });
-    }
-    connectedCallback() { this.render(); }
-    toggle() {
-        const isDark = document.body.classList.toggle('dark-mode');
-        localStorage.setItem('theme', isDark ? 'dark' : 'light');
-        this.render();
-    }
-    render() {
-        const isDark = document.body.classList.contains('dark-mode');
-        this.shadowRoot.innerHTML = `
-            <style>
-                button { background: none; border: 1px solid var(--border-color, #ccc); color: var(--text-color, #000); padding: 0.5rem; border-radius: 50%; cursor: pointer; display: flex; align-items: center; width: 40px; height: 40px; transition: 0.2s; }
-                button:hover { background: var(--accent-color, #eee); }
-                svg { width: 20px; height: 20px; }
-            </style>
-            <button onclick="this.getRootNode().host.toggle()">
-                ${isDark ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>' : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>'}
-            </button>
-        `;
-    }
-}
-customElements.define('theme-toggle', ThemeToggle);
-
-class CharacterModal extends HTMLElement {
-    constructor() {
-        super();
-        this.innerHTML = `
-            <div class="modal-backdrop" id="modal-backdrop">
-                <div class="modal-window">
-                    <button class="modal-close" id="modal-close">&times;</button>
-                    <div class="modal-content" id="modal-body"></div>
-                </div>
-            </div>
-        `;
-    }
-    connectedCallback() {
-        this.querySelector('#modal-close').onclick = () => this.close();
-        this.querySelector('#modal-backdrop').onclick = (e) => {
-            if (e.target.id === 'modal-backdrop') this.close();
-        };
-    }
-    open(char) {
-        const body = this.querySelector('#modal-body');
-        body.innerHTML = `
-            <div class="char-modal-layout">
-                <div class="char-modal-image">
-                    <img src="${char.image}" alt="${char.name}">
-                </div>
-                <div class="char-modal-info">
-                    <h2 style="font-size: 2.5rem; margin-bottom: 0.5rem;">${char.name}</h2>
-                    <p style="color: var(--primary-color); font-weight: 700; margin-bottom: 1.5rem;">${char.title} (${char.category})</p>
-                    <div class="info-tabs">
-                        <button class="tab-btn active">상세 설명</button>
-                    </div>
-                    <div class="tab-content">
-                        <p style="font-size: 1.1rem; line-height: 1.8;">${char.desc}</p>
-                        <div style="margin-top: 2rem; padding: 1.5rem; background: var(--accent-color); border-radius: 12px;">
-                            <h4 style="margin-bottom: 0.5rem;">배경 스토리</h4>
-                            <p style="opacity: 0.9;">${char.lore}</p>
-                            <h4 style="margin-top: 1.5rem; margin-bottom: 0.5rem;">성격</h4>
-                            <p style="opacity: 0.9;">${char.personality}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        this.querySelector('#modal-backdrop').classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-    close() {
-        this.querySelector('#modal-backdrop').classList.remove('active');
-        document.body.style.overflow = '';
-        if (window.location.hash.startsWith('#char/')) {
-            window.location.hash = '#characters';
-        }
-    }
-}
-customElements.define('character-modal', CharacterModal);
+export { CHARACTERS, CATEGORIES };
 
 // Routing & View Logic
 function navigate() {
     const hash = window.location.hash || '#home';
     const views = document.querySelectorAll('.view');
     const navLinks = document.querySelectorAll('.nav-link');
-    const modal = document.querySelector('character-modal');
 
     if (hash.startsWith('#char/')) {
         const charId = hash.split('/')[1];
-        const char = CHARACTERS.find(c => c.id === charId);
-        if (char && modal) {
-            modal.open(char);
-        }
-        
-        if (Array.from(views).every(v => v.style.display === 'none')) {
-            document.getElementById('view-characters').style.display = 'block';
-            renderCharGrid();
-            document.querySelector('.nav-link[href="#characters"]')?.classList.add('active');
-        }
+        // Open in new window/tab instead of modal
+        window.open(`detail.html?id=${charId}`, '_blank');
+        // Revert hash to characters to stay on page
+        window.location.hash = '#characters';
         return;
-    }
-
-    if (modal && !hash.startsWith('#char/')) {
-        modal.querySelector('#modal-backdrop').classList.remove('active');
-        document.body.style.overflow = '';
     }
 
     views.forEach(v => v.style.display = 'none');
@@ -226,6 +150,7 @@ function setupSearch() {
 
 function renderCharGrid() {
     const grid = document.getElementById('char-grid');
+    if (!grid) return;
     grid.innerHTML = CATEGORIES.map(cat => {
         const catChars = CHARACTERS.filter(c => c.category === cat);
         if (catChars.length === 0) return '';
@@ -252,17 +177,19 @@ function renderCharGrid() {
 // Initial Setup
 window.addEventListener('hashchange', navigate);
 window.addEventListener('load', () => {
-    if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
     navigate();
 
-    document.querySelectorAll('.playlist li').forEach(li => {
-        li.onclick = function() {
-            document.querySelector('.playlist li.active').classList.remove('active');
-            this.classList.add('active');
-            const videoId = this.dataset.video;
-            document.getElementById('main-player').src = `https://www.youtube.com/embed/videoseries?list=${videoId}`;
-        };
-    });
+    const playlist = document.querySelector('.playlist');
+    if (playlist) {
+        playlist.querySelectorAll('li').forEach(li => {
+            li.onclick = function() {
+                document.querySelector('.playlist li.active').classList.remove('active');
+                this.classList.add('active');
+                const videoId = this.dataset.video;
+                document.getElementById('main-player').src = `https://www.youtube.com/embed/videoseries?list=${videoId}`;
+            };
+        });
+    }
 
     const sidebar = document.getElementById('main-sidebar');
     const toggle = document.getElementById('sidebar-toggle');
