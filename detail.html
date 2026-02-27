@@ -79,20 +79,25 @@
     </header>
 
     <main class="detail-page" id="detail-container">
-        <!-- Content will be loaded by JS -->
         <p>캐릭터 정보를 불러오는 중...</p>
     </main>
 
     <script type="module">
-        import { CHARACTERS } from './data.js';
+        import { CHARACTERS } from './main.js';
 
         function loadDetail() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const charId = urlParams.get('id');
+            // Get ID from Hash (#tianlu) instead of Query String
+            const charId = window.location.hash.substring(1);
             const char = CHARACTERS.find(c => c.id === charId);
 
             if (!char) {
-                document.getElementById('detail-container').innerHTML = '<h2>캐릭터를 찾을 수 없습니다.</h2><a href="index.html">홈으로 돌아가기</a>';
+                document.getElementById('detail-container').innerHTML = `
+                    <div style="text-align: center; padding: 3rem;">
+                        <h2>캐릭터를 찾을 수 없습니다.</h2>
+                        <p>ID: ${charId}</p>
+                        <a href="index.html" class="btn-primary" style="display: inline-block; margin-top: 1rem; text-decoration: none;">홈으로 돌아가기</a>
+                    </div>
+                `;
                 return;
             }
 
@@ -138,7 +143,9 @@
             `;
         }
 
+        // Load initially and on hash change (if page stays open)
         window.onload = loadDetail;
+        window.onhashchange = loadDetail;
     </script>
 </body>
 </html>
