@@ -1,22 +1,40 @@
-# You Shou Yan Wiki: Media & Character Hub Blueprint
+# 유수연 위키 프로젝트 블루프린트
 
-## Overview
-Expanding the wiki into a comprehensive media hub. This update introduces a dedicated "Watch Anime" theater mode and interactive character dossiers.
+## 1. 프로젝트 개요
 
-## New Features
-- **Anime Theater**: A dedicated section with an embedded YouTube player and a playlist selector for "All Saints Street" (You Shou Yan) seasons.
-- **Character Modal (Description Window)**: An elegant overlay window that pops up when a character card is clicked.
-- **AdSense Optimization Pack**: 
-  - Essential Pages: Privacy Policy, About, Contact.
-  - SEO Meta Tags & Semantic Structure.
-  - Content Hub: A "News & Updates" section for textual content depth.
-  - Ad Placeholders: Pre-styled slots for future advertisements.
+이 프로젝트는 애니메이션 "유수연(有兽焉)"의 팬들을 위한 비공식 위키 웹사이트입니다. 사용자들은 이 웹사이트를 통해 애니메이션의 주요 캐릭터 정보, 최신 뉴스, 추천 에피소드 등을 확인할 수 있습니다.
 
-## Technical Implementation
-- **SEO**: Integrated JSON-LD for character data and improved meta tags.
-- **Navigation**: Enhanced footer with legal links.
-- **Modals**: Reusable modal system for characters and legal documents.
+## 2. 디자인 및 기능 명세
 
-## Design
-- **Cinematic Mode**: Darkened background when viewing videos.
-- **Tabbed Information**: Using CSS `:has` or JS to switch between 'Overview', 'Lore', and 'Gallery' in character details.
+### 2.1. 디자인
+
+*   **메인 컬러:** `#4A90E2` (활기찬 파란색)
+*   **서브 컬러:** `#F5A623` (따뜻한 주황색)
+*   **폰트:** Inter
+*   **레이아웃:** 반응형 웹 디자인, 모바일 우선 접근
+*   **특징:**
+    *   부드러운 전환 애니메이션
+    *   카드 형태의 UI를 사용하여 정보 그룹화
+    *   아이콘을 활용하여 직관적인 네비게이션 제공
+
+### 2.2. 기능
+
+*   **캐릭터:** 주요 캐릭터들의 이미지, 이름, 상세 설명을 포함하는 동적 생성 카드 리스트
+*   **천록(天禄) / 벽사(辟邪):** 천록의 한국어/한자 표기 및 이명 추가
+*   **사불상(四不像):** 사불상의 한자 표기
+*   **투예(兔爷):** 투예의 한자 표기
+*   **최신 뉴스:** 애니메이션 관련 최신 소식 제공
+*   **추천 에피소드:** 시청을 유도하는 추천 에피소드 섹션
+*   **테마 전환:** 라이트 모드 / 다크 모드 전환 기능
+
+## 3. 현재 구현 계획: 캐릭터 정보 추가
+
+1.  **`main.js` 파일 수정:**
+    *   `characters` 배열에 '피쇼', '판다' 등 새로운 캐릭터 객체 추가. 각 객체는 `name`, `name_en`, `description`, `image_url` 속성을 가짐.
+2.  **`index.html` 파일 검토:**
+    *   캐릭터 카드가 동적으로 추가될 `character-grid` 컨테이너 구조 확인.
+3.  **`style.css` 파일 수정:**
+    *   새롭게 추가될 캐릭터 카드에 대한 스타일 추가 및 기존 스타일 개선.
+4.  **기능 확인:**
+    *   페이지 로드 시 모든 캐릭터 정보가 정상적으로 표시되는지 확인.
+
