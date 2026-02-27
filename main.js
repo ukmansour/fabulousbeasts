@@ -90,17 +90,19 @@ const CHARACTERS = [
 
 export { CHARACTERS, CATEGORIES };
 
+// Global function for character detail window
+window.openCharacter = (charId) => {
+    window.open(`detail.html?id=${charId}`, '_blank');
+};
+
 // Routing & View Logic
 function navigate() {
     const hash = window.location.hash || '#home';
     const views = document.querySelectorAll('.view');
     const navLinks = document.querySelectorAll('.nav-link');
 
+    // Remove hash-based character navigation since we use direct onclick now
     if (hash.startsWith('#char/')) {
-        const charId = hash.split('/')[1];
-        // Open in new window/tab instead of modal
-        window.open(`detail.html?id=${charId}`, '_blank');
-        // Revert hash to characters to stay on page
         window.location.hash = '#characters';
         return;
     }
@@ -160,7 +162,7 @@ function renderCharGrid() {
                 <h2 class="category-title">${cat}</h2>
                 <div class="category-grid">
                     ${catChars.map(char => `
-                        <div class="character-card" onclick="location.hash='#char/${char.id}'">
+                        <div class="character-card" onclick="openCharacter('${char.id}')">
                             <div class="card-img-wrap"><img src="${char.image}" alt="${char.name}"></div>
                             <div class="card-info">
                                 <h3>${char.name}</h3>
@@ -186,7 +188,8 @@ window.addEventListener('load', () => {
                 document.querySelector('.playlist li.active').classList.remove('active');
                 this.classList.add('active');
                 const videoId = this.dataset.video;
-                document.getElementById('main-player').src = `https://www.youtube.com/embed/videoseries?list=${videoId}`;
+                const player = document.getElementById('main-player');
+                if (player) player.src = `https://www.youtube.com/embed/videoseries?list=${videoId}`;
             };
         });
     }
