@@ -30,6 +30,10 @@
 
     body {
         font-family: 'Inter', system-ui, sans-serif;
+        background-image: url('https://postfiles.pstatic.net/MjAyNjAyMjdfNTUg/MDAxNzcyMTc2MDA1MDIz.P7AVgtKiyzpnJqlLgSEovfywG17LEiCo2JlJ4_HJ7ocg.LCaE16DD9zomuCQNvplJie08HD_0vrYTR3l152a9yVQg.PNG/%EC%8A%A4%ED%81%AC%EB%A6%B0%EC%83%B7_2026-02-23_170942.png?type=w966');
+        background-size: cover;
+        background-attachment: fixed;
+        background-position: center;
         background-color: var(--bg-color);
         color: var(--text-color);
         line-height: 1.6;

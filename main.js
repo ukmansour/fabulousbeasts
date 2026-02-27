@@ -1,13 +1,23 @@
 const CHARACTERS = [
     {
         id: 'tianlu',
-        name: '천록 (天禄, 벽사 辟邪)',
+        name: '천록 (天禄)',
         kName: '천록',
-        title: '행운을 가져다주는 벽사',
+        title: '행운을 가져다주는 신수',
         desc: '금품을 먹는 어린 벽사. 항상 배고파하며 행운을 가져다준다고 믿어집니다.',
-        image: 'https://i.pinimg.com/564x/21/f0/2c/21f02c5e5a230f2dd31b8a6b10164c3c.jpg',
+        image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTEg/MDAxNzcyMTc1OTg0OTQ3.rpxuAaG1zrS8pnwOdAcoX6k0RFfjzEu5CoYtkcjFKVMg.xHR8VJ7WEKTqnnzowG9dzqEiVj7Ei32YiV8kG-7UNUMg.JPEG/%EC%B2%9C%EB%A1%9D.jpg?type=w966',
         lore: '고대 신화 속의 벽사(Pi Xiu)로, 현대 사회에서 닉(Nick)과 사불상과 함께 살고 있습니다. 먹을 것을 매우 좋아하며, 특히 금속이나 보석을 좋아합니다.',
         personality: '천진난만하고 낙천적입니다. 가끔 사고를 치기도 하지만 미워할 수 없는 매력을 가졌습니다.'
+    },
+    {
+        id: 'pixiu',
+        name: '벽사 (辟邪)',
+        kName: '벽사',
+        title: '신비로운 행운의 상징',
+        desc: '천록의 형. 동생과 달리 차분하고 어른스럽지만, 사실은 동생을 매우 아낍니다.',
+        image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMjE5/MDAxNzcyMTc1OTg0OTU3.OyQB3R7OC-15vRNB79JX8r6Wd5JxTUiHvsZxAqq5nLMg.YuP3_LtcBn5f7tcsxYnFY1UDKFE-haIuNSxbbhihH3gg.JPEG/%EB%B2%BD%EC%82%AC.jpg?type=w966',
+        lore: '천록과 함께 사는 또 다른 벽사. 더 성숙하고 강력한 힘을 지니고 있습니다. 가끔은 천록의 보호자 역할을 합니다.',
+        personality: '조용하고 신중하지만, 가족에게는 따뜻한 마음을 가지고 있습니다. 강력한 힘을 숨기고 있습니다.'
     },
     {
         id: 'sibuxiang',
@@ -15,7 +25,7 @@ const CHARACTERS = [
         kName: '사불상',
         title: '루렌디엔 유물 가게 주인',
         desc: '"루렌디엔" 유물 가게의 주인. 다른 이들을 돕기 위해 지상으로 내려온 상서로운 짐승입니다.',
-        image: 'https://i.pinimg.com/564x/b8/22/3e/b8223e71020297509b5c3d4b6b886915.jpg',
+        image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTIy/MDAxNzcyMTc1OTg0OTU4.eNx-UZfaw5GDPBCH-UKakyA5MFfA3CohXvdFTOxGjIsg.UNtOLmvRpzkPR_MzspYX-eJpmhmfz8CaNp9p1FYXSFwg.JPEG/%EC%82%AC%EB%B6%88%EC%83%81.jpg?type=w966',
         lore: '기린의 첫째 아들로, 매우 강력한 신통력을 가지고 있습니다. 하지만 지상에서는 평범한(?) 가게 주인으로 살아가고 있습니다.',
         personality: '침착하고 현명하며, 주변 사람들을 잘 챙깁니다. 하지만 가끔 엄격한 면도 보여줍니다.'
     },
@@ -25,19 +35,9 @@ const CHARACTERS = [
         kName: '투예',
         title: '부유한 기업가 달토끼',
         desc: '달토끼이자 부유한 기업가. 사불상의 마음을 얻기 위해 노력합니다.',
-        image: 'https://i.pinimg.com/564x/a3/1b/30/a31b302781b3b2c6d482283a316a3a41.jpg',
+        image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTkz/MDAxNzcyMTc1OTg0OTcy.zFn5rtmshGqNNQ6Qf6ePLRq7zL6EwXu4rrNoE2KiDdMg.vHAay7aMCSFXQH6EegUe90CydWs7RMzmzB4gqF-M_fEg.JPEG/%ED%88%AC%EC%98%88.jpg?type=w966',
         lore: '달에서 온 토끼로, 지상에서 큰 성공을 거둔 사업가입니다. 사불상을 짝사랑하며 항상 그에게 구애를 합니다.',
         personality: '자신감이 넘치고 화려한 것을 좋아합니다. 목표를 위해 아낌없이 투자하는 성격입니다.'
-    },
-    {
-        id: 'pixiu',
-        name: '피쇼 (Pixiu)',
-        kName: '피쇼',
-        title: '신비로운 행운의 상징',
-        desc: '천록의 형. 동생과 달리 차분하고 어른스럽지만, 사실은 동생을 매우 아낍니다.',
-        image: 'https://i.pinimg.com/564x/4e/7d/de/4e7dde8a7c6f043c92a0a256a52a51a3.jpg',
-        lore: '천록과 함께 사는 또 다른 벽사. 더 성숙하고 강력한 힘을 지니고 있습니다. 가끔은 천록의 보호자 역할을 합니다.',
-        personality: '조용하고 신중하지만, 가족에게는 따뜻한 마음을 가지고 있습니다. 강력한 힘을 숨기고 있습니다.'
     },
     {
         id: 'pandada',
