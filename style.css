@@ -51,6 +51,12 @@
     .header-content {
         display: flex; align-items: center; max-width: 1400px; margin: 0 auto; height: 100%; gap: 2rem;
     }
+    .logo {
+        display: flex; align-items: center; gap: 0.75rem; text-decoration: none; color: var(--text-color); font-weight: 700; font-size: 1.25rem;
+    }
+    .logo-img {
+        height: 40px; width: auto; object-fit: contain;
+    }
     .top-nav { display: flex; gap: 1.5rem; }
     .nav-link { 
         font-weight: 600; color: var(--text-color); opacity: 0.7; font-size: 0.95rem; 
@@ -105,17 +111,29 @@
     .playlist li.active { background: var(--primary-color); color: white; }
 
     /* Character Cards */
-    .character-grid {
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 2rem;
+    .category-section {
+        margin-bottom: 4rem;
+    }
+    .category-title {
+        font-size: 2rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary-color);
+        color: var(--text-color);
+    }
+    .category-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1.5rem;
     }
     .character-card {
         background: var(--card-bg); border-radius: 16px; overflow: hidden;
         border: 1px solid var(--border-color); cursor: pointer; transition: 0.3s;
     }
     .character-card:hover { transform: translateY(-10px); box-shadow: var(--shadow-md); }
-    .card-img-wrap { height: 260px; background: #eee; }
+    .card-img-wrap { height: 220px; background: #eee; }
     .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
-    .card-info { padding: 1.5rem; }
+    .card-info { padding: 1rem; }
+    .card-info h3 { font-size: 1.1rem; margin-bottom: 0.25rem; }
+    .card-info p { font-size: 0.9rem; opacity: 0.7; }
 
     /* Detail View */
     .btn-back { 

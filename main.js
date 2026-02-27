@@ -1,74 +1,74 @@
+const CATEGORIES = [
+    "메인 캐릭터", "녹인점", "고대", "지옥", "토보서", "채운산", "비휴", 
+    "기린", "맹극", "와묘", "신조", "천상", "타장르", "기타"
+];
+
 const CHARACTERS = [
-    {
-        id: 'tianlu',
-        name: '천록 (天禄)',
-        kName: '천록',
-        title: '행운을 가져다주는 신수',
-        desc: '금품을 먹는 어린 벽사. 항상 배고파하며 행운을 가져다준다고 믿어집니다.',
-        image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTEg/MDAxNzcyMTc1OTg0OTQ3.rpxuAaG1zrS8pnwOdAcoX6k0RFfjzEu5CoYtkcjFKVMg.xHR8VJ7WEKTqnnzowG9dzqEiVj7Ei32YiV8kG-7UNUMg.JPEG/%EC%B2%9C%EB%A1%9D.jpg?type=w966',
-        lore: '고대 신화 속의 벽사(Pi Xiu)로, 현대 사회에서 닉(Nick)과 사불상과 함께 살고 있습니다. 먹을 것을 매우 좋아하며, 특히 금속이나 보석을 좋아합니다.',
-        personality: '천진난만하고 낙천적입니다. 가끔 사고를 치기도 하지만 미워할 수 없는 매력을 가졌습니다.'
-    },
-    {
-        id: 'pixiu',
-        name: '벽사 (辟邪)',
-        kName: '벽사',
-        title: '신비로운 행운의 상징',
-        desc: '천록의 형. 동생과 달리 차분하고 어른스럽지만, 사실은 동생을 매우 아낍니다.',
-        image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMjE5/MDAxNzcyMTc1OTg0OTU3.OyQB3R7OC-15vRNB79JX8r6Wd5JxTUiHvsZxAqq5nLMg.YuP3_LtcBn5f7tcsxYnFY1UDKFE-haIuNSxbbhihH3gg.JPEG/%EB%B2%BD%EC%82%AC.jpg?type=w966',
-        lore: '천록과 함께 사는 또 다른 벽사. 더 성숙하고 강력한 힘을 지니고 있습니다. 가끔은 천록의 보호자 역할을 합니다.',
-        personality: '조용하고 신중하지만, 가족에게는 따뜻한 마음을 가지고 있습니다. 강력한 힘을 숨기고 있습니다.'
-    },
-    {
-        id: 'sibuxiang',
-        name: '사불상 (四不像)',
-        kName: '사불상',
-        title: '루렌디엔 유물 가게 주인',
-        desc: '"루렌디엔" 유물 가게의 주인. 다른 이들을 돕기 위해 지상으로 내려온 상서로운 짐승입니다.',
-        image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTIy/MDAxNzcyMTc1OTg0OTU4.eNx-UZfaw5GDPBCH-UKakyA5MFfA3CohXvdFTOxGjIsg.UNtOLmvRpzkPR_MzspYX-eJpmhmfz8CaNp9p1FYXSFwg.JPEG/%EC%82%AC%EB%B6%88%EC%83%81.jpg?type=w966',
-        lore: '기린의 첫째 아들로, 매우 강력한 신통력을 가지고 있습니다. 하지만 지상에서는 평범한(?) 가게 주인으로 살아가고 있습니다.',
-        personality: '침착하고 현명하며, 주변 사람들을 잘 챙깁니다. 하지만 가끔 엄격한 면도 보여줍니다.'
-    },
-    {
-        id: 'tony',
-        name: '투예 (兔爷)',
-        kName: '투예',
-        title: '부유한 기업가 달토끼',
-        desc: '달토끼이자 부유한 기업가. 사불상의 마음을 얻기 위해 노력합니다.',
-        image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTkz/MDAxNzcyMTc1OTg0OTcy.zFn5rtmshGqNNQ6Qf6ePLRq7zL6EwXu4rrNoE2KiDdMg.vHAay7aMCSFXQH6EegUe90CydWs7RMzmzB4gqF-M_fEg.JPEG/%ED%88%AC%EC%98%88.jpg?type=w966',
-        lore: '달에서 온 토끼로, 지상에서 큰 성공을 거둔 사업가입니다. 사불상을 짝사랑하며 항상 그에게 구애를 합니다.',
-        personality: '자신감이 넘치고 화려한 것을 좋아합니다. 목표를 위해 아낌없이 투자하는 성격입니다.'
-    },
-    {
-        id: 'pandada',
-        name: '판다다 (Pandada)',
-        kName: '판다다',
-        title: '대나무숲의 아이돌',
-        desc: '인터넷 방송을 하는 인기 많은 판다. 귀여운 외모와 달리 까칠한 성격입니다.',
-        image: 'https://i.pinimg.com/564x/e7/73/77/e77377d61083e956b68514106b12ba94.jpg',
-        lore: '유명한 인플루언서로, 자신의 채널을 통해 팬들과 소통합니다. 사실은 평범한 삶을 동경하고 있습니다.',
-        personality: '겉으로는 까칠하고 도도해 보이지만, 속은 여리고 정이 많습니다. 자신의 인기에 대한 부담감을 느끼고 있습니다.'
-    },
-    {
-        id: 'li',
-        name: '리 (Li)',
-        kName: '리',
-        title: '매혹적인 구미호',
-        desc: '아름다운 외모를 가진 구미호. 사람의 마음을 홀리는 능력을 가지고 있습니다.',
-        image: 'https://i.pinimg.com/564x/9a/59/11/9a5911d33b86503c530e6cb4b5b5a265.jpg',
-        lore: '수천 년을 살아온 구미호로, 다양한 모습으로 변신할 수 있습니다. 사불상과는 오랜 인연을 가지고 있습니다.',
-        personality: '우아하고 신비로운 분위기를 풍깁니다. 자신의 감정을 잘 드러내지 않지만, 사실은 외로움을 많이 느깁니다.'
-    },
-    {
-        id: 'fenrir',
-        name: '펜리르 (Fenrir)',
-        kName: '펜리르',
-        title: '북유럽 신화의 늑대',
-        desc: '북유럽 신화에서 온 강력한 늑대. 힘을 제어하지 못해 문제를 일으키기도 합니다.',
-        image: 'https://i.pinimg.com/564x/27/55/e5/2755e5c544e33989c47c505b22b64d30.jpg',
-        lore: '오딘에 의해 봉인되었다가 풀려난 신화 속의 늑대. 현대 사회에 적응하기 위해 노력하고 있습니다.',
-        personality: '거칠고 반항적으로 보이지만, 인정받고 싶어 하는 욕구가 강합니다. 의외로 순수한 면이 있습니다.'
-    }
+    // 메인 캐릭터
+    { id: 'tianlu', category: '메인 캐릭터', name: '천록 (天禄)', title: '행운의 신수', image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTEg/MDAxNzcyMTc1OTg0OTQ3.rpxuAaG1zrS8pnwOdAcoX6k0RFfjzEu5CoYtkcjFKVMg.xHR8VJ7WEKTqnnzowG9dzqEiVj7Ei32YiV8kG-7UNUMg.JPEG/%EC%B2%9C%EB%A1%9D.jpg?type=w966', desc: '금품을 먹는 어린 벽사. 행운을 가져다줍니다.', lore: '고대 신화 속의 벽사(Pi Xiu)입니다.', personality: '천진난만하고 낙천적입니다.' },
+    { id: 'pixiu', category: '메인 캐릭터', name: '벽사 (辟邪)', title: '수호의 신수', image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMjE5/MDAxNzcyMTc1OTg0OTV3.OyQB3R7OC-15vRNB79JX8r6Wd5JxTUiHvsZxAqq5nLMg.YuP3_LtcBn5f7tcsxYnFY1UDKFE-haIuNSxbbhihH3gg.JPEG/%EB%B2%BD%EC%82%AC.jpg?type=w966', desc: '천록의 형. 더 성숙하고 강력한 힘을 지니고 있습니다.', lore: '동생을 끔찍이 아끼는 보호자입니다.', personality: '조용하고 신중합니다.' },
+    { id: 'sibuxiang', category: '메인 캐릭터', name: '사불상 (四不像)', title: '유물 가게 주인', image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTIy/MDAxNzcyMTc1OTg0OTU4.eNx-UZfaw5GDPBCH-UKakyA5MFfA3CohXvdFTOxGjIsg.UNtOLmvRpzkPR_MzspYX-eJpmhmfz8CaNp9p1FYXSFwg.JPEG/%EC%82%AC%EB%B6%88%EC%83%81.jpg?type=w966', desc: '루렌디엔 유물 가게의 주인입니다.', lore: '기린의 첫째 아들로 강력한 신통력을 가졌습니다.', personality: '침착하고 현명합니다.' },
+    { id: 'tony', category: '메인 캐릭터', name: '투예 (兔爷)', title: '달토끼 기업가', image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMTkz/MDAxNzcyMTc1OTg0OTcy.zFn5rtmshGqNNQ6Qf6ePLRq7zL6EwXu4rrNoE2KiDdMg.vHAay7aMCSFXQH6EegUe90CydWs7RMzmzB4gqF-M_fEg.JPEG/%ED%88%AC%EC%98%88.jpg?type=w966', desc: '달에서 온 부유한 사업가입니다.', lore: '사불상을 짝사랑하여 항상 구애합니다.', personality: '자신감 넘치고 화려합니다.' },
+
+    // 녹인점
+    ...["금각", "은각", "호두", "후쿠", "쇼타", "마키", "전호", "메이메이", "파릉군", "파혁", "영야"].map(name => ({
+        id: `nok-${name}`, category: '녹인점', name, title: '녹인점 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `${name} 캐릭터입니다.`, lore: '녹인점의 일원입니다.', personality: '다양한 매력을 가졌습니다.'
+    })),
+
+    // 고대
+    ...["사불상", "제강", "혼돈", "도철", "궁기", "도올", "경천수", "금오"].map(name => ({
+        id: `anc-${name}`, category: '고대', name, title: '고대 신수', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `고대로부터 전해지는 신수 ${name}입니다.`, lore: '전설적인 배경을 가지고 있습니다.', personality: '강력하고 신비롭습니다.'
+    })),
+
+    // 지옥
+    ...["체청", "소루", "칭훠", "지마"].map(name => ({
+        id: `hell-${name}`, category: '지옥', name, title: '지옥 거주자', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `지옥에서 온 ${name}입니다.`, lore: '지옥의 질서를 유지합니다.', personality: '냉철하거나 독특합니다.'
+    })),
+
+    // 토보서
+    ...["토보서", "다람쥐형", "황사아", "황오"].map(name => ({
+        id: `tob-${name}`, category: '토보서', name, title: '토보서 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `토보서의 ${name}입니다.`, lore: '작고 귀여운 존재들입니다.', personality: '활발하고 호기심이 많습니다.'
+    })),
+
+    // 채운산
+    ...["리치", "장장", "추구", "소산작", "마오마오레이", "반호", "해치", "화초", "샤오빙", "유성"].map(name => ({
+        id: `chaeun-${name}`, category: '채운산', name, title: '채운산 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `채운산에 거주하는 ${name}입니다.`, lore: '산의 정기를 받고 자랐습니다.', personality: '평화롭고 조화롭습니다.'
+    })),
+
+    // 비휴
+    { id: 'pixiu-77', category: '비휴', name: '칠십칠', title: '비휴 77', image: 'https://via.placeholder.com/300?text=77', desc: '비휴 종족의 칠십칠입니다.', lore: '천록과 같은 종족입니다.', personality: '성격이 독특합니다.' },
+
+    // 기린
+    ...["시기린", "옥기린"].map(name => ({
+        id: `qilin-${name}`, category: '기린', name, title: '기린 일족', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `고귀한 기린 일족의 ${name}입니다.`, lore: '상서로움의 상징입니다.', personality: '고결하고 우아합니다.'
+    })),
+
+    // 맹극
+    ...["협죽도", "목화", "운두"].map(name => ({
+        id: `maeng-${name}`, category: '맹극', name, title: '맹극 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `맹극의 ${name}입니다.`, lore: '빠른 속도를 자랑합니다.', personality: '민첩하고 용감합니다.'
+    })),
+
+    // 와묘
+    ...["용묘", "묘룡"].map(name => ({
+        id: `wamyo-${name}`, category: '와묘', name, title: '와묘 종족', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `고양이와 용의 특징을 가진 ${name}입니다.`, lore: '희귀한 종족입니다.', personality: '변덕스럽지만 귀엽습니다.'
+    })),
+
+    // 신조
+    ...["봉황", "금시대붕", "크리스티나", "비비"].map(name => ({
+        id: `shinjo-${name}`, category: '신조', name, title: '신성한 새', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `하늘을 나는 신성한 새 ${name}입니다.`, lore: '하늘의 지배자들입니다.', personality: '자유롭고 도도합니다.'
+    })),
+
+    // 천상
+    ...["잉쟈오", "정향"].map(name => ({
+        id: `heaven-${name}`, category: '천상', name, title: '천계 거주자', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), desc: `천상계의 ${name}입니다.`, lore: '신성한 임무를 수행합니다.', personality: '엄격하고 경건합니다.'
+    })),
+
+    // 타장르
+    { id: 'other-baektaek', category: '타장르', name: '백택', title: '만물의 지식인', image: 'https://via.placeholder.com/300?text=Baektaek', desc: '모든 것을 알고 있는 백택입니다.', lore: '다른 세계관에서 온 손님입니다.', personality: '박학다식합니다.' },
+
+    // 기타
+    { id: 'etc-daesan', category: '기타', name: '대산', title: '기타 캐릭터', image: 'https://via.placeholder.com/300?text=Daesan', desc: '대산입니다.', lore: '알려지지 않은 배경을 가졌습니다.', personality: '미스터리합니다.' },
+    { id: 'pandada', category: '기타', name: '판다다 (Pandada)', title: '아이돌 판다', image: 'https://i.pinimg.com/564x/e7/73/77/e77377d61083e956b68514106b12ba94.jpg', desc: '인기 많은 방송인 판다입니다.', lore: '지상의 아이돌입니다.', personality: '까칠하지만 속은 따뜻합니다.' }
 ];
 
 class ThemeToggle extends HTMLElement {
@@ -125,7 +125,7 @@ class CharacterModal extends HTMLElement {
                 </div>
                 <div class="char-modal-info">
                     <h2 style="font-size: 2.5rem; margin-bottom: 0.5rem;">${char.name}</h2>
-                    <p style="color: var(--primary-color); font-weight: 700; margin-bottom: 1.5rem;">${char.title}</p>
+                    <p style="color: var(--primary-color); font-weight: 700; margin-bottom: 1.5rem;">${char.title} (${char.category})</p>
                     <div class="info-tabs">
                         <button class="tab-btn active">상세 설명</button>
                     </div>
@@ -198,10 +198,6 @@ function navigate() {
     const activeLink = document.querySelector(`.nav-link[href="${hash}"]`);
     if (activeLink) activeLink.classList.add('active');
     
-    if (hash.startsWith('#char/')) {
-        document.querySelector('.nav-link[href="#characters"]')?.classList.add('active');
-    }
-
     if (hash === '#characters') {
         renderCharGrid();
         setupSearch();
@@ -214,24 +210,43 @@ function setupSearch() {
     searchInput.oninput = (e) => {
         const term = e.target.value.toLowerCase();
         const cards = document.querySelectorAll('.character-card');
+        const sections = document.querySelectorAll('.category-section');
+        
         cards.forEach(card => {
             const text = card.textContent.toLowerCase();
             card.style.display = text.includes(term) ? 'block' : 'none';
+        });
+
+        sections.forEach(section => {
+            const visibleCards = section.querySelectorAll('.character-card[style="display: block;"]');
+            section.style.display = (visibleCards.length > 0 || term === "") ? 'block' : 'none';
         });
     };
 }
 
 function renderCharGrid() {
     const grid = document.getElementById('char-grid');
-    grid.innerHTML = CHARACTERS.map(char => `
-        <div class="character-card" onclick="location.hash='#char/${char.id}'">
-            <div class="card-img-wrap"><img src="${char.image}" alt="${char.name}"></div>
-            <div class="card-info">
-                <h3>${char.name}</h3>
-                <p>${char.title}</p>
+    grid.innerHTML = CATEGORIES.map(cat => {
+        const catChars = CHARACTERS.filter(c => c.category === cat);
+        if (catChars.length === 0) return '';
+        
+        return `
+            <div class="category-section">
+                <h2 class="category-title">${cat}</h2>
+                <div class="category-grid">
+                    ${catChars.map(char => `
+                        <div class="character-card" onclick="location.hash='#char/${char.id}'">
+                            <div class="card-img-wrap"><img src="${char.image}" alt="${char.name}"></div>
+                            <div class="card-info">
+                                <h3>${char.name}</h3>
+                                <p>${char.title}</p>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 // Initial Setup
