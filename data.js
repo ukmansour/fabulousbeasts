@@ -3,12 +3,12 @@ export const CATEGORIES = [
     "기린", "맹극", "와묘", "신조", "천상", "타장르", "기타"
 ];
 
-// 캐릭터 설명 섹션 정의 (기타 제거)
+// 캐릭터 설명 섹션 정의
 export const DETAIL_SECTIONS = [
     { id: 'appearance', label: '외모', num: 1 },
     { id: 'personality', label: '성격', num: 2 },
     { id: 'ability', label: '능력', num: 3 },
-    { id: 'motif', label: '모티브', num: 4 },
+    { id: 'motif', label: '실제 신화 속 모습', num: 4 }, // 모티브 -> 실제 신화 속 모습
     { id: 'name_origin', label: '이름', num: 5 },
     { id: 'trivia', label: '여담', num: 6 },
     { id: 'yusu_huihwa', label: '유수희화', num: 7 }
@@ -42,8 +42,8 @@ export const CHARACTERS = [
         category: '메인 캐릭터', 
         name: '벽사 (辟邪)', 
         title: '수호의 신수', 
-        image: 'https://postfiles.pstatic.net/MjAyNjAyMjdfMjE5/MDAxNzcyMTc1OTg0OTU3.OyQB3R7OC-15vRNB79JX8r6Wd5JxTUiHvsZxAqq5nLMg.YuP3_LtcBn5f7tcsxYnFY1UDKFE-haIuNSxbbhihH3gg.JPEG/%EB%B2%BD%EC%82%AC.jpg?type=w966', 
-        nickname: '-', gender: '남성', species: '비휴 (벽사)', height: '-', furColor: '흰색, 붉은색', eyeColor: '연두-노랑 그라데이션', nationality: '중국', birthday: '알 수 없음',
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F9Q14u%2FdJMcacPJ24n%2FAAAAAAAAAAAAAAAAAAAAAFoRydmVaFWWG_LJ7cPCti5ZgJafraCVR9wj-8E8xrt8%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DyreQ90YtOGmqrZceEuJPb8EISPA%253D', 
+        nickname: '-', gender: '남', species: '비휴', height: '53cm', furColor: '흰색, 빨간색', eyeColor: '초록 노랑 그라데이션', nationality: '중국', birthday: '4월 5일',
         
         appearance: `벽사는 쌍둥이 형제인 천록과 매우 비슷한 외모를 가지고 있다. 마찬가지로 몸 대부분이 흰색 털로 덮여 있으며 몸 곳곳에 장식 무늬가 있다. 다만 천록의 무늬가 파란색인 것과 달리 벽사의 무늬는 붉은색이다. 또한 천록이 엉덩이 부분에 파란 원형 무늬를 가지고 있는 것과 달리, 벽사는 붉은 매화 문양이 있다.<br><br>눈 색 역시 천록과 반대되는 그라데이션을 띠며, 연두빛에서 노란색으로 이어진다. 머리 위에는 귀 사이에 노란색 뿔 두 개가 나 있다. 과거 어린 시절 도철과 싸우는 동안 도철에게 왼쪽 귀를 물려 귀 윗부분이 패인 상처가 생겼으며, 이 흉터는 지금까지 남아 있다.<br><br><b>1.1 원래 모습:</b> 천록과 마찬가지로 벽사의 <b>“원래 모습”</b>은 기본 형태가 성장한 것과 같은 모습이다. 더 큰 개과 동물처럼 보이며 훨씬 사납고 공격적인 분위기를 띤다. 몸과 각 특징은 더욱 길고 커지며 날카로워지고, 분노하거나 위협할 때는 털을 곤두세울 수 있다. 천록과 마찬가지로 변신 상태에 관계없이 몸의 무늬는 변하지 않으며 귀의 흉터 역시 그대로 유지된다.<br><br><b>1.2 아기 변장:</b> 투예의 계획으로 장장과 리치에게 맡기기 위해 기린과 천마의 혼혈 아이인 것처럼 위장한 적이 있다. 이를 위해 벽사는 몸을 아기 모습으로 줄였으며, 꼬리는 천마처럼 말려 보이도록 다듬었다. 또한 토보서가 준 분홍색 마니 구슬을 먹어 붉은 털을 분홍색으로 물들였다.`,
         
@@ -51,9 +51,9 @@ export const CHARACTERS = [
         
         ability: `<b>무한한 위장 / 초강력 소화:</b> 벽사의 뱃속 역시 천록과 마찬가지로 차원 공간과 같은 구조를 가지고 있어 무엇이든 담을 수 있다. 다만 천록의 위장과 달리 내부는 매우 깨끗하며 밝은 흰 공간처럼 보이고 표면에는 액체층이 존재한다. 이 액체는 매우 강한 소화 능력을 가지고 있어 천록이 들어갔을 때 몸에 있던 세균이 순식간에 제거되었다. 다만 오래 머물면 몸이 녹을 수도 있다. 이 특성은 몸 전체에도 적용되어 몸에 들어온 미생물이나 작은 생명체를 제거할 수 있다.<br><br><b>형태 변화:</b> 자신의 크기와 외형을 바꿀 수 있다. 작은 형태로 줄어들거나 거대한 모습으로 변할 수 있으며, 후자는 일반적으로 <b>“원래 모습”</b>이라 불린다.<br><br><b>정리:</b> 천록이 계속 먹어 치워 뱃속이 어지러워지자 벽사는 내부를 정리하여 먹은 물건을 체계적으로 관리하는 시스템을 만들었다. 또한 닭들을 부하로 삼아 관리 업무를 맡기기도 했다.<br><br><b>요리:</b> 요리에 대한 지식과 실력을 가지고 있으며 천록의 뱃속에서 당강을 손질하고 요리한 적도 있다.<br><br><b>예술:</b> 사불상을 찾기 위해 그림 실력을 발전시키기 시작했으며 이후 계속 그림을 그리는 취미를 유지하고 있다.`,
         
-        motif: `중국 신화 속의 영수 비휴(辟邪). 사악한 것을 물리치는 신수로 알려져 있다.`,
+        motif: `<b>벽사(辟邪)</b>는 중국 신화에 등장하는 신수로, 이름 그대로 사악한 기운과 재앙을 물리치는 존재로 알려져 있다. 고대 중국에서는 무덤, 궁전, 관청 입구 등에 벽사의 석상이나 장식을 세워 악귀와 액운이 침입하는 것을 막는 수호신적 존재로 여겼다.`,
         
-        name_origin: `사악한 것을 물리친다는 의미의 <b>벽사(辟邪)</b>에서 유래했다.`,
+        name_origin: `<b>벽사(물리칠 辟, 간사할 邪) / 비셰:</b> 사악한 것을 물리치는 존재`,
         
         trivia: `<ul><li>벽사의 존재는 만화 초반 여러 장면에서 암시되었다.</li><li>천록이 보물을 매우 좋아하는 것과 달리, 벽사는 악령과 부정한 재물을 먹는 것을 좋아한다.</li><li>하지만 악령은 영양가가 거의 없어 벽사에게는 일종의 정크푸드와 같다.</li><li>오랫동안 천록의 뱃속에 숨어 지내며 현대 기술에 익숙하지 않아 새로운 것들을 보면 신기해한다.</li><li><b>천록과 벽사는 서로 털뭉치를 보내 메시지를 전달하는 비휴만의 비밀 통신 방법을 가지고 있다.</b></li></ul>`,
         
@@ -65,21 +65,28 @@ export const CHARACTERS = [
         name: '사불상 (四不像)', 
         title: '유물 가게 주인', 
         image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbD0eLx%2FdJMcafr9eyx%2FAAAAAAAAAAAAAAAAAAAAAAjZQRaTjqxLHFq1C_vz2DjDAmpHr_i6HehWlH-4obHD%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3D9D2sgrhZJBp%252BVyeDIj5nf1TMJN8%253D', 
-        nickname: '-', gender: '남성', species: '기린', height: '-', furColor: '연갈색', eyeColor: '갈색', nationality: '중국', birthday: '알 수 없음',
-        appearance: '안경을 쓰고 지적인 분위기를 풍기는 기린입니다.',
-        personality: '침착하고 현명하며 때로는 엄격합니다.',
-        ability: '강력한 신통력과 유물에 대한 해박한 지식을 가졌습니다.',
-        motif: '봉신연의 등에서 유래한 사불상/기린.',
-        name_origin: '네 가지 동물을 닮았으나 그 어느 것도 아니라는 의미.',
-        trivia: '루렌디엔 유물 가게를 운영하고 있습니다.',
-        yusu_huihwa: '',
+        nickname: '사 사장', gender: '남', species: '사불상', height: '-', furColor: '연갈색', eyeColor: '갈색', nationality: '중국', birthday: '7월 20일',
+        
+        appearance: `사불상은 연한 갈색 털을 지닌 의인화된 사슴의 모습으로 나타난다. 허벅지와 꼬리 윗부분에는 흰색 반점이 흩어져 있으며, 꼬리 아래쪽과 엉덩이 부분, 그리고 귀 안쪽에는 흰 털이 있다.<br><br>머리에는 개암색의 사슴뿔이 한 쌍 나 있으며 다리는 발굽이 갈라진 형태를 하고 있다. 발에는 갈색 발바닥 젤리와 짧은 발톱이 있다. 자세히 보면 발바닥은 고양이나 개의 발바닥 구조와 비슷하지만, 가운데 패드는 사슴 발굽 자국처럼 보이는 모양을 하고 있다.<br><br>그는 흰 구름 무늬가 장식된 붉은 망토를 입고 있으며, 망토 양쪽 끝에는 금빛 술 장식이 달려 있다.<br><br>사불상의 가장 큰 특징은 얼굴이 항상 흰색 도자기 가면으로 가려져 있다는 점이다. 가면에는 붉은색과 검은색 문양이 그려져 있으며, 붉은 끈으로 머리에 묶여 있고 끝에는 술 장식이 달려 있다. 만화나 외전 등 작품 내에서 그의 얼굴은 항상 가려져 있어 실제 모습은 알려져 있지 않다.<br><br>또한 사슴처럼 때때로 뿔이 빠지고 다시 자라기도 한다. 사불상이라는 이름처럼 그의 몸은 여러 동물의 특징이 섞여 있는 존재로 여겨진다. 앞다리와 발은 고양이과 동물을 닮았지만 전체적인 외형은 사슴과 가장 비슷하다.<br><br><b>1.1 본래 모습:</b> 사불상은 또 다른 형태로 변할 수 있는데, 이 모습에서는 원래의 사슴 정령에 가까운 형태가 된다. 이 모습에서는 몸이 일반 사슴과 더 비슷해지지만 크기는 보통 사슴보다 약간 더 크다. 털 색과 가면은 그대로 유지되며, 가면 역시 몸의 크기에 맞게 형태가 변한다. 변신하면 망토는 투명한 붉은 리본 같은 띠로 변하여 몸 주변을 떠다닌다.<br><br><b>1.2 위장된 모습:</b> 작품 후반에서는 대부분의 사람들이 보는 사불상의 모습이 독자들이 보는 모습과 다르다는 사실이 밝혀진다. 이 “위장된 모습"에서는 흰 털과 옅은 금색 뿔을 지니고 있으며, 가면에 있는 것과 비슷한 붉은 볼 무늬가 있다. 또한 귀가 두 쌍이며 뿔과 주둥이가 조금 더 길어 기린 사불상의 모습과 비슷하게 보인다.`,
+        
+        personality: `사불상은 침착하고 현실적인 성격의 신수이다. 주인공 일행 중에서는 가장 성숙한 어른 같은 역할을 맡고 있으며, 천계의 대표로서 행동할 때나 가게를 운영할 때 책임감 있고 규율을 중시하는 모습을 보인다.<br><br>하지만 이러한 진지의 태도 때문에 주변 상황이 마음대로 되지 않으면 쉽게 짜증을 내기도 한다. 특히 직원이나 다른 신수들이 소란을 피우면 금방 화를 내는 편이다.<br><br>겉보기에는 냉정하고 세련된 태도를 보이지만 실제로는 돈에 매우 집착하는 면이 있다. 상당히 인색하고 계산적인 성격으로, 가게의 예산을 쓰는 것을 아까워하며 물건이나 건물이 손상되면 크게 신경 쓴다. 돈을 절약하거나 더 벌 수 있는 기회가 있으면 적극적으로 이용하려 한다.<br><br>천계의 임무를 맡고 있지만 오랫동안 한가롭게 지내다가 갑자기 일을 맡게 되었기 때문에 의외로 게으른 편이다. 자신의 시간에 가치가 없다고 생각되는 일에는 의욕을 보이지 않는다.<br><br>또한 약간 이기적인 면이 있어 자신의 의지로만 행동하려 하는 경향이 있다. 다른 이들의 부탁도 위협을 받거나 큰 보상이 있을 때에야 들어주기도 한다. 감정을 겉으로 잘 드러내지 않는 편이며, 가면 뒤에 자신의 생각과 감정을 숨기고 있는 경우가 많다. 겉으로는 태연하고 여유로운 태도를 유지한다.`,
+        
+        ability: `<b>불사:</b> 봉신 전쟁 이후 신이 되어 불사의 존재가 되었다고 말한다. 그러나 실제로는 천계가 기린 사불상의 유해를 그의 몸에 이식했기 때문에 불사의 상태가 되었다.<br><br><b>힘:</b> 발차기만으로 상대를 멀리 날려버릴 정도로 강한 힘을 지니고 있다.<br><br><b>비행:</b> 본래 모습에서는 하늘을 날 수 있으며 하루에 수천 리를 이동할 수 있다고 한다.<br><br><b>상담:</b> 지상에 있는 신수들을 돕는 임무를 맡고 있기 때문에 다른 존재들과 대화를 잘하며 조언을 해 줄 수 있다.<br><br><b>경영:</b> 녹인점을 운영하며 물건을 판매하고 가게를 관리하는 능력이 있다.<br><br><b>요리:</b> 직원들과 자신이 먹을 음식을 직접 만들기도 한다.<br><br><b>낚시:</b> 취미로 낚시를 즐긴다.`,
+        
+        motif: `사불상은 중국 고전 소설 봉신연의에 등장하는 신수로, 강자아의 탈것으로 알려져 있다. 이 신수는 여러 동물의 특징이 섞여 있는 존재로 묘사되며 전승에 따라 사슴의 뿔, 소의 발굽, 말의 얼굴, 당나귀의 꼬리가 결합된 모습으로 설명된다. 이처럼 4가지 동물의 특징이 섞여 있지만 “네 가지가 모두 닮지 않았다”는 의미로 사불상이라는 이름이 붙었다.`,
+        
+        name_origin: `사불상 (넉 四, 아닐 不, 모양 像). 즉 <b>“네 가지 모두 닮지 않았다”</b>라는 뜻이다. 여러 동물의 특징이 섞여 있어 어느 한 동물과도 완전히 같지 않은 존재라는 의미에서 붙은 이름이다.`,
+        
+        trivia: `<ul><li>가면을 쓰고 있는 이유에 대해 작품 내 설정에서는 너무 잘생겨서 다른 존재들이 가까이 오지 못하기 때문이라고 말하기도 한다.</li><li>아직까지 그의 실제 눈은 작품에서 제대로 공개되지 않았다. 다만 몇몇 등장인물들은 그의 눈을 본 적이 있다고 말하며 깊고 촉촉한 눈이라고 묘사한다.</li><li>2025년 10월 15일 8주년 라이브에서 만화가 완결될 때 사불상의 얼굴을 드러낼 것이며 아직 눈 색은 미정이라고 언급했다.</li><li>예전에는 담배를 피웠지만 지상에 내려온 이후 금연하게 되었다.</li><li>망토 아래에는 여러 종류의 가면을 숨겨 두고 있어 현재 가면이 벗겨지거나 부서져도 바로 다른 가면으로 바꿀 수 있다.</li><li>발바닥이 매우 예민한 편이다.</li><li><b>단 것을 좋아한다.</b></li></ul>`,
+        
+        yusu_huihwa: ``
     },
     { 
         id: 'tony', 
         category: '메인 캐릭터', 
         name: '투예 (兔爷)', 
         title: '달토끼 기업가', 
-        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FKcUIj%2FdJMcaflokNh%2FAAAAAAAAAAAAAAAAAAAAAGSQRnO0c8CI22cpfXLpydcTTRVnKqg4FgAas4yhvs0Y%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3DNaFtgpU5vmas1VzvSRfUJ%252Fvn7zw%253D', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FKcUIj%2FdJMcaflokNh%2FAAAAAAAAAAAAAAAAAAAAAGSQRnO0c8CI22cpfXLpydcTTRVnKqg4FgAas4yhvs0Y%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3D9D2sgrhZJBp%252BVyeDIj5nf1TMJN8%253D', 
         nickname: '토니', gender: '남성', species: '토끼', height: '-', furColor: '흰색', eyeColor: '빨간색', nationality: '달', birthday: '알 수 없음',
         appearance: '화려한 옷을 입은 신사적인 달토끼입니다.',
         personality: '자신감이 넘치고 열정적이며 사불상을 좋아합니다.',
