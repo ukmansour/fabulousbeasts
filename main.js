@@ -51,7 +51,7 @@ function renderCharGrid() {
                 <h2 class="category-title">${cat}</h2>
                 <div class="category-grid">
                     ${catChars.map(char => `
-                        <a href="detail.html#${char.id}" target="_blank" class="character-card-link">
+                        <a href="detail.html#${char.id}" class="character-card-link">
                             <div class="character-card">
                                 <div class="card-img-wrap"><img src="${char.image}" alt="${char.name}"></div>
                                 <div class="card-info">

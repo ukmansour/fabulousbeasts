@@ -9,7 +9,7 @@ export const CHARACTERS = [
         category: '메인 캐릭터', 
         name: '천록 (天禄)', 
         title: '부를 불러와주는 비휴', 
-        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbcXQoT%2FdJMcadA2rAc%2FAAAAAAAAAAAAAAAAAAAAAIL2JD45iIL4id-sqMYSQvlK0xdRWR-RaQhfhIvNqqnY%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3DuIV48xImOA7ML2o92NQPjf764VI%253D', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbcXQoT%2FdJMcadA2rAc%2FAAAAAAAAAAAAAAAAAAAAAIL2JD45iIL4id-sqMYSQvlK0xdRWR-RaQhfhIvNqqnY%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DYi2%252FKXk7uewzxqx81NjWPhZJmY4%253D', 
         desc: '금품을 먹는 어린 벽사. 부와 행운을 불러옵니다.', 
         lore: '고대 신화 속의 벽사(Pi Xiu)입니다.', 
         personality: '천진난만하고 낙천적입니다.',
