@@ -20,6 +20,21 @@ function loadDetail() {
 
     document.title = `${char.name} - 유수언 위키`;
 
+    // 유효한 섹션 필터링 (내용이 있는 것만)
+    const activeSections = DETAIL_SECTIONS.filter(s => {
+        const content = char[s.id];
+        return content && content.trim() !== '' && content !== '-';
+    });
+
+    // 퀵 네비게이션 생성 (활성 섹션만)
+    const quickNavHtml = activeSections.length > 0 ? `
+        <nav class="detail-quick-nav">
+            <ul>
+                ${activeSections.map((s, index) => `<li><a href="#${charId}-${s.id}">${index + 1}. ${s.label}</a></li>`).join('')}
+            </ul>
+        </nav>
+    ` : '';
+
     // 기본 정보 테이블 생성
     const profileRows = [
         { label: '이름', value: char.name },
@@ -33,12 +48,12 @@ function loadDetail() {
         { label: '생일', value: char.birthday }
     ].map(row => `<tr><th>${row.label}</th><td>${row.value || '-'}</td></tr>`).join('');
 
-    // 8대 섹션 HTML 생성
-    const sectionsHtml = DETAIL_SECTIONS.map(section => `
-        <div class="detail-section">
-            <h2>${section.label}</h2>
+    // 활성 섹션 HTML 생성
+    const sectionsHtml = activeSections.map((section, index) => `
+        <div class="detail-section" id="${charId}-${section.id}">
+            <h2>${index + 1}. ${section.label}</h2>
             <div class="detail-content">
-                <p>${char[section.id] || '-'}</p>
+                <p>${char[section.id]}</p>
             </div>
         </div>
     `).join('');
@@ -58,6 +73,8 @@ function loadDetail() {
             </div>
         </div>
 
+        ${quickNavHtml}
+
         <div class="detail-sections-wrapper">
             ${sectionsHtml}
         </div>
@@ -65,4 +82,15 @@ function loadDetail() {
 }
 
 window.addEventListener('load', loadDetail);
-window.addEventListener('hashchange', loadDetail);
+window.addEventListener('hashchange', () => {
+    const hash = window.location.hash;
+    if (hash.includes('-')) {
+        const element = document.getElementById(hash.replace('#', ''));
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    } else {
+        loadDetail();
+        window.scrollTo(0, 0);
+    }
+});

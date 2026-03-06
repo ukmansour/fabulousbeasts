@@ -3,7 +3,7 @@ export const CATEGORIES = [
     "기린", "맹극", "와묘", "신조", "천상", "타장르", "기타"
 ];
 
-// 캐릭터 설명 섹션 8종 정의
+// 캐릭터 설명 섹션 정의 (기타 제거)
 export const DETAIL_SECTIONS = [
     { id: 'appearance', label: '외모', num: 1 },
     { id: 'personality', label: '성격', num: 2 },
@@ -11,8 +11,7 @@ export const DETAIL_SECTIONS = [
     { id: 'motif', label: '모티브', num: 4 },
     { id: 'name_origin', label: '이름', num: 5 },
     { id: 'trivia', label: '여담', num: 6 },
-    { id: 'yusu_huihwa', label: '유수희화', num: 7 },
-    { id: 'etc', label: '기타', num: 8 }
+    { id: 'yusu_huihwa', label: '유수희화', num: 7 }
 ];
 
 export const CHARACTERS = [
@@ -36,9 +35,7 @@ export const CHARACTERS = [
         
         trivia: `<ul><li>처음 녹인점에 왔을 때 건물 밖 개집에서 잠을 잤다. 이후 사불상의 방으로 옮겼다.</li><li>작품 내 개그요소로 자주 개 취급을 받는다.</li><li>사실은 자신만의 옷을 입고 싶어 한다.</li><li>처음 신발을 신었을 때 너무 놀라 움직이지 못한 적이 있다.</li><li>대부분의 야생 신수처럼 빨간색을 싫어한다.</li><li>항문이 없기 때문에 침으로 영역 표시를 한다.</li><li><b>한 번은 운석에 맞아 죽은 적도 있다.</b></li></ul>`,
         
-        yusu_huihwa: `애니메이션 및 만화 '유수희화' 시리즈에서 주인공으로서 다양한 활약을 보여준다.`,
-        
-        etc: `현재 루렌디엔 유물 가게에서 사불상, 벽사와 함께 지내고 있다.`
+        yusu_huihwa: ``, // 비워둠
     },
     { 
         id: 'pixiu', 
@@ -53,8 +50,7 @@ export const CHARACTERS = [
         motif: '중국 신화 속의 영수 비휴(辟邪).',
         name_origin: '사악한 것을 물리친다는 의미의 벽사(辟邪)에서 유래.',
         trivia: '천록의 형으로 정신적 지주 역할을 합니다.',
-        yusu_huihwa: '-',
-        etc: '-'
+        yusu_huihwa: '',
     },
     { 
         id: 'sibuxiang', 
@@ -69,8 +65,7 @@ export const CHARACTERS = [
         motif: '봉신연의 등에서 유래한 사불상/기린.',
         name_origin: '네 가지 동물을 닮았으나 그 어느 것도 아니라는 의미.',
         trivia: '루렌디엔 유물 가게를 운영하고 있습니다.',
-        yusu_huihwa: '-',
-        etc: '-'
+        yusu_huihwa: '',
     },
     { 
         id: 'tony', 
@@ -85,8 +80,7 @@ export const CHARACTERS = [
         motif: '중국 전통 인형 투예(兔儿爷).',
         name_origin: '투예(兔爷)라는 명칭 그대로 사용.',
         trivia: '엄청난 부자로 알려져 있습니다.',
-        yusu_huihwa: '-',
-        etc: '-'
+        yusu_huihwa: '',
     },
     ...["금각", "은각", "호두", "후쿠", "쇼타", "마키", "전호", "메이메이", "파릉군", "파혁", "영야"].map(name => ({
         id: `nok-${name}`, category: '녹인점', name, title: '녹인점 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name), 
@@ -97,7 +91,6 @@ export const CHARACTERS = [
         motif: '-',
         name_origin: '-',
         trivia: '-',
-        yusu_huihwa: '-',
-        etc: '-'
+        yusu_huihwa: ''
     }))
 ];
