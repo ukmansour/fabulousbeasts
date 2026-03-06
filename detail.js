@@ -1,4 +1,4 @@
-import { CHARACTERS } from './data.js';
+import { CHARACTERS, DETAIL_SECTIONS } from './data.js';
 
 function loadDetail() {
     const charId = window.location.hash.replace('#', '');
@@ -20,6 +20,29 @@ function loadDetail() {
 
     document.title = `${char.name} - 유수언 위키`;
 
+    // 기본 정보 테이블 생성
+    const profileRows = [
+        { label: '이름', value: char.name },
+        { label: '별명', value: char.nickname },
+        { label: '성별', value: char.gender },
+        { label: '종', value: char.species },
+        { label: '키', value: char.height },
+        { label: '털색', value: char.furColor },
+        { label: '눈색', value: char.eyeColor },
+        { label: '국적', value: char.nationality },
+        { label: '생일', value: char.birthday }
+    ].map(row => `<tr><th>${row.label}</th><td>${row.value || '-'}</td></tr>`).join('');
+
+    // 8대 섹션 HTML 생성
+    const sectionsHtml = DETAIL_SECTIONS.map(section => `
+        <div class="detail-section">
+            <h2>${section.label}</h2>
+            <div class="detail-content">
+                <p>${char[section.id] || '-'}</p>
+            </div>
+        </div>
+    `).join('');
+
     container.innerHTML = `
         <div class="detail-header">
             <div class="detail-image">
@@ -30,32 +53,13 @@ function loadDetail() {
                 <p style="color: var(--primary-color); font-weight: 700; font-size: 1.2rem; margin-bottom: 1rem;">${char.title}</p>
                 
                 <table class="profile-table">
-                    <tr><th>이름</th><td>${char.name || '-'}</td></tr>
-                    <tr><th>별명</th><td>${char.nickname || '-'}</td></tr>
-                    <tr><th>성별</th><td>${char.gender || '-'}</td></tr>
-                    <tr><th>종</th><td>${char.species || '-'}</td></tr>
-                    <tr><th>키</th><td>${char.height || '-'}</td></tr>
-                    <tr><th>털색</th><td>${char.furColor || '-'}</td></tr>
-                    <tr><th>눈색</th><td>${char.eyeColor || '-'}</td></tr>
-                    <tr><th>국적</th><td>${char.nationality || '-'}</td></tr>
-                    <tr><th>생일</th><td>${char.birthday || '-'}</td></tr>
+                    ${profileRows}
                 </table>
             </div>
         </div>
 
-        <div class="detail-section">
-            <h2>상세 설명</h2>
-            <div class="detail-content">
-                <p>${char.desc}</p>
-                <p>${char.personality ? '성격: ' + char.personality : ''}</p>
-            </div>
-        </div>
-
-        <div class="detail-section">
-            <h2>스토리</h2>
-            <div class="detail-content">
-                <p>${char.lore}</p>
-            </div>
+        <div class="detail-sections-wrapper">
+            ${sectionsHtml}
         </div>
     `;
 }
