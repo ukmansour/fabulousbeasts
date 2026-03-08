@@ -26,11 +26,11 @@ function loadDetail() {
         return content && content.trim() !== '' && content !== '-';
     });
 
-    // 퀵 네비게이션
+    // 퀵 네비게이션 (네모 상자 제거 버전)
     const quickNavHtml = activeSections.length > 0 ? `
-        <nav class="detail-quick-nav" style="margin-bottom: 2rem;">
-            <ul style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem; background: #f1f3f5; padding: 1rem; border-radius: 12px;">
-                ${activeSections.map((s, index) => `<li><a href="#${charId}-${s.id}" style="text-decoration: none; color: var(--primary-color); font-weight: 600;">${index + 1}. ${s.label}</a></li>`).join('')}
+        <nav class="detail-quick-nav">
+            <ul style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 1.2rem; margin: 0;">
+                ${activeSections.map((s, index) => `<li><a href="#${charId}-${s.id}" style="text-decoration: none; color: var(--primary-color); font-weight: 600; font-size: 1.05rem;">${index + 1}. ${s.label}</a></li>`).join('')}
             </ul>
         </nav>
     ` : '';
@@ -45,7 +45,7 @@ function loadDetail() {
         </div>
     `).join('');
 
-    // 인포박스 생성 (데이터에 있으면 사용, 없으면 기본 정보로 생성)
+    // 인포박스 생성
     let infoboxHtml = char.infobox;
     if (!infoboxHtml) {
         infoboxHtml = `
@@ -66,12 +66,16 @@ function loadDetail() {
     container.innerHTML = `
         <div class="detail-main-layout">
             <div class="detail-left-col">
-                <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; color: var(--secondary-color);">${char.name}</h1>
-                <p style="color: var(--primary-color); font-weight: 700; font-size: 1.4rem; margin-bottom: 2rem; opacity: 0.8;">${char.title}</p>
+                <div class="detail-header-group">
+                    <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; color: var(--secondary-color);">${char.name}</h1>
+                    <p style="color: var(--primary-color); font-weight: 700; font-size: 1.4rem; margin-bottom: 2rem; opacity: 0.8;">${char.title}</p>
+                </div>
                 
-                ${quickNavHtml}
+                <div class="sticky-nav-wrapper">
+                    ${quickNavHtml}
+                </div>
 
-                <div class="detail-sections-wrapper">
+                <div class="detail-sections-wrapper" style="margin-top: 3rem;">
                     ${sectionsHtml}
                 </div>
             </div>
@@ -92,7 +96,15 @@ window.addEventListener('hashchange', () => {
     if (hash.includes('-')) {
         const element = document.getElementById(hash.replace('#', ''));
         if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
+            // 헤더 높이만큼 여유를 두고 스크롤
+            const headerOffset = 150;
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: "smooth"
+            });
         }
     } else {
         loadDetail();

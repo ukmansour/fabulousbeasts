@@ -1,11 +1,22 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
+import { db } from './firebase-config.js';
 
-function navigate() {
+async function getCharactersFromFirestore() {
+    const snapshot = await db.collection('characters').get();
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+}
+
+async function getCategoriesFromFirestore() {
+    // Assuming categories are stored with an 'order' field for sorting
+    const snapshot = await db.collection('categories').orderBy('order').get();
+    return snapshot.docs.map(doc => doc.data().name);
+}
+
+async function navigate() {
     const hash = window.location.hash || '#home';
     const views = document.querySelectorAll('.view');
     const navLinks = document.querySelectorAll('.nav-link');
 
-    // Hide all views first
     views.forEach(v => v.style.display = 'none');
     navLinks.forEach(l => l.classList.remove('active'));
 
@@ -22,7 +33,7 @@ function navigate() {
     if (activeLink) activeLink.classList.add('active');
 
     if (hash === '#characters') {
-        renderCharGrid();
+        await renderCharGrid();
         setupSearch();
     }
 
@@ -44,11 +55,32 @@ function setupSearch() {
     };
 }
 
-function renderCharGrid() {
+async function renderCharGrid() {
     const grid = document.getElementById('char-grid');
     if (!grid) return;
-    grid.innerHTML = CATEGORIES.map(cat => {
-        const catChars = CHARACTERS.filter(c => c.category === cat);
+
+    let characters = [];
+    let categories = [];
+
+    try {
+        console.log("Attempting to fetch data from Firestore...");
+        characters = await getCharactersFromFirestore();
+        categories = await getCategoriesFromFirestore();
+
+        if (characters.length === 0 || categories.length === 0) {
+            console.log("Firestore data is empty, falling back to local data.");
+            throw new Error("Firestore is empty.");
+        }
+        console.log("Successfully fetched data from Firestore.");
+
+    } catch (error) {
+        console.error("Error fetching from Firestore, falling back to local data.js:", error);
+        characters = CHARACTERS;
+        categories = CATEGORIES;
+    }
+
+    grid.innerHTML = categories.map(cat => {
+        const catChars = characters.filter(c => c.category === cat);
         if (catChars.length === 0) return '';
         return `
             <div class="category-section">
@@ -89,7 +121,6 @@ function renderPlaylist() {
     }
     playlist.innerHTML = html;
 
-    // Video Playlist Click logic
     const playlistItems = playlist.querySelectorAll('li:not(.season-header)');
     playlistItems.forEach(li => {
         li.onclick = function() {
@@ -109,7 +140,6 @@ window.addEventListener('hashchange', navigate);
 window.addEventListener('DOMContentLoaded', () => {
     navigate();
     
-    // Sidebar toggle
     const toggle = document.getElementById('sidebar-toggle');
     const sidebar = document.getElementById('main-sidebar');
     if (toggle && sidebar) {

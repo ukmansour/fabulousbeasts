@@ -33,8 +33,37 @@
         .detail-left-col {
             min-width: 0;
         }
+        
+        /* 퀵네비게이션 상단 고정 및 스타일 */
+        .sticky-nav-wrapper {
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            padding: 1.5rem 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2.5rem;
+        }
+        .detail-quick-nav ul {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            background: none !important; /* 배경 박스 제거 */
+        }
+        .detail-quick-nav a {
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: color 0.2s;
+        }
+        .detail-quick-nav a:hover {
+            color: var(--secondary-color);
+        }
+
         .detail-right-col {
-            /* sticky 제거: 일반 설명과 함께 스크롤되도록 함 */
             position: relative;
             top: 0;
         }
@@ -48,7 +77,6 @@
             object-fit: cover;
         }
         
-        /* 인포박스 스타일 */
         .infobox {
             background: #f8f9fa;
             border: 1px solid var(--border-color);
@@ -77,12 +105,10 @@
             font-weight: 700;
             text-align: center;
         }
-        .infobox-section-title:first-child {
-            margin-top: 0;
-        }
 
         .detail-section {
-            margin-bottom: 3.5rem;
+            margin-bottom: 4rem;
+            scroll-margin-top: 120px; /* 이동 시 상단 여백 확보 */
         }
         .detail-section h2 {
             font-size: 1.8rem;
@@ -100,6 +126,7 @@
         @media (max-width: 992px) {
             .detail-main-layout { grid-template-columns: 1fr; }
             .detail-right-col { position: static; max-width: 450px; margin: 0 auto 3rem auto; order: -1; }
+            .sticky-nav-wrapper { top: 0; }
         }
     </style>
 </head>
