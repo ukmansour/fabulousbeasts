@@ -1,7 +1,7 @@
 import { CHARACTERS, DETAIL_SECTIONS } from './data.js';
 
 function loadDetail() {
-    const charId = window.location.hash.replace('#', '');
+    const charId = window.location.hash.split('-')[0].replace('#', '');
     const char = CHARACTERS.find(c => c.id === charId);
     const container = document.getElementById('detail-container');
 
@@ -20,35 +20,22 @@ function loadDetail() {
 
     document.title = `${char.name} - 유수언 위키`;
 
-    // 유효한 섹션 필터링 (내용이 있는 것만)
+    // 유효한 섹션 필터링
     const activeSections = DETAIL_SECTIONS.filter(s => {
         const content = char[s.id];
         return content && content.trim() !== '' && content !== '-';
     });
 
-    // 퀵 네비게이션 생성 (활성 섹션만)
+    // 퀵 네비게이션
     const quickNavHtml = activeSections.length > 0 ? `
-        <nav class="detail-quick-nav">
-            <ul>
-                ${activeSections.map((s, index) => `<li><a href="#${charId}-${s.id}">${index + 1}. ${s.label}</a></li>`).join('')}
+        <nav class="detail-quick-nav" style="margin-bottom: 2rem;">
+            <ul style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem; background: #f1f3f5; padding: 1rem; border-radius: 12px;">
+                ${activeSections.map((s, index) => `<li><a href="#${charId}-${s.id}" style="text-decoration: none; color: var(--primary-color); font-weight: 600;">${index + 1}. ${s.label}</a></li>`).join('')}
             </ul>
         </nav>
     ` : '';
 
-    // 기본 정보 테이블 생성
-    const profileRows = [
-        { label: '이름', value: char.name },
-        { label: '별명', value: char.nickname },
-        { label: '성별', value: char.gender },
-        { label: '종', value: char.species },
-        { label: '키', value: char.height },
-        { label: '털색', value: char.furColor },
-        { label: '눈색', value: char.eyeColor },
-        { label: '국적', value: char.nationality },
-        { label: '생일', value: char.birthday }
-    ].map(row => `<tr><th>${row.label}</th><td>${row.value || '-'}</td></tr>`).join('');
-
-    // 활성 섹션 HTML 생성
+    // 활성 섹션 HTML
     const sectionsHtml = activeSections.map((section, index) => `
         <div class="detail-section" id="${charId}-${section.id}">
             <h2>${index + 1}. ${section.label}</h2>
@@ -58,25 +45,43 @@ function loadDetail() {
         </div>
     `).join('');
 
+    // 인포박스 생성 (데이터에 있으면 사용, 없으면 기본 정보로 생성)
+    let infoboxHtml = char.infobox;
+    if (!infoboxHtml) {
+        infoboxHtml = `
+            <div class="infobox">
+                <div class="infobox-row"><strong>이름:</strong> ${char.name}</div>
+                <div class="infobox-row"><strong>별명:</strong> ${char.nickname || '-'}</div>
+                <div class="infobox-row"><strong>성별:</strong> ${char.gender || '-'}</div>
+                <div class="infobox-row"><strong>종:</strong> ${char.species || '-'}</div>
+                <div class="infobox-row"><strong>키:</strong> ${char.height || '-'}</div>
+                <div class="infobox-row"><strong>털색:</strong> ${char.furColor || '-'}</div>
+                <div class="infobox-row"><strong>눈색:</strong> ${char.eyeColor || '-'}</div>
+                <div class="infobox-row"><strong>국적:</strong> ${char.nationality || '-'}</div>
+                <div class="infobox-row"><strong>생일:</strong> ${char.birthday || '-'}</div>
+            </div>
+        `;
+    }
+
     container.innerHTML = `
-        <div class="detail-header">
-            <div class="detail-image">
-                <img src="${char.image}" alt="${char.name}">
-            </div>
-            <div class="detail-info">
-                <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">${char.name}</h1>
-                <p style="color: var(--primary-color); font-weight: 700; font-size: 1.2rem; margin-bottom: 1rem;">${char.title}</p>
+        <div class="detail-main-layout">
+            <div class="detail-left-col">
+                <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; color: var(--secondary-color);">${char.name}</h1>
+                <p style="color: var(--primary-color); font-weight: 700; font-size: 1.4rem; margin-bottom: 2rem; opacity: 0.8;">${char.title}</p>
                 
-                <table class="profile-table">
-                    ${profileRows}
-                </table>
+                ${quickNavHtml}
+
+                <div class="detail-sections-wrapper">
+                    ${sectionsHtml}
+                </div>
             </div>
-        </div>
 
-        ${quickNavHtml}
-
-        <div class="detail-sections-wrapper">
-            ${sectionsHtml}
+            <div class="detail-right-col">
+                <div class="detail-image-container">
+                    <img src="${char.image}" alt="${char.name}">
+                </div>
+                ${infoboxHtml}
+            </div>
         </div>
     `;
 }
