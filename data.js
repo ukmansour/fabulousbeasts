@@ -31,7 +31,33 @@ export const CHARACTERS = [
         motif: `<b>비휴(貔貅)</b>는 중국 신화에 등장하는 신수로 사나운 외형과 길한 능력으로 알려져 있다. 보물을 먹고 살아가며 항문이 없어 먹은 보물을 배출하지 않는다고 전해진다. 그래서 재물과 행운, 번영을 가져오는 존재로 여겨진다.`,
         name_origin: `<b>천록(하늘 天, 녹 禄) / 티엔루:</b> 하늘이 내려주는 부와 복이라는 의미를 가진 이름이다.<br><b>비휴(맹수이름 貔, 비휴 貅) / 피슈:</b> 전설 속 신수의 이름.<br><br>또한 <b>피피(피피)</b>라는 별명으로도 자주 불린다.`,
         trivia: `<ul><li>처음 녹인점에 왔을 때 그는 건물 밖 개집에서 잠을 잤다. 이후 사불상의 방으로 옮겼다.</li><li>작품 내 개그요소로 자주 개 취급을 받는다.</li><li>사실은 자신만의 옷을 입고 싶어 한다.</li><li>처음 신발을 신었을 때 너무 놀라 움직이지 못한 적이 있다.</li><li>대부분의 야생 신수처럼 빨간색을 싫어한다.</li><li>비휴는 항문이 없기 때문에 침으로 영역 표시를 한다.</li><li><b>한 번은 운석에 맞아 죽은 적도 있다.</b></li></ul>`,
-        yusu_huihwa: ``
+        yusu_huihwa: ``,
+        infobox: `
+            <div class="infobox">
+                <div class="infobox-row"><strong>이름:</strong> 천록 (天禄)</div>
+                <div class="infobox-row"><strong>성별:</strong> 남성</div>
+                <div class="infobox-row"><strong>나이:</strong> 수천 세 이상</div>
+                <div class="infobox-row"><strong>생일:</strong> 4월 5일</div>
+                <div class="infobox-row"><strong>종:</strong> 비휴</div>
+                
+                <div class="infobox-section-title">신체 특징</div>
+                <div class="infobox-row"><strong>키:</strong> 53cm</div>
+                <div class="infobox-row"><strong>특이사항:</strong> 외형이 파란색과 흰색이 섞인 페키니즈 강아지와 닮았다는 이야기를 자주 듣는다.</div>
+                
+                <div class="infobox-section-title">별명 및 호칭</div>
+                <div class="infobox-row">비휴(貔貅), 피피(皮피 - 현대 가명), 동그라미/샤오란췌(小蓝圈 - 애칭), 피피오빠/피피거(皮皮哥 - 토보서)</div>
+                
+                <div class="infobox-section-title">관계</div>
+                <div class="infobox-row"><strong>가족:</strong> 벽사(쌍둥이 형), 사불상(의형제)</div>
+                <div class="infobox-row"><strong>양부모:</strong> 시 기린 & 유 기린</div>
+                <div class="infobox-row"><strong>입양 아들:</strong> 피칠성</div>
+                <div class="infobox-row"><strong>유사 가족:</strong> 제강 & 혼돈</div>
+                <div class="infobox-row"><strong>기타:</strong> 과거 강자아의 좌기로 활동한 이력이 있다.</div>
+                
+                <div class="infobox-section-title">배경 및 거주지</div>
+                <div class="infobox-row">발자국 동굴, 천계, 기린산 등지, 족룡의 위장속, 녹인점</div>
+            </div>
+        `
     },
     { 
         id: 'pixiu', 
@@ -50,58 +76,29 @@ export const CHARACTERS = [
         yusu_huihwa: ``,
         infobox: `
             <div class="infobox">
-                <div class="infobox-row"><strong>이름:</strong> 벽사 (Bixie / 辟邪)</div>
-                <div class="infobox-row"><strong>뜻:</strong> 사악한 것을 물리침 (Exorcism / Ward off spirits)</div>
-                <div class="infobox-row"><strong>성별:</strong> 남성</div>
-                <div class="infobox-row"><strong>나이:</strong> 수천 세 이상 (원시 시대 출생)</div>
-                <div class="infobox-row"><strong>생일:</strong> 4월 5일 (양자리)</div>
-                <div class="infobox-row"><strong>종족:</strong> 피휴(Pixiu)</div>
-
-                <div class="infobox-section-title">신체 특징</div>
-                <div class="infobox-row"><strong>키:</strong> 53cm</div>
-                <div class="infobox-row"><strong>특이사항:</strong> 두 개의 뿔을 가진 피휴(两角貔貅)이다.</div>
-
-                <div class="infobox-section-title">별명 및 호칭</div>
-                <div class="infobox-row">양각피휴(两角貔貅), 홍비휴(红貔貅), 샤오메이화(小梅花 - 애칭), 디디(弟弟 - 호칭), 피피(피피 - 투예의 착각), 라오다(老大 - 부하들)</div>
-
-                <div class="infobox-section-title">관계</div>
-                <div class="infobox-row"><strong>가족:</strong> 천록(쌍둥이 동생), 사불상(의형제)</div>
-                <div class="infobox-row"><strong>양부모:</strong> 시기린 & 옥기린, 장장 & 리치</div>
-                <div class="infobox-row"><strong>유사 가족:</strong> 제강 & 혼돈</div>
-                <div class="infobox-row"><strong>부하:</strong> 병아리 부하들 (입양한 아이들처럼 아낌)</div>
-
-                <div class="infobox-section-title">배경 및 거주지</div>
-                <div class="infobox-row"><strong>과거:</strong> 과거 천계 소속이었으나 현재 쫓기는 신세. 500화 전까지 천록의 위장 속 거주.</div>
-                <div class="infobox-row"><strong>거주지:</strong> 발자국 동굴 → 기린산 → 천록 뱃속 → 채운산 → 리치와 장장의 동굴</div>
-
-                <div class="infobox-section-title">매체 출연</div>
-                <div class="infobox-row"><strong>데뷔:</strong> 만화 100화, 애니 24화</div>
-                <div class="infobox-row"><strong>성우:</strong> 산신(山新)</div>
-                <div class="infobox-row"><strong>기타:</strong> 《비인재》 출연</div>
-            </div>
-        `
-        },
-            <div class="infobox">
-                <div class="infobox-row"><strong>이름:</strong> 벽사 (Bixie / 辟邪)</div>
+                <div class="infobox-row"><strong>이름:</strong> 벽사 (辟邪)</div>
                 <div class="infobox-row"><strong>뜻:</strong> 사악한 것을 물리침 (Exorcism / Ward off evil spirits)</div>
-                <div class="infobox-row"><strong>성별:</strong> 남성</div>
-                <div class="infobox-row"><strong>나이:</strong> 수천 세 이상 (원시 시대 출생)</div>
-                <div class="infobox-row"><strong>생일:</strong> 4월 5일 (양자리)</div>
-                <div class="infobox-row"><strong>종족:</strong> 피휴(Pixiu)</div>
+                <div class="infobox-row"><strong>성별:</strong> 남</div>
+                <div class="infobox-row"><strong>나이:</strong> 수천 세 이상</div>
+                <div class="infobox-row"><strong>생일:</strong> 4월 5일</div>
+                <div class="infobox-row"><strong>종족:</strong> 비휴</div>
+
                 <div class="infobox-section-title">신체 특징</div>
                 <div class="infobox-row"><strong>키:</strong> 53cm</div>
                 <div class="infobox-row"><strong>특이사항:</strong> 두 개의 뿔을 가진 피휴(两角貔貅)이다.</div>
+
                 <div class="infobox-section-title">별명 및 호칭</div>
-                <div class="infobox-row">양각피휴(两角貔貅), 홍비휴(红貔貅), 샤오메이화(小梅花 - 애칭), 디디(弟弟 - 호칭), 피피(皮피), 라오다(老大)</div>
+                <div class="infobox-row">양각피휴(两角貔貅), 홍비휴(红貔貅), 샤오메이화(小梅화 - 애칭), 디디(弟弟 - 호칭), 피피(피피 - 투예의 착각), 라오다(老大 - 부하들)</div>
 
                 <div class="infobox-section-title">관계</div>
-                <div class="infobox-row"><strong>가족:</strong> 천록(쌍둥이 동생), 사불상(의형제)</div>
+                <div class="infobox-row"><strong>가족:</strong> 천록(쌍둥이 남동생), 사불상(의형제)</div>
                 <div class="infobox-row"><strong>양부모:</strong> 시기린 & 옥기린, 장장 & 리치</div>
                 <div class="infobox-row"><strong>유사 가족:</strong> 제강 & 혼돈</div>
-                <div class="infobox-row"><strong>부하:</strong> 병아리 부하들 (자신의 부하이자 입양한 아이들처럼 아낌)</div>
+                <div class="infobox-row"><strong>부하:</strong> 병아리 부하들</div>
+
                 <div class="infobox-section-title">배경 및 거주지</div>
-                <div class="infobox-row"><strong>과거:</strong> 천계 소속이었으나 현재 쫓기는 중. 고대부터 천록의 위장 속에서 거주.</div>
-                <div class="infobox-row"><strong>거주지:</strong> 발자국 동굴 → 기린산 → 천록 뱃속 → 채운산 → 리치와 장장의 동굴</div>
+                <div class="infobox-row">발자국 동굴, 천계, 천록의 뱃속, 채운산, 리치와 장장의 동굴 (제1107화 기준)</div>
+
                 <div class="infobox-section-title">매체 출연</div>
                 <div class="infobox-row"><strong>데뷔:</strong> 만화 100화, 애니 24화</div>
                 <div class="infobox-row"><strong>성우:</strong> 산신(山新)</div>
