@@ -93,7 +93,27 @@ export const CHARACTERS = [
     })),
 
     // --- 고대 ---
-    ...["사불상 (四不相)", "제강", "혼돈", "도철", "궁기", "도올", "경천수", "금오", "촉룡", "후"].map(name => ({
+    ...["사불상 (四不相)", "제강"].map(name => ({
+        id: `anc-${name.replace(/\s/g, '-')}`, category: '고대', name, title: '고대 신수', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
+    })),
+    {
+        id: 'anc-혼돈',
+        category: '고대',
+        name: '혼돈',
+        title: '고대 신수',
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fm00n7%2FdJMb99MhOso%2FAAAAAAAAAAAAAAAAAAAAAJeErgOSjIZ5anQZS9E6jjbkeEcPwWRQ-vy1lxEFArjZ%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3D0b48Gw%252BDpc2t9JLGoY6%252BY31G0h8%253D'
+    },
+    {
+        id: `anc-도철`, category: '고대', name: '도철', title: '고대 신수', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent('도철')
+    },
+    {
+        id: 'anc-궁기',
+        category: '고대',
+        name: '궁기',
+        title: '고대 신수',
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FcZRvL5%2FdJMcacWyiVV%2FAAAAAAAAAAAAAAAAAAAAAFmN4rn-QZdqG3sJeoFAIMqyjIfCU2BZWQP7mI4naYkJ%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DzUb1NaakX0LVnktW9ga77%252FU3n5s%253D'
+    },
+    ...["도올", "경천수", "금오", "촉룡", "후"].map(name => ({
         id: `anc-${name.replace(/\s/g, '-')}`, category: '고대', name, title: '고대 신수', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
     })),
 
