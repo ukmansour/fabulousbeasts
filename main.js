@@ -25,6 +25,10 @@ function navigate() {
         renderCharGrid();
         setupSearch();
     }
+
+    if (hash === '#watch') {
+        renderPlaylist();
+    }
 }
 
 function setupSearch() {
@@ -67,6 +71,40 @@ function renderCharGrid() {
     }).join('');
 }
 
+function renderPlaylist() {
+    const playlist = document.getElementById('episode-playlist');
+    if (!playlist || playlist.children.length > 0) return; // Only render once
+
+    let html = '';
+    const totalSeasons = 5;
+    const epsPerSeason = 12;
+
+    for (let s = 1; s <= totalSeasons; s++) {
+        html += `<li class="season-header">시즌 ${s}</li>`;
+        for (let e = 1; e <= epsPerSeason; e++) {
+            const epNum = (s - 1) * epsPerSeason + e;
+            const isActive = epNum === 1 ? 'active' : '';
+            html += `<li class="${isActive}" data-ep="${epNum}">${epNum}화</li>`;
+        }
+    }
+    playlist.innerHTML = html;
+
+    // Video Playlist Click logic
+    const playlistItems = playlist.querySelectorAll('li:not(.season-header)');
+    playlistItems.forEach(li => {
+        li.onclick = function() {
+            playlist.querySelector('li.active')?.classList.remove('active');
+            this.classList.add('active');
+            const epNum = this.dataset.ep;
+            const player = document.getElementById('main-player');
+            if (player) {
+                player.src = `https://media.fabulousbeasts.kr/${epNum}화.mp4`;
+                player.play().catch(err => console.log("Auto-play prevented", err));
+            }
+        };
+    });
+}
+
 window.addEventListener('hashchange', navigate);
 window.addEventListener('DOMContentLoaded', () => {
     navigate();
@@ -77,16 +115,4 @@ window.addEventListener('DOMContentLoaded', () => {
     if (toggle && sidebar) {
         toggle.onclick = () => sidebar.classList.toggle('active');
     }
-
-    // Video Playlist
-    const playlistItems = document.querySelectorAll('.playlist li');
-    playlistItems.forEach(li => {
-        li.onclick = function() {
-            document.querySelector('.playlist li.active')?.classList.remove('active');
-            this.classList.add('active');
-            const videoId = this.dataset.video;
-            const player = document.getElementById('main-player');
-            if (player) player.src = `https://www.youtube.com/embed/videoseries?list=${videoId}`;
-        };
-    });
 });
