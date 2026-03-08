@@ -1,20 +1,27 @@
 import { CHARACTERS, DETAIL_SECTIONS } from './data.js';
+import { db, auth } from './firebase-config.js';
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-function loadDetail() {
+async function loadDetail() {
     const charId = window.location.hash.split('-')[0].replace('#', '');
-    const char = CHARACTERS.find(c => c.id === charId);
     const container = document.getElementById('detail-container');
-
     if (!container) return;
 
+    // Firestore에서 데이터 가져오기 시도
+    let char = CHARACTERS.find(c => c.id === charId);
+    try {
+        const docRef = doc(db, "characters", charId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            char = { ...char, ...docSnap.data() };
+        }
+    } catch (e) {
+        console.warn("Firestore fetch error:", e);
+    }
+
     if (!char) {
-        container.innerHTML = `
-            <div style="text-align: center; padding: 3rem;">
-                <h2>캐릭터를 찾을 수 없습니다.</h2>
-                <p>ID: ${charId}</p>
-                <a href="index.html" class="btn-primary" style="display: inline-block; margin-top: 1rem; text-decoration: none;">홈으로 돌아가기</a>
-            </div>
-        `;
+        container.innerHTML = `<h2>캐릭터를 찾을 수 없습니다.</h2>`;
         return;
     }
 
@@ -26,16 +33,14 @@ function loadDetail() {
         return content && content.trim() !== '' && content !== '-';
     });
 
-    // 퀵 네비게이션 (네모 상자 제거 버전)
     const quickNavHtml = activeSections.length > 0 ? `
         <nav class="detail-quick-nav">
             <ul style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 1.2rem; margin: 0;">
-                ${activeSections.map((s, index) => `<li><a href="#${charId}-${s.id}" style="text-decoration: none; color: var(--primary-color); font-weight: 600; font-size: 1.05rem;">${index + 1}. ${s.label}</a></li>`).join('')}
+                ${activeSections.map((s, index) => `<li><a href="#${charId}-${s.id}">${index + 1}. ${s.label}</a></li>`).join('')}
             </ul>
         </nav>
     ` : '';
 
-    // 활성 섹션 HTML
     const sectionsHtml = activeSections.map((section, index) => `
         <div class="detail-section" id="${charId}-${section.id}">
             <h2>${index + 1}. ${section.label}</h2>
@@ -45,30 +50,26 @@ function loadDetail() {
         </div>
     `).join('');
 
-    // 인포박스 생성
-    let infoboxHtml = char.infobox;
-    if (!infoboxHtml) {
-        infoboxHtml = `
-            <div class="infobox">
-                <div class="infobox-row"><strong>이름:</strong> ${char.name}</div>
-                <div class="infobox-row"><strong>별명:</strong> ${char.nickname || '-'}</div>
-                <div class="infobox-row"><strong>성별:</strong> ${char.gender || '-'}</div>
-                <div class="infobox-row"><strong>종:</strong> ${char.species || '-'}</div>
-                <div class="infobox-row"><strong>키:</strong> ${char.height || '-'}</div>
-                <div class="infobox-row"><strong>털색:</strong> ${char.furColor || '-'}</div>
-                <div class="infobox-row"><strong>눈색:</strong> ${char.eyeColor || '-'}</div>
-                <div class="infobox-row"><strong>국적:</strong> ${char.nationality || '-'}</div>
-                <div class="infobox-row"><strong>생일:</strong> ${char.birthday || '-'}</div>
-            </div>
-        `;
-    }
+    let infoboxHtml = char.infobox || `
+        <div class="infobox">
+            <div class="infobox-row"><strong>이름:</strong> ${char.name}</div>
+            <div class="infobox-row"><strong>별명:</strong> ${char.nickname || '-'}</div>
+            <div class="infobox-row"><strong>성별:</strong> ${char.gender || '-'}</div>
+            <div class="infobox-row"><strong>종:</strong> ${char.species || '-'}</div>
+        </div>
+    `;
 
     container.innerHTML = `
         <div class="detail-main-layout">
             <div class="detail-left-col">
                 <div class="detail-header-group">
-                    <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; color: var(--secondary-color);">${char.name}</h1>
-                    <p style="color: var(--primary-color); font-weight: 700; font-size: 1.4rem; margin-bottom: 2rem; opacity: 0.8;">${char.title}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h1 style="font-size: 3.5rem; margin-bottom: 0.5rem; color: var(--secondary-color);">${char.name}</h1>
+                            <p style="color: var(--primary-color); font-weight: 700; font-size: 1.4rem; margin-bottom: 2rem; opacity: 0.8;">${char.title}</p>
+                        </div>
+                        <div id="edit-action-container"></div>
+                    </div>
                 </div>
                 
                 <div class="sticky-nav-wrapper">
@@ -88,6 +89,28 @@ function loadDetail() {
             </div>
         </div>
     `;
+
+    // 유저 상태에 따른 편집 버튼 노출
+    onAuthStateChanged(auth, (user) => {
+        const userInfo = document.getElementById('user-info');
+        const editContainer = document.getElementById('edit-action-container');
+        
+        if (user) {
+            if (userInfo) {
+                userInfo.innerHTML = `
+                    <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${user.email.split('@')[0]}님</span>
+                    <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
+                `;
+                document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
+            }
+            if (editContainer) {
+                editContainer.innerHTML = `<a href="edit.html#${charId}" class="btn-primary" style="text-decoration: none;">편집하기</a>`;
+            }
+        } else {
+            if (userInfo) userInfo.innerHTML = `<a href="auth.html" class="nav-link">로그인</a>`;
+            if (editContainer) editContainer.innerHTML = '';
+        }
+    });
 }
 
 window.addEventListener('load', loadDetail);
@@ -96,18 +119,9 @@ window.addEventListener('hashchange', () => {
     if (hash.includes('-')) {
         const element = document.getElementById(hash.replace('#', ''));
         if (element) {
-            // 헤더 높이만큼 여유를 두고 스크롤
-            const headerOffset = 150;
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: "smooth"
-            });
+            window.scrollTo({ top: element.getBoundingClientRect().top + window.pageYOffset - 150, behavior: "smooth" });
         }
     } else {
         loadDetail();
-        window.scrollTo(0, 0);
     }
 });

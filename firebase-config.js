@@ -1,3 +1,7 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
 // TODO: Firebase 프로젝트 설정 후 아래 값을 채워주세요.
 const firebaseConfig = {
   apiKey: "YOUR_API_KEY",
@@ -8,8 +12,17 @@ const firebaseConfig = {
   appId: "YOUR_APP_ID"
 };
 
-// Firebase 앱 초기화
-const app = firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+let db, auth;
 
-export { db };
+try {
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+} catch (e) {
+    console.error("Firebase 초기화 실패. 로컬 데이터를 사용합니다.", e);
+    // 더미 객체 생성 (오류 방지)
+    db = {};
+    auth = { onAuthStateChanged: () => {} };
+}
+
+export { db, auth };

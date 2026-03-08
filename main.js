@@ -1,15 +1,60 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
-import { db } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
+import { collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+// 유저 상태 관리 (안전하게 실행)
+if (auth && typeof auth.onAuthStateChanged === 'function') {
+    onAuthStateChanged(auth, (user) => {
+        const userInfo = document.getElementById('user-info');
+        if (!userInfo) return;
+        if (user) {
+            userInfo.innerHTML = `
+                <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${user.email.split('@')[0]}님</span>
+                <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
+            `;
+            document.getElementById('logout-btn')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                signOut(auth);
+            });
+        } else {
+            userInfo.innerHTML = `<a href="auth.html" class="nav-link" id="login-link">로그인</a>`;
+        }
+    });
+}
 
 async function getCharactersFromFirestore() {
-    const snapshot = await db.collection('characters').get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    if (!db || Object.keys(db).length === 0) return CHARACTERS;
+    try {
+        const querySnapshot = await getDocs(collection(db, "characters"));
+        const firestoreChars = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        const combined = [...CHARACTERS];
+        firestoreChars.forEach(fChar => {
+            const index = combined.findIndex(c => c.id === fChar.id);
+            if (index !== -1) {
+                combined[index] = { ...combined[index], ...fChar };
+            } else {
+                combined.push(fChar);
+            }
+        });
+        return combined;
+    } catch (e) {
+        console.warn("Firestore data error, using local:", e);
+        return CHARACTERS;
+    }
 }
 
 async function getCategoriesFromFirestore() {
-    // Assuming categories are stored with an 'order' field for sorting
-    const snapshot = await db.collection('categories').orderBy('order').get();
-    return snapshot.docs.map(doc => doc.data().name);
+    if (!db || Object.keys(db).length === 0) return CATEGORIES;
+    try {
+        const q = query(collection(db, "categories"), orderBy("order"));
+        const querySnapshot = await getDocs(q);
+        if (querySnapshot.empty) return CATEGORIES;
+        return querySnapshot.docs.map(doc => doc.data().name);
+    } catch (e) {
+        return CATEGORIES;
+    }
 }
 
 async function navigate() {
@@ -17,85 +62,69 @@ async function navigate() {
     const views = document.querySelectorAll('.view');
     const navLinks = document.querySelectorAll('.nav-link');
 
-    views.forEach(v => v.style.display = 'none');
-    navLinks.forEach(l => l.classList.remove('active'));
+    // 1. 모든 뷰 숨기기
+    views.forEach(v => {
+        v.style.display = 'none';
+    });
 
-    const targetId = `view-${hash.replace('#', '')}`;
-    const targetView = document.getElementById(targetId);
+    // 2. 모든 네비 링크 비활성화
+    navLinks.forEach(l => {
+        l.classList.remove('active');
+        if (l.getAttribute('href') === hash) {
+            l.classList.add('active');
+        }
+    });
 
+    // 3. 대상 뷰 찾기 및 표시
+    const rawId = hash.replace('#', '');
+    const viewId = `view-${rawId}`;
+    let targetView = document.getElementById(viewId);
+    
+    // 만약 #watch 대신 #animation 같은 다른 이름을 쓴 경우 보정
+    if (!targetView && rawId === 'watch') targetView = document.getElementById('view-watch');
+    
     if (targetView) {
         targetView.style.display = 'block';
     } else {
-        document.getElementById('view-home').style.display = 'block';
+        // 찾지 못하면 무조건 홈 표시
+        const homeView = document.getElementById('view-home');
+        if (homeView) homeView.style.display = 'block';
     }
 
-    const activeLink = document.querySelector(`.nav-link[href="${hash}"]`);
-    if (activeLink) activeLink.classList.add('active');
-
-    if (hash === '#characters') {
-        await renderCharGrid();
-        setupSearch();
-    }
-
+    // 4. 섹션별 추가 로직
     if (hash === '#watch') {
         renderPlaylist();
+    } else if (hash === '#characters') {
+        const chars = await getCharactersFromFirestore();
+        const cats = await getCategoriesFromFirestore();
+        renderCharacters(chars, cats);
     }
+    
+    window.scrollTo(0, 0);
 }
 
-function setupSearch() {
-    const searchInput = document.getElementById('wiki-search');
-    if (!searchInput) return;
-    searchInput.oninput = (e) => {
-        const term = e.target.value.toLowerCase();
-        const cards = document.querySelectorAll('.character-card-link');
-        cards.forEach(card => {
-            const text = card.textContent.toLowerCase();
-            card.style.display = text.includes(term) ? 'block' : 'none';
-        });
-    };
-}
-
-async function renderCharGrid() {
+function renderCharacters(chars, cats) {
     const grid = document.getElementById('char-grid');
     if (!grid) return;
-
-    let characters = [];
-    let categories = [];
-
-    try {
-        console.log("Attempting to fetch data from Firestore...");
-        characters = await getCharactersFromFirestore();
-        categories = await getCategoriesFromFirestore();
-
-        if (characters.length === 0 || categories.length === 0) {
-            console.log("Firestore data is empty, falling back to local data.");
-            throw new Error("Firestore is empty.");
-        }
-        console.log("Successfully fetched data from Firestore.");
-
-    } catch (error) {
-        console.error("Error fetching from Firestore, falling back to local data.js:", error);
-        characters = CHARACTERS;
-        categories = CATEGORIES;
-    }
-
-    grid.innerHTML = categories.map(cat => {
-        const catChars = characters.filter(c => c.category === cat);
+    
+    grid.innerHTML = cats.map(cat => {
+        const catChars = chars.filter(c => c.category === cat);
         if (catChars.length === 0) return '';
+        
         return `
-            <div class="category-section">
-                <h2 class="category-title">${cat}</h2>
-                <div class="category-grid">
+            <div class="category-section" style="grid-column: 1 / -1;">
+                <h3 class="category-title" style="margin: 2rem 0 1.5rem 0; padding-left: 1rem; border-left: 5px solid var(--primary-color);">${cat}</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 2rem;">
                     ${catChars.map(char => `
-                        <a href="detail.html#${char.id}" class="character-card-link">
-                            <div class="character-card">
-                                <div class="card-img-wrap"><img src="${char.image}" alt="${char.name}"></div>
-                                <div class="card-info">
-                                    <h3>${char.name}</h3>
-                                    <p>${char.title}</p>
-                                </div>
+                        <div class="character-card" onclick="location.href='detail.html#${char.id}'">
+                            <div class="card-img-wrap">
+                                <img src="${char.image}" alt="${char.name}" loading="lazy">
                             </div>
-                        </a>
+                            <div class="card-info">
+                                <h4>${char.name}</h4>
+                                <p>${char.title}</p>
+                            </div>
+                        </div>
                     `).join('')}
                 </div>
             </div>
@@ -105,44 +134,52 @@ async function renderCharGrid() {
 
 function renderPlaylist() {
     const playlist = document.getElementById('episode-playlist');
-    if (!playlist || playlist.children.length > 0) return; // Only render once
+    const player = document.getElementById('main-player');
+    if (!playlist || !player) return;
 
-    let html = '';
-    const totalSeasons = 5;
-    const epsPerSeason = 12;
+    if (playlist.children.length > 0) return;
 
-    for (let s = 1; s <= totalSeasons; s++) {
-        html += `<li class="season-header">시즌 ${s}</li>`;
-        for (let e = 1; e <= epsPerSeason; e++) {
-            const epNum = (s - 1) * epsPerSeason + e;
-            const isActive = epNum === 1 ? 'active' : '';
-            html += `<li class="${isActive}" data-ep="${epNum}">${epNum}화</li>`;
+    playlist.innerHTML = '';
+    const seasons = [
+        { name: "시즌 1", range: [1, 12] },
+        { name: "시즌 2", range: [13, 24] },
+        { name: "시즌 3", range: [25, 36] },
+        { name: "시즌 4", range: [37, 48] },
+        { name: "시즌 5", range: [49, 60] }
+    ];
+
+    seasons.forEach(season => {
+        const header = document.createElement('li');
+        header.className = 'season-header';
+        header.textContent = season.name;
+        playlist.appendChild(header);
+
+        for(let i = season.range[0]; i <= season.range[1]; i++) {
+            const item = document.createElement('li');
+            item.textContent = `${i}화`;
+            item.addEventListener('click', () => {
+                player.src = `https://media.fabulousbeasts.kr/${i}화.mp4`;
+                player.play();
+                playlist.querySelectorAll('li').forEach(li => li.classList.remove('active'));
+                item.classList.add('active');
+            });
+            playlist.appendChild(item);
         }
-    }
-    playlist.innerHTML = html;
-
-    const playlistItems = playlist.querySelectorAll('li:not(.season-header)');
-    playlistItems.forEach(li => {
-        li.onclick = function() {
-            playlist.querySelector('li.active')?.classList.remove('active');
-            this.classList.add('active');
-            const epNum = this.dataset.ep;
-            const player = document.getElementById('main-player');
-            if (player) {
-                player.src = `https://media.fabulousbeasts.kr/${epNum}화.mp4`;
-                player.play().catch(err => console.log("Auto-play prevented", err));
-            }
-        };
     });
 }
 
+// 이벤트 리스너 등록
 window.addEventListener('hashchange', navigate);
-window.addEventListener('DOMContentLoaded', () => {
-    navigate();
-    
-    const toggle = document.getElementById('sidebar-toggle');
-    const sidebar = document.getElementById('main-sidebar');
-    if (toggle && sidebar) {
-        toggle.onclick = () => sidebar.classList.toggle('active');
-    }
-});
+window.addEventListener('load', navigate);
+
+// 초기 실행
+navigate();
+
+// 사이드바 토글
+const sidebar = document.getElementById('main-sidebar');
+const sidebarToggle = document.getElementById('sidebar-toggle');
+if (sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
+    });
+}

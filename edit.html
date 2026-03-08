@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>캐릭터 편집 - 유수언 위키</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .edit-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 3rem;
+            background: var(--card-bg);
+            border-radius: 24px;
+            box-shadow: var(--shadow-md);
+        }
+        .edit-form {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+        .form-group label {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+        .form-group textarea, .form-group input {
+            padding: 1.2rem;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            line-height: 1.6;
+        }
+        .form-group textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+        .edit-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        .btn-save {
+            padding: 1rem 2.5rem;
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+        .btn-cancel {
+            padding: 1rem 2.5rem;
+            background: #eee;
+            color: #333;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo" class="logo-img">
+                <span>유수언 위키</span>
+            </a>
+        </div>
+    </header>
+
+    <main class="edit-container">
+        <h1 id="edit-title">캐릭터 편집</h1>
+        <p id="edit-subtitle" style="margin-bottom: 3rem; color: #666;">내용을 수정하고 저장 버튼을 눌러주세요.</p>
+
+        <form id="edit-form" class="edit-form">
+            <!-- Dynamically generated fields -->
+            <div id="dynamic-fields"></div>
+
+            <div class="edit-actions">
+                <button type="submit" class="btn-save">저장하기</button>
+                <a href="#" id="cancel-link" class="btn-cancel">취소</a>
+            </div>
+        </form>
+    </main>
+
+    <script type="module" src="edit.js"></script>
+</body>
+</html>
