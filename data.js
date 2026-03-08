@@ -78,7 +78,17 @@ export const CHARACTERS = [
     },
 
     // --- 녹인점 ---
-    ...["금각", "은각", "호두", "후쿠", "쇼타", "마키", "전호", "메이메이", "파혁", "샤오자오", "영야", "제건", "링후쯔", "산예"].map(name => ({
+    ...["금각", "은각"].map(name => ({
+        id: `nok-${name}`, category: '녹인점', name, title: '녹인점 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
+    })),
+    {
+        id: 'nok-호두', 
+        category: '녹인점', 
+        name: '호두', 
+        title: '녹인점 소속', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fc1GFuC%2FdJMcaflokNi%2FAAAAAAAAAAAAAAAAAAAAAOpP4fGd27YAcumI_OJe6yJKOWt2KnG4amElTd4au8XT%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3Dsw%252FG8yScJDB3RvBIyQVkoqKCZQ4%253D'
+    },
+    ...["후쿠", "쇼타", "마키", "전호", "메이메이", "파혁", "샤오자오", "영야", "제건", "링후쯔", "산예"].map(name => ({
         id: `nok-${name}`, category: '녹인점', name, title: '녹인점 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
     })),
 
