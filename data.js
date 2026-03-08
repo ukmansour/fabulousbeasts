@@ -73,7 +73,7 @@ export const CHARACTERS = [
         ability: `투예는 달에서 살아온 존재로, 달의 환경에서도 자연스럽게 호흡하고 움직일 수 있는 능력을 가지고 있다. 토끼의 본능으로 복잡한 지하 굴을 파는 능력이 뛰어나다. 그는 루런전 뒤쪽에 큰 굴을 파서 집으로 사용하고 있으며 내부도 화려하게 꾸며 놓았다. 토끼의 반사신경 덕분에 매우 빠르고 민첩하게 움직인다.<br><br>인류의 숭배와 수행을 통해 신의 경지에 올라 긴 수명을 얻었다. 의인화된 모습과 본래의 달 토끼 모습 사이를 자유롭게 변할 수 있다. 체력이 떨어지면 의도하지 않게 토끼 모습으로 변하기도 한다. 다양한 약과 영약을 만드는 능력을 가지고 있다. 옛날에 역병을 치료해 사람들을 구하면서 신으로 숭배받게 되었다.<br><br>현대 사회에서 살아가기 위해 다양한 사업에 참여해 큰 재산을 모았다. 뛰어난 이발사이자 스타일리스트이기도 하다. 머리, 털, 깃털 등 다양한 손님을 손질할 수 있으며 미용실을 운영하고 있다. 요리 실력도 뛰어나며 특히 월병을 잘 만든다.<br><br><b>월병 제작:</b> 월병을 매우 좋아하고 만드는 실력도 뛰어나 <b>“수석 월병 요리사”</b>라는 칭호를 얻었다.`,
         motif: `동아시아 전설에서는 토끼가 절구와 공이를 사용해 약을 찧는 모습으로 묘사되며, 중국 신화에서는 달의 여신 항아의 동료로 알려져 있다.`,
         name_origin: `<b>토야(토끼 兔, 아비 爷):</b> 문자 그대로 <b>“토끼 어르신” 또는 “토끼 대인”</b>이라는 의미를 가진다. 이 이름은 중국 민속 전승과 관련되어 있으며 두 가지 유래가 추정된다.<br><br>첫 번째는 <b>토아야(兔儿爷)</b>에서 유래했을 가능성이다. 토얼예는 중국 민속에서 항아와 함께 달에 사는 옥토끼를 가리키는 존재이다.<br>두 번째는 <b>토아신(兔儿神)</b>과 <b>대야(大爷)</b>의 이름이 합쳐졌을 가능성이다. 토아신은 중국 민간 신앙에서 토끼와 남성 간 사랑을 관장하는 신으로 전해진다.<br><br>또한 공식 설정에서는 그의 영어 이름이 토니라고 표시되어 있다.`,
-        trivia: `<ul><li>그는 예전에 인간 세계에서 역병을 치료해 많은 사람들에게 숭배받았다.</li><li>달에서 어린 시절 집에서 쫓겨난 뒤 항아의 궁전에 있는 월병 공장에서 일하게 되었다.</li><li>월병을 좋아하는 유일한 달 토끼라고 한다.</li><li>눈이 보라색인 것은 토끼들 사이에서 희귀한 특징이었다.</li><li>예전에 자동차를 소유했지만 토끼의 습성 때문에 브레이크를 계속 밟아 운전이 어려워 포기했다.</li><li>한때 여장을 하고 사람들의 눈을 피한 적도 있다.</li><li>미래의 자신을 만났을 때 사불상과 관련된 비극적인 미래가 암시되기도 했다.</li><li>사불상을 위해 유수연 테마 놀이공원을 지을 계획을 가지고 있으며 완성까지 약 30년이 걸린다고 한다.</li></ul>`,
+        trivia: `<ul><li>그는 예전에 인간 세계에서 역병을 치료해 많은 사람들에게 숭배받았다.</li><li>달에서 어린 시절 집에서 쫓겨난 뒤 항아의 궁전에 있는 월병 공장에서 일하게 되었다.</li><li>월병을 좋아하는 유일한 달 토끼라고 한다.</li><li>눈이 보라색인 것은 토끼들 사이에서 희귀한 특징이었다.</li><li>예전에 자동차를 소유했지만 토끼의 습성 때문에 브레이크를 계속 밟아 운전이 어려워 포기했다.</li><li>한때 여장을 하고 사람들의 눈을 피한 적도 있다.</li><li>미래의 자신을 만났을 때 사불상과 관련된 비극적인 미래가 암시되기도 했다.</li><li>사불상을 위해 유수연 테인 놀이공원을 지을 계획을 가지고 있으며 완성까지 약 30년이 걸린다고 한다.</li></ul>`,
         yusu_huihwa: ``
     },
 
@@ -106,7 +106,28 @@ export const CHARACTERS = [
         title: '녹인점 소속', 
         image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F5qgl7%2FdJMcafeJedj%2FAAAAAAAAAAAAAAAAAAAAAElwJsTg0qTi5m5mBDMKAECh05DhZsmYD93795uS_M8K%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3D2v2rf2mSBW7nM%252F6D8oirqzgirVA%253D'
     },
-    ...["후쿠", "쇼타", "마키", "전호", "메이메이", "샤오자오", "영야", "제건", "링후쯔", "산예"].map(name => ({
+    {
+        id: 'nok-후쿠', 
+        category: '녹인점', 
+        name: '후쿠', 
+        title: '녹인점 소속', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FrWiOy%2FdJMcaa5wAs8%2FAAAAAAAAAAAAAAAAAAAAAB78Zx-kzB1wstvNqtgVfhu-xeu660BPRoJzOT0dkCXi%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3Dlm7B8j6ujFVYMb%252FDNhmLvu7Lo4Y%253D'
+    },
+    {
+        id: 'nok-쇼타', 
+        category: '녹인점', 
+        name: '쇼타', 
+        title: '녹인점 소속', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fb2To5h%2FdJMcafZ2Abv%2FAAAAAAAAAAAAAAAAAAAAAFWrYEnQwog781OEUFb-4HnIY0-9LZTn0riHOiawMA0g%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DWnhyGms5HUAB5s%252BFgv56tC4XFGI%253D'
+    },
+    {
+        id: 'nok-메이메이', 
+        category: '녹인점', 
+        name: '메이메이', 
+        title: '녹인점 소속', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fk1AvK%2FdJMb99MhOsc%2FAAAAAAAAAAAAAAAAAAAAAGSccvsmtioSAH0e6XrURNgrvSsf9H4pS5Cn4eknnixd%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DnYFC7vH1iKp2BxP7IF1vMXD6MYg%253D'
+    },
+    ...["마키", "전호", "샤오자오", "영야", "제건", "링후쯔", "산예"].map(name => ({
         id: `nok-${name}`, category: '녹인점', name, title: '녹인점 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
     })),
 
@@ -136,7 +157,14 @@ export const CHARACTERS = [
     })),
 
     // --- 지옥 ---
-    ...["체청", "소루", "칭훠", "지마", "아오"].map(name => ({
+    {
+        id: 'hell-소루', 
+        category: '지옥', 
+        name: '소루', 
+        title: '지옥 소속', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Ftr93N%2FdJMb99MhOul%2FAAAAAAAAAAAAAAAAAAAAACQMKHEUP5LfsiTuBP6aF3YtoxA2jAtgodFotiCL8fFu%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DviocTsaFosXGpb46mc5iRXOa5pk%253D'
+    },
+    ...["체청", "칭훠", "지마", "아오"].map(name => ({
         id: `hell-${name}`, category: '지옥', name, title: '지옥 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
     })),
 
@@ -160,7 +188,21 @@ export const CHARACTERS = [
         title: '운남산 신수', 
         image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FkXjYm%2FdJMcaa5wAtv%2FAAAAAAAAAAAAAAAAAAAAAB1ggxa5nQCWReeAoqO9G_Q0Q87_enM7wGcKZFef5Ao0%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DJ9RgwGX9IOyBObLdjl4YCLOpDww%253D'
     },
-    ...["추구", "소산작", "마오마오레이"].map(name => ({
+    {
+        id: 'un-추구', 
+        category: '운남산 언덕', 
+        name: '추구', 
+        title: '운남산 신수', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbbiMFS%2FdJMcacWyiVM%2FAAAAAAAAAAAAAAAAAAAAAKx8lenNFZ-xTmc5dY1HBqGBukA0ODRlE1INSGzselgS%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DCTVWJCS2VzaVfb55b4w2Wc%252Bsd%252BY%253D'
+    },
+    {
+        id: 'un-마오마오레이', 
+        category: '운남산 언덕', 
+        name: '마오마오레이', 
+        title: '운남산 신수', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FKbi0M%2FdJMcafsdqoJ%2FAAAAAAAAAAAAAAAAAAAAAG9kKderAnWHoxE0VX_VWLJF4Nd54cXOajivr27Zi7pc%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DIZB6FO67HYhK%252BZHkA1nzFJFlkLs%253D'
+    },
+    ...["소산작"].map(name => ({
         id: `un-${name}`, category: '운남산 언덕', name, title: '운남산 신수', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
     })),
     {
@@ -190,7 +232,14 @@ export const CHARACTERS = [
     })),
 
     // --- 신조 ---
-    ...["봉황", "금시대", "크리스티나", "비비", "풍황", "공작", "화예조", "홍홍", "오병"].map(name => ({
+    {
+        id: 'sin-화예조', 
+        category: '신조', 
+        name: '화예조', 
+        title: '신조 소속', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fdgw06o%2FdJMcaioXJ6D%2FAAAAAAAAAAAAAAAAAAAAAGmLKI9u33Bf2CBNQ93T7jpdBV3Ofnxmlt57JQrwsGZ_%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DzGIQzqGjqLbxg6bE2Q88lP1dEAA%253D'
+    },
+    ...["봉황", "금시대", "크리스티나", "비비", "풍황", "공작", "홍홍", "오병"].map(name => ({
         id: `sin-${name}`, category: '신조', name, title: '신조 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
     })),
 
