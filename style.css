@@ -20,7 +20,7 @@
 
     body {
         font-family: 'Inter', system-ui, sans-serif;
-        background: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), url('https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FFyykv%2FdJMcajgYuyX%2FAAAAAAAAAAAAAAAAAAAAAFvMUpIy3kp8z8xG_DNNbcyVKItr3Lyu6owU-NFE8IKq%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3Dxr2cMULm13bU4OselRbeXXu59GY%253D');
+        background: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FFyykv%2FdJMcajgYuyX%2FAAAAAAAAAAAAAAAAAAAAAFvMUpIy3kp8z8xG_DNNbcyVKItr3Lyu6owU-NFE8IKq%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3Dxr2cMULm13bU4OselRbeXXu59GY%253D');
         background-size: cover;
         background-attachment: fixed;
         background-position: center;

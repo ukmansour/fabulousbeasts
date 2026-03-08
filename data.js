@@ -78,9 +78,20 @@ export const CHARACTERS = [
     },
 
     // --- 녹인점 ---
-    ...["금각", "은각"].map(name => ({
-        id: `nok-${name}`, category: '녹인점', name, title: '녹인점 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
-    })),
+    {
+        id: 'nok-금각', 
+        category: '녹인점', 
+        name: '금각', 
+        title: '녹인점 소속', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fvr4fW%2FdJMcaa5wAtx%2FAAAAAAAAAAAAAAAAAAAAAHf99aKPJxOf5IZA6_OvKTuhwESeXKoVDKR6RBACEXVH%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DlT%252BrO1NtCoLHT4O40pmjb%252BxF2So%253D'
+    },
+    {
+        id: 'nok-은각', 
+        category: '녹인점', 
+        name: '은각', 
+        title: '녹인점 소속', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fn50Qi%2FdJMcafeJedh%2FAAAAAAAAAAAAAAAAAAAAACj3ui5AqQhysufruDsT9mzRqIgzy6XZ4PzWedwL7g82%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DkNSNZ8NW8EJuuPJV49HlV8MuQAg%253D'
+    },
     {
         id: 'nok-호두', 
         category: '녹인점', 
@@ -88,7 +99,14 @@ export const CHARACTERS = [
         title: '녹인점 소속', 
         image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fc1GFuC%2FdJMcaflokNi%2FAAAAAAAAAAAAAAAAAAAAAOpP4fGd27YAcumI_OJe6yJKOWt2KnG4amElTd4au8XT%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3Dsw%252FG8yScJDB3RvBIyQVkoqKCZQ4%253D'
     },
-    ...["후쿠", "쇼타", "마키", "전호", "메이메이", "파혁", "샤오자오", "영야", "제건", "링후쯔", "산예"].map(name => ({
+    {
+        id: 'nok-파혁', 
+        category: '녹인점', 
+        name: '파혁', 
+        title: '녹인점 소속', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2F5qgl7%2FdJMcafeJedj%2FAAAAAAAAAAAAAAAAAAAAAElwJsTg0qTi5m5mBDMKAECh05DhZsmYD93795uS_M8K%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3D2v2rf2mSBW7nM%252F6D8oirqzgirVA%253D'
+    },
+    ...["후쿠", "쇼타", "마키", "전호", "메이메이", "샤오자오", "영야", "제건", "링후쯔", "산예"].map(name => ({
         id: `nok-${name}`, category: '녹인점', name, title: '녹인점 소속', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
     })),
 
@@ -128,7 +146,21 @@ export const CHARACTERS = [
     })),
 
     // --- 운남산 언덕 ---
-    ...["리치", "장장", "추구", "소산작", "마오마오레이"].map(name => ({
+    {
+        id: 'un-리치', 
+        category: '운남산 언덕', 
+        name: '리치', 
+        title: '운남산 신수', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FRmGJV%2FdJMcai3uRXz%2FAAAAAAAAAAAAAAAAAAAAAJk1NOaTN2n3lQdvPOAwprIVZ3s298OA5yHdr2UmoFHI%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3Dd4e95bufau%252BsdtGvVy21gsCFmg0%253D'
+    },
+    {
+        id: 'un-장장', 
+        category: '운남산 언덕', 
+        name: '장장', 
+        title: '운남산 신수', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FkXjYm%2FdJMcaa5wAtv%2FAAAAAAAAAAAAAAAAAAAAAB1ggxa5nQCWReeAoqO9G_Q0Q87_enM7wGcKZFef5Ao0%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DJ9RgwGX9IOyBObLdjl4YCLOpDww%253D'
+    },
+    ...["추구", "소산작", "마오마오레이"].map(name => ({
         id: `un-${name}`, category: '운남산 언덕', name, title: '운남산 신수', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
     })),
     {
