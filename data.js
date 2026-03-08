@@ -128,7 +128,17 @@ export const CHARACTERS = [
     })),
 
     // --- 운남산 언덕 ---
-    ...["리치", "장장", "추구", "소산작", "마오마오레이", "반호", "해치", "화초", "샤오빙", "유성", "피칠성", "토삼성", "사일성"].map(name => ({
+    ...["리치", "장장", "추구", "소산작", "마오마오레이"].map(name => ({
+        id: `un-${name}`, category: '운남산 언덕', name, title: '운남산 신수', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
+    })),
+    {
+        id: 'un-반호',
+        category: '운남산 언덕',
+        name: '반호',
+        title: '운남산 신수',
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FqPFVh%2FdJMcacWyiVR%2FAAAAAAAAAAAAAAAAAAAAAPYfm3UOU3WpbdFSTfKVfwBMLbCO3Ymge9ccNgcSERhI%2Fimg.png%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3D59GyrAi1WNFE4WP%252BmVWwaTr4%252Fpw%253D'
+    },
+    ...["해치", "화초", "샤오빙", "유성", "피칠성", "토삼성", "사일성"].map(name => ({
         id: `un-${name}`, category: '운남산 언덕', name, title: '운남산 신수', image: 'https://via.placeholder.com/300?text=' + encodeURIComponent(name)
     })),
 
