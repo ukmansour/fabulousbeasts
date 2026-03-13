@@ -9,8 +9,9 @@ if (auth && typeof auth.onAuthStateChanged === 'function') {
         const userInfo = document.getElementById('user-info');
         if (!userInfo) return;
         if (user) {
+            const displayName = user.displayName || user.email.split('@')[0];
             userInfo.innerHTML = `
-                <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${user.email.split('@')[0]}님</span>
+                <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${displayName}님</span>
                 <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
             `;
             document.getElementById('logout-btn')?.addEventListener('click', (e) => {

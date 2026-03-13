@@ -62,6 +62,17 @@
             font-size: 0.9rem;
             margin-top: 1rem;
             display: none;
+            text-align: left;
+            background: #fdf2f2;
+            padding: 0.8rem;
+            border-radius: 8px;
+        }
+        .optional-label {
+            font-size: 0.8rem;
+            color: #888;
+            margin-top: -0.8rem;
+            text-align: left;
+            padding-left: 0.5rem;
         }
     </style>
 </head>
@@ -82,8 +93,20 @@
         </div>
 
         <form id="auth-form" class="auth-form">
-            <input type="email" id="email" placeholder="이메일" required>
+            <!-- 닉네임 (ID 역할) -->
+            <input type="text" id="nickname" placeholder="닉네임 (또는 아이디)" required>
+            
+            <!-- 이메일 (회원가입 시에만 보임 / 선택사항) -->
+            <div id="email-group" style="display: none; flex-direction: column; gap: 1rem;">
+                <input type="email" id="email" placeholder="이메일 (비밀번호 찾기용)">
+                <span class="optional-label">* 이메일은 선택 사항입니다.</span>
+            </div>
+
             <input type="password" id="password" placeholder="비밀번호" required>
+            
+            <!-- 비밀번호 확인 (회원가입 시에만 보임) -->
+            <input type="password" id="password-confirm" placeholder="비밀번호 확인" style="display: none;">
+
             <button type="submit" class="auth-btn" id="submit-btn">로그인</button>
         </form>
         <div id="error-message" class="error-message"></div>
