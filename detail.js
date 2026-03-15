@@ -101,11 +101,9 @@ async function loadDetail() {
         </div>
     `;
 
-    // 유저 상태에 따른 편집 버튼 노출
+    // 유저 상태에 따른 상단 정보 업데이트
     onAuthStateChanged(auth, (user) => {
         const userInfo = document.getElementById('user-info');
-        const editContainer = document.getElementById('edit-action-container');
-        
         if (user) {
             const displayName = user.displayName || user.email.split('@')[0];
             if (userInfo) {
@@ -115,14 +113,28 @@ async function loadDetail() {
                 `;
                 document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
             }
-            if (editContainer) {
-                editContainer.innerHTML = `<a href="edit.html#${charId}" class="btn-primary" style="text-decoration: none; padding: 0.8rem 1.5rem; font-size: 1.1rem;">문서 편집</a>`;
-            }
         } else {
             if (userInfo) userInfo.innerHTML = `<a href="auth.html" class="nav-link">로그인</a>`;
-            if (editContainer) editContainer.innerHTML = '';
         }
     });
+
+    // 편집 버튼 (항상 노출, 비로그인 시 클릭하면 안내)
+    const editContainer = document.getElementById('edit-action-container');
+    if (editContainer) {
+        editContainer.innerHTML = `
+            <button id="edit-btn" class="btn-primary" style="padding: 0.8rem 1.5rem; font-size: 1.1rem; border: none; cursor: pointer;">
+                문서 편집
+            </button>
+        `;
+        document.getElementById('edit-btn').addEventListener('click', () => {
+            if (auth.currentUser) {
+                window.location.href = `edit.html#${charId}`;
+            } else {
+                alert("로그인이 필요한 기능입니다. 로그인 페이지로 이동합니다.");
+                window.location.href = 'auth.html';
+            }
+        });
+    }
 }
 
 window.addEventListener('load', loadDetail);
