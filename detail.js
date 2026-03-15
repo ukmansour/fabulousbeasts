@@ -63,6 +63,24 @@ async function loadDetail() {
         </div>
     `;
 
+    // 편집 기록 섹션 생성
+    let historyHtml = '';
+    if (char.history && char.history.length > 0) {
+        historyHtml = `
+            <div class="detail-section" style="margin-top: 5rem; border-top: 1px solid #eee; padding-top: 2rem;">
+                <h2 style="font-size: 1.4rem; color: #666; border-bottom: none;">편집 기록</h2>
+                <ul style="list-style: none; padding: 0; font-size: 0.9rem; color: #777;">
+                    ${char.history.map(entry => `
+                        <li style="margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                            <span><strong>${entry.user}</strong>님이 문서를 수정함</span>
+                            <span>${new Date(entry.timestamp?.seconds * 1000).toLocaleString()}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        `;
+    }
+
     const lastUpdatedHtml = char.updatedBy ? `
         <div style="margin-top: 2rem; font-size: 0.9rem; color: #888; text-align: right;">
             최근 수정: ${char.updatedBy} (${new Date(char.updatedAt?.seconds * 1000).toLocaleDateString()})
@@ -90,6 +108,7 @@ async function loadDetail() {
                     ${sectionsHtml}
                 </div>
                 ${lastUpdatedHtml}
+                ${historyHtml}
             </div>
 
             <div class="detail-right-col">

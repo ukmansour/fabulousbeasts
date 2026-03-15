@@ -104,6 +104,15 @@ async function loadCharacterData() {
 editForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    const currentUser = auth.currentUser;
+    const editorName = currentUser.displayName || currentUser.email.split('@')[0];
+    
+    const historyEntry = {
+        user: editorName,
+        timestamp: new Date(),
+        type: 'edit'
+    };
+
     const updatedData = {
         title: document.getElementById('field-title').value,
         image: document.getElementById('field-image').value,
@@ -114,7 +123,7 @@ editForm.addEventListener('submit', async (e) => {
         birthday: document.getElementById('field-birthday').value,
         height: document.getElementById('field-height').value,
         updatedAt: new Date(),
-        updatedBy: auth.currentUser.displayName || auth.currentUser.email.split('@')[0]
+        updatedBy: editorName
     };
 
     DETAIL_SECTIONS.forEach(section => {
@@ -124,7 +133,18 @@ editForm.addEventListener('submit', async (e) => {
     });
 
     try {
-        await setDoc(doc(db, "characters", charId), updatedData, { merge: true });
+        const docRef = doc(db, "characters", charId);
+        const docSnap = await getDoc(docRef);
+        let history = [];
+        if (docSnap.exists() && docSnap.data().history) {
+            history = docSnap.data().history;
+        }
+        history.unshift(historyEntry); // 최신 순으로 정렬되도록 앞에 추가
+        if (history.length > 10) history = history.slice(0, 10); // 최대 10개까지만 보관
+        
+        updatedData.history = history;
+
+        await setDoc(docRef, updatedData, { merge: true });
         alert("성공적으로 저장되었습니다.");
         window.location.href = `detail.html#${charId}`;
     } catch (error) {
