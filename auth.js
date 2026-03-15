@@ -20,7 +20,7 @@ const errorMessage = document.getElementById('error-message');
 let isLogin = true;
 
 // 내부적으로 사용할 도메인 (이메일 미입력 시)
-const INTERNAL_DOMAIN = "@users.fbwiki.internal";
+const INTERNAL_DOMAIN = "@fbwiki.com";
 
 loginTab.addEventListener('click', () => {
     isLogin = true;
@@ -48,6 +48,16 @@ signupTab.addEventListener('click', () => {
 authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
+    // Firebase가 정상적으로 초기화되지 않았을 경우 체크
+    if (!auth || typeof auth.signInWithEmailAndPassword !== 'undefined') {
+        // 실제 SDK 함수가 존재하지 않으면 (dummy object 상태면) 에러 표시
+        if (!auth.app) { 
+            errorMessage.textContent = "Firebase 설정이 완료되지 않았습니다. firebase-config.js에 실제 API 키를 입력해 주세요.";
+            errorMessage.style.display = 'block';
+            return;
+        }
+    }
+
     const nickname = nicknameInput.value.trim();
     const email = emailInput.value.trim();
     const password = passwordInput.value;
@@ -55,10 +65,20 @@ authForm.addEventListener('submit', async (e) => {
     
     errorMessage.style.display = 'none';
 
-    // 최종 이메일 결정 로직
+    // 닉네임 유효성 검사 (회원가입 시)
+    if (!isLogin && (nickname.length < 2 || nickname.length > 20)) {
+        errorMessage.textContent = "닉네임은 2~20자 사이여야 합니다.";
+        errorMessage.style.display = 'block';
+        return;
+    }
+
+    // 최종 이메일 결정 로직 (한글 및 특수문자 대응을 위한 인코딩 지양, 대신 단순화)
     let finalEmail = nickname;
     if (!nickname.includes('@')) {
-        finalEmail = nickname + INTERNAL_DOMAIN;
+        // Firebase Auth 이메일 규칙 준수를 위해 공백 제거 및 영문/숫자 위주 추천
+        // 하지만 한글 닉네임 사용을 위해 내부적으로는 ID처럼 취급
+        const safeId = nickname.replace(/[^a-zA-Z0-9가-힣]/g, '');
+        finalEmail = safeId + INTERNAL_DOMAIN;
     }
 
     try {
@@ -95,6 +115,10 @@ authForm.addEventListener('submit', async (e) => {
             msg = "닉네임 또는 비밀번호가 올바르지 않습니다.";
         } else if (error.code === 'auth/email-already-in-use') {
             msg = "이미 사용 중인 닉네임 또는 이메일입니다.";
+        } else if (error.code === 'auth/invalid-email') {
+            msg = "유효하지 않은 이메일 형식입니다. 닉네임에 특수문자를 제외해 주세요.";
+        } else if (error.code === 'auth/operation-not-allowed') {
+            msg = "Firebase Console에서 Email/Password 인증이 활성화되어 있지 않습니다.";
         }
         errorMessage.textContent = msg;
         errorMessage.style.display = 'block';
