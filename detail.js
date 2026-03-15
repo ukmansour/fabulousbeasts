@@ -50,14 +50,24 @@ async function loadDetail() {
         </div>
     `).join('');
 
-    let infoboxHtml = char.infobox || `
+    // 인포박스 동적 생성 (Firestore 데이터 우선)
+    const infoboxHtml = `
         <div class="infobox">
             <div class="infobox-row"><strong>이름:</strong> ${char.name}</div>
             <div class="infobox-row"><strong>별명:</strong> ${char.nickname || '-'}</div>
             <div class="infobox-row"><strong>성별:</strong> ${char.gender || '-'}</div>
-            <div class="infobox-row"><strong>종:</strong> ${char.species || '-'}</div>
+            <div class="infobox-row"><strong>종족:</strong> ${char.species || '-'}</div>
+            <div class="infobox-row"><strong>국적:</strong> ${char.nationality || '-'}</div>
+            <div class="infobox-row"><strong>생일:</strong> ${char.birthday || '-'}</div>
+            <div class="infobox-row"><strong>키:</strong> ${char.height || '-'}</div>
         </div>
     `;
+
+    const lastUpdatedHtml = char.updatedBy ? `
+        <div style="margin-top: 2rem; font-size: 0.9rem; color: #888; text-align: right;">
+            최근 수정: ${char.updatedBy} (${new Date(char.updatedAt?.seconds * 1000).toLocaleDateString()})
+        </div>
+    ` : '';
 
     container.innerHTML = `
         <div class="detail-main-layout">
@@ -79,6 +89,7 @@ async function loadDetail() {
                 <div class="detail-sections-wrapper" style="margin-top: 3rem;">
                     ${sectionsHtml}
                 </div>
+                ${lastUpdatedHtml}
             </div>
 
             <div class="detail-right-col">
@@ -96,15 +107,16 @@ async function loadDetail() {
         const editContainer = document.getElementById('edit-action-container');
         
         if (user) {
+            const displayName = user.displayName || user.email.split('@')[0];
             if (userInfo) {
                 userInfo.innerHTML = `
-                    <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${user.email.split('@')[0]}님</span>
+                    <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${displayName}님</span>
                     <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
                 `;
                 document.getElementById('logout-btn').addEventListener('click', () => signOut(auth));
             }
             if (editContainer) {
-                editContainer.innerHTML = `<a href="edit.html#${charId}" class="btn-primary" style="text-decoration: none;">편집하기</a>`;
+                editContainer.innerHTML = `<a href="edit.html#${charId}" class="btn-primary" style="text-decoration: none; padding: 0.8rem 1.5rem; font-size: 1.1rem;">문서 편집</a>`;
             }
         } else {
             if (userInfo) userInfo.innerHTML = `<a href="auth.html" class="nav-link">로그인</a>`;
@@ -116,7 +128,7 @@ async function loadDetail() {
 window.addEventListener('load', loadDetail);
 window.addEventListener('hashchange', () => {
     const hash = window.location.hash;
-    if (hash.includes('-')) {
+    if (hash && hash.includes('-')) {
         const element = document.getElementById(hash.replace('#', ''));
         if (element) {
             window.scrollTo({ top: element.getBoundingClientRect().top + window.pageYOffset - 150, behavior: "smooth" });

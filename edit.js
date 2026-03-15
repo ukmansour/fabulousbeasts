@@ -41,16 +41,54 @@ async function loadCharacterData() {
     document.getElementById('edit-title').textContent = `${char.name} 편집`;
     cancelLink.href = `detail.html#${charId}`;
 
-    // 필드 생성 (설정, 외형, 성격, 능력 등)
+    // 필드 생성 (기본 정보)
     let fieldsHtml = `
+        <div class="form-group">
+            <label>캐릭터 이름 (변경 불가)</label>
+            <input type="text" value="${char.name}" disabled style="background: #f0f0f0;">
+        </div>
         <div class="form-group">
             <label>한 줄 소개 (title)</label>
             <input type="text" id="field-title" value="${char.title || ''}">
         </div>
+        <div class="form-group">
+            <label>이미지 URL</label>
+            <input type="text" id="field-image" value="${char.image || ''}">
+        </div>
+        
+        <h3 style="margin-top: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 0.5rem;">기본 프로필 정보</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+                <label>별명</label>
+                <input type="text" id="field-nickname" value="${char.nickname || ''}">
+            </div>
+            <div class="form-group">
+                <label>성별</label>
+                <input type="text" id="field-gender" value="${char.gender || ''}">
+            </div>
+            <div class="form-group">
+                <label>종족</label>
+                <input type="text" id="field-species" value="${char.species || ''}">
+            </div>
+            <div class="form-group">
+                <label>국적</label>
+                <input type="text" id="field-nationality" value="${char.nationality || ''}">
+            </div>
+            <div class="form-group">
+                <label>생일</label>
+                <input type="text" id="field-birthday" value="${char.birthday || ''}">
+            </div>
+            <div class="form-group">
+                <label>키</label>
+                <input type="text" id="field-height" value="${char.height || ''}">
+            </div>
+        </div>
+
+        <h3 style="margin-top: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 0.5rem;">상세 설정 내용</h3>
     `;
 
     DETAIL_SECTIONS.forEach(section => {
-        if (section.id === 'yusu_huihwa') return; // 갤러리는 제외 (일단)
+        if (section.id === 'yusu_huihwa') return; 
         
         fieldsHtml += `
             <div class="form-group">
@@ -68,8 +106,15 @@ editForm.addEventListener('submit', async (e) => {
     
     const updatedData = {
         title: document.getElementById('field-title').value,
+        image: document.getElementById('field-image').value,
+        nickname: document.getElementById('field-nickname').value,
+        gender: document.getElementById('field-gender').value,
+        species: document.getElementById('field-species').value,
+        nationality: document.getElementById('field-nationality').value,
+        birthday: document.getElementById('field-birthday').value,
+        height: document.getElementById('field-height').value,
         updatedAt: new Date(),
-        updatedBy: auth.currentUser.email
+        updatedBy: auth.currentUser.displayName || auth.currentUser.email.split('@')[0]
     };
 
     DETAIL_SECTIONS.forEach(section => {
