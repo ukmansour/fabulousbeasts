@@ -48,14 +48,12 @@ signupTab.addEventListener('click', () => {
 authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Firebase가 정상적으로 초기화되지 않았을 경우 체크
-    if (!auth || typeof auth.signInWithEmailAndPassword !== 'undefined') {
-        // 실제 SDK 함수가 존재하지 않으면 (dummy object 상태면) 에러 표시
-        if (!auth.app) { 
-            errorMessage.textContent = "Firebase 설정이 완료되지 않았습니다. firebase-config.js에 실제 API 키를 입력해 주세요.";
-            errorMessage.style.display = 'block';
-            return;
-        }
+    // Firebase 설정 확인 (더미 객체 여부 체크)
+    // 실제 Firebase Auth 객체는 내부적으로 'config' 또는 'app' 프로퍼티를 가집니다.
+    if (!auth || !auth.app || !auth.app.options || auth.app.options.apiKey === "YOUR_API_KEY") {
+        errorMessage.textContent = "Firebase 설정이 완료되지 않았습니다. 'firebase-config.js' 파일에 실제 API Key와 설정값들을 입력해 주세요.";
+        errorMessage.style.display = 'block';
+        return;
     }
 
     const nickname = nicknameInput.value.trim();
