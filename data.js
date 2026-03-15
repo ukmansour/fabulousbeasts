@@ -112,31 +112,94 @@ export const CHARACTERS = [
         name: '사불상 (四不像)', 
         title: '녹인점의 주인', 
         image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FbD0eLx%2FdJMcafr9eyx%2FAAAAAAAAAAAAAAAAAAAAAAjZQRaTjqxLHFq1C_vz2DjDAmpHr_i6HehWlH-4obHD%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1772290799%26allow_ip%3D%26allow_referer%3D%26signature%3D9D2sgrhZJBp%252BVyeDIj5nf1TMJN8%253D', 
-        nickname: '사 사장', gender: '남', species: '사불상', height: '175cm', furColor: '연갈색', eyeColor: '갈색', nationality: '중국', birthday: '7월 20일',
-        appearance_debut: `천계의 지시로 이승에서 가난한 신수들을 도우며 녹인점을 운영 중인 사불상.`,
+        nickname: '사 사장', gender: '남', species: '녹정 (승천한 신수)', height: '175cm', furColor: '연갈색', eyeColor: '갈색', nationality: '중국', birthday: '7월 20일',
+        appearance_debut: `원래는 천계에 살고있었으나 천계의 지시로 이승에서 가난한 신수들을 도우며 녹인점을 운영 중인 사불상.`,
         appearance: `사불상은 연한 갈색 털을 지닌 의인화된 사슴의 모습으로 나타난다. 허벅지와 꼬리 윗부분에는 흰색 반점이 흩어져 있으며, 꼬리 아래쪽과 엉덩이 부분, 그리고 귀 안쪽에는 흰 털이 있다.<br><br>머리에는 개암색의 사슴뿔이 한 쌍 나 있으며 다리는 발굽이 갈라진 형태를 하고 있다. 발에는 갈색 발바닥 젤리와 짧은 발톱이 있다. 자세히 보면 발바닥은 고양이나 개의 발바닥 구조와 비슷하지만, 가운데 패드는 사슴 발굽 자국처럼 보이는 모양을 하고 있다.<br><br>그는 흰 구름 무늬가 장식된 붉은 망토를 입고 있으며, 망토 양쪽 끝에는 금빛 술 장식이 달려 있다.<br><br>사불상의 가장 큰 특징은 얼굴이 항상 흰색 도자기 가면으로 가려져 있다는 점이다. 가면에는 붉은색과 검은색 문양이 그려져 있으며, 붉은 끈으로 머리에 묶여 있고 끝에는 술 장식이 달려 있다. 만화나 외전 등 작품 내에서 그의 얼굴은 항상 가려져 있어 실제 모습은 알려져 있지 않다.<br><br>또한 사슴처럼 때때로 뿔이 빠지고 다시 자라기도 한다. 사불상이라는 이름처럼 그의 몸은 여러 동물의 특징이 섞여 있는 존재로 여겨진다. 앞다리와 발은 고양이과 동물을 닮았지만 전체적인 외형은 사슴과 가장 비슷하다.<br><br><b>2.1 본래 모습:</b> 사불상은 또 다른 형태로 변할 수 있는데, 이 모습에서는 원래의 사슴 정령에 가까운 형태가 된다. 이 모습에서는 몸이 일반 사슴과 더 비슷해지지만 크기는 보통 사슴보다 약간 더 크다. 털 색과 가면은 그대로 유지되며, 가면 역시 몸의 크기에 맞게 형태가 변한다. 변신하면 망토는 투명한 붉은 리본 같은 띠로 변하여 몸 주변을 떠다닌다. 이 형태에서는 여러 동물의 특징이 섞여 보이지 않고 완전히 사슴에 가까운 모습이 된다. 뿔이 빠진 상태에서는 암사슴과 매우 비슷해 보이기도 한다.<br><br><b>2.2 위장된 모습:</b> 작품 후반에서는 대부분의 사람들이 보는 사불상의 모습이 독자들이 보는 모습과 다르다는 사실이 밝혀진다. 이 “위장된 모습"에서는 흰 털과 옅은 금색 뿔을 지니고 있으며, 가면에 있는 것과 비슷한 붉은 볼 무늬가 있다. 또한 귀가 두 쌍이며 뿔과 주둥이가 조금 더 길어 기린 사불상의 모습과 비슷하게 보인다. 벽사에 따르면 그의 냄새 역시 기린 사불상과 비슷하다고 한다.`,
-        personality: `사불상은 침착하고 reality적인 성격의 신수이다. 주인공 일행 중에서는 가장 성숙한 어른 같은 역할을 맡고 있으며, 천계의 대표로서 행동할 때나 가게를 운영할 때 책임감 있고 규율을 중시하는 모습을 보인다.<br><br>하지만 이러한 진지의 태도 때문에 주변 상황이 마음대로 되지 않으면 쉽게 짜증을 내기도 한다. 특히 직원이나 다른 신수들이 소란을 피우면 금방 화를 내는 편이다.<br><br>겉보기에는 냉정하고 세련된 태도를 보이지만 실제로는 돈에 매우 집착하는 면이 있다. 상당히 인색하고 계산적인 성격으로, 가게의 예산을 쓰는 것을 아까워하며 물건이나 건물이 손상되면 크게 신경 쓴다. 돈을 절약하거나 더 벌 수 있는 기회가 있으면 적극적으로 이용하려 한다.<br><br>천계의 임무를 맡고 있지만 오랫동안 한가롭게 지내다가 갑자기 일을 맡게 되었기 때문에 의외로 게으른 편이다. 자신의 시간에 가치가 없다고 생각되는 일에는 의욕을 보이지 않는다.<br><br>또한 약간 이기적인 면이 있어 자신의 의지로만 행동하려 하는 경향이 있다. 다른 이들의 부탁도 위협을 받거나 큰 보상이 있을 때에야 들어주기도 한다. 감정을 겉으로 잘 드러내지 않는 편이며, 가면 뒤에 자신의 생각과 감정을 숨기고 있는 경우가 많다. 겉으로는 태연하고 여유로운 태도를 유지한다. 그는 천록의 과거에 대해 말하는 사람을 막으려 하며, 천록이 자신의 기억을 되찾았을 때 자신에게 등을 돌릴까 두려워하기도 한다.`,
+        personality: `사불상은 침착하고 현실적인 성격의 신수이다. 주인공 일행 중에서는 가장 성숙한 어른 같은 역할을 맡고 있으며, 천계의 대표로서 행동할 때나 가게를 운영할 때 책임감 있고 규율을 중시하는 모습을 보인다.<br><br>하지만 이러한 진지의 태도 때문에 주변 상황이 마음대로 되지 않으면 쉽게 짜증을 내기도 한다. 특히 직원이나 다른 신수들이 소란을 피우면 금방 화를 내는 편이다.<br><br>겉보기에는 냉정하고 세련된 태도를 보이지만 실제로는 돈에 매우 집착하는 면이 있다. 상당히 인색하고 계산적인 성격으로, 가게의 예산을 쓰는 것을 아까워하며 물건이나 건물이 손상되면 크게 신경 쓴다. 돈을 절약하거나 더 벌 수 있는 기회가 있으면 적극적으로 이용하려 한다.<br><br>천계의 임무를 맡고 있지만 오랫동안 한가롭게 지내다가 갑자기 일을 맡게 되었기 때문에 의외로 게으른 편이다. 자신의 시간에 가치가 없다고 생각되는 일에는 의욕을 보이지 않는다.<br><br>또한 약간 이기적인 면이 있어 자신의 의지로만 행동하려 하는 경향이 있다. 다른 이들의 부탁도 위협을 받거나 큰 보상이 있을 때에야 들어주기도 한다. 감정을 겉으로 잘 드러내지 않는 편이며, 가면 뒤에 자신의 생각과 감정을 숨기고 있는 경우가 많다. 겉으로는 태연하고 여유로운 태도를 유지한다. 그는 천록의 과거에 대해 말하는 사람을 막으려 하며, 천록이 자신의 기억을 되찾았을 때 자신에게 등을 돌릴까 두려워하기도 한다.`,
         ability: `봉신 전쟁 이후 신이 되어 불사의 존재가 되었다고 말한다. 그러나 실제로는 천계가 기린 사불상의 유해를 그의 몸에 이식했기 때문에 불사의 상태가 되었다.<br><br>발차기만으로 상대를 멀리 날려버릴 정도로 강한 힘을 지니고 있다.<br><br>본래 모습에서는 하늘을 날 수 있으며 하루에 수천 리를 이동할 수 있다고 한다.<br><br>지상에 있는 신수들을 돕는 임무를 맡고 있기 때문에 다른 존재들과 대화를 잘하며 조언을 해 줄 수 있다.<br><br>녹인점을 운영하며 물건을 판매하고 가게를 관리하는 능력이 있다.<br><br>직원들과 자신이 먹을 음식을 직접 만들기도 한다.<br><br>취미로 낚시를 즐긴다.`,
         motif: `사불상은 중국 고전 소설 봉신연의에 등장하는 신수로, 강자아의 탈것으로 알려져 있다. 이 신수는 여러 동물의 특징이 섞여 있는 존재로 묘사되며 전승에 따라 사슴의 뿔, 소의 발굽, 말의 얼굴, 당나귀의 꼬리가 결합된 모습으로 설명된다. 이처럼 4가지 동물의 특징이 섞여 있지만 “네 가지가 모두 닮지 않았다”는 의미로 사불상이라는 이름이 붙었다. 또한 중국에서는 <b>사불상(四不象)</b>이라는 말이 여러 동물의 특징이 섞여 있는 존재를 가리키는 표현으로 사용되기도 한다.`,
         name_origin: `사불상 (넉 四, 아닐 不, 모양 像) / 스부샹. 즉 <b>“네 가지 모두 닮지 않았다”</b>라는 뜻이다. 여러 동물의 특징이 섞여 있어 어느 한 동물과도 완전히 같지 않은 존재라는 의미에서 붙은 이름이다.`,
         trivia: `<ul><li>가면을 쓰고 있는 이유에 대해 작품 내 설정에서는 너무 잘생겨서 다른 존재들이 가까이 오지 못하기 때문이라고 말하기도 한다.</li><li>아직까지 그의 실제 눈은 작품에서 제대로 공개되지 않았다. 다만 몇몇 등장인물들은 그의 눈을 본 적이 있다고 말하며 깊고 촉촉한 눈이라고 묘사한다. 2025년 10월 15일 8주년 라이브에서 만화가 완결될 때 사불상의 얼굴을 드러낼 것이며 아직 눈 색은 미정이라고 언급했다.</li><li>예전에는 담배를 피웠지만 지상에 내려온 이후 금연하게 되었다.</li><li>망토 아래에는 여러 종류의 가면을 숨겨 두고 있어 현재 가면이 벗겨지거나 부서져도 바로 다른 가면으로 바꿀 수 있다.</li><li>발바닥이 매우 예민한 편이다.</li><li><b>단 것을 좋아한다.</b></li></ul>`,
-        yusu_huihwa: ``
+        yusu_huihwa: ``,
+        infobox: `
+            <div class="infobox">
+                <div class="infobox-row"><strong>이름:</strong> 사불상 (四不像)</div>
+                <div class="infobox-row"><strong>성별:</strong> 남</div>
+                <div class="infobox-row"><strong>종:</strong> 녹정 (승천한 신수)</div>
+                <div class="infobox-row"><strong>변장:</strong> 기린</div>
+                <div class="infobox-row"><strong>키:</strong> 175cm</div>
+                <div class="infobox-row"><strong>생일:</strong> 7월 20일</div>
+                <div class="infobox-row"><strong>국적:</strong> 중국</div>
+                
+                <div class="infobox-section-title">직업</div>
+                <div class="infobox-row">강자아의 좌기 (과거), 녹인점 골동품 가게 주인, 교도관</div>
+                
+                <div class="infobox-section-title">별명 및 호칭</div>
+                <div class="infobox-row">사 사장(四老板), 합성육(合成肉 - 방랑신), 녹정(鹿精 - 천록)</div>
+                
+                <div class="infobox-section-title">관계</div>
+                <div class="infobox-row"><strong>양자:</strong> 사의성</div>
+                <div class="infobox-row"><strong>소속:</strong> 녹인점(주인), 천계</div>
+                
+                <div class="infobox-section-title">배경 및 거주지</div>
+                <div class="infobox-row">녹인점 (운남 채운산), 북경 반가원 시장 (과거), 천궁 (과거)</div>
+                
+                <div class="infobox-section-title">기타 정보</div>
+                <div class="infobox-row"><strong>만화 첫 등장:</strong> 1화</div>
+                <div class="infobox-row"><strong>애니 첫 등장:</strong> 1화</div>
+                <div class="infobox-row"><strong>등장 횟수:</strong> 515화</div>
+                <div class="infobox-row"><strong>성우:</strong> 도특하몽(图特哈蒙 - 만화 오디오), 아걸(阿杰 - 애니)</div>
+                <div class="infobox-row"><strong>등장 작품:</strong> 《비인재》</div>
+            </div>
+        `
     },
     { 
         id: 'tony', 
         category: '메인 캐릭터', 
-        name: '투예 (兔爷)', 
+        name: '투예 (兔爷 / 토야)', 
         title: '사불상 남편', 
         image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FKcUIj%2FdJMcaflokNh%2FAAAAAAAAAAAAAAAAAAAAAGSQRnO0c8CI22cpfXLpydcTTRVnKqg4FgAas4yhvs0Y%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3DDtjbWrv5PQB1R4UjoOozyYEz68g%253D', 
-        nickname: '토니', gender: '남', species: '토끼', height: '178cm', furColor: '연한 갈색, 흰색', eyeColor: '보라색', nationality: '중국', birthday: '1월 21일',
-        appearance_debut: `사불상을 짝사랑 하며 사업으로 성공해 재산이 많은 달토끼.`,
+        nickname: '토니', gender: '남', species: '월토', height: '178cm', furColor: '연한 갈색, 흰색', eyeColor: '보라색', nationality: '중국', birthday: '1월 21일',
+        appearance_debut: `오래전 달을 떠나 지구로 내려와 인류를 구하려 했던 월궁의 토끼. 이후 현대 시대에 와서는 사업가로 활동하고 있다.<br><br>사불상에게 집착에 가까운 짝사랑을 하고 있으며, 사불상의 마음을 얻기 위해서라면 어떤 일도 마다하지 않는다.`,
         appearance: `연한 갈색의 의인화된 토끼 모습으로 등장한다. 발끝, 엉덩이 아래쪽, 꼬리 아래, 그리고 목 안쪽에서 입과 턱까지 이어지는 부분에는 흰 털이 나 있다. 오른쪽 귀에는 두 줄의 흰 털 무늬가 있으며 눈은 보라색이다.<br><br>만화에서는 턱에 염소수염이 그려지는 경우가 있는데, 이는 주로 표지나 장식 일러스트에서 등장하는 “약간 멋있어 보이게 하는 요소”이다. 짙은 갈색 눈썹은 눈 위에 세 줄이 곡선으로 배열된 형태처럼 보인다. 항상 보라색 목도리를 두르고 있으며 절대 벗지 않는다. 왼쪽 귀 안쪽에는 초록색 귀걸이, 바깥쪽에는 금색 귀걸이와 두 개의 검은 피어싱을 하고 있다.<br><br><b>2.1:</b> 달 토끼로서의 원래 모습에서는 일반적인 토끼 형태가 되며, 갈색과 흰색의 털 색깔은 그대로 유지된다. 눈은 다른 토끼들과 마찬가지로 구슬처럼 작은 형태로 보인다.<br><br><b>2.2:</b> 인간 형태로 변할 때는 연한 갈색 머리카락을 가지며, 귀걸이와 목도리 같은 장식은 그대로 유지한다. 또한 토끼 귀와 꼬리도 남아 있다. 복장은 찢어진 청바지, 회색 셔츠, 짙은 회색 재킷을 입고 있는 모습으로 묘사된다.`,
         personality: `투예는 화려하고 활기찬 성격을 지닌 인물이다. 기본적으로 사람들에게 친절하고 사교적이며, 열정이 많은 토끼이다. 과거 이야기에 따르면 그는 인류를 돕고 싶어 하는 자비로운 성격을 가지고 있다. 달에서 위험한 환경 속에서 살아온 경험 때문에 신중하고 현실적인 판단력도 갖게 되었다. 또한 다양한 기술과 직업을 익혀 여러 사업에 참여하는 일 중독자 같은 면도 보인다. 운남 산맥에 사는 신수들에게 매우 관대하여 집이나 시설, 심지어 통신탑까지 지어 주는 등 많은 지원을 해 주었다. 사불상에게 강한 호감을 가지고 있으며 거의 집착에 가까운 짝사랑을 하고 있다. 사불상은 투예의 감정을 잘 모르지만, 투예는 사불상을 위해 무슨 일이든 할 준비가 되어 있는 모습을 보인다. 그러나 자신의 감정을 고백하려 하면 자주 당황하거나 긴장한다. 거절당했다고 느끼면 크게 상심하기도 한다. 그럼에도 그는 사불상의 친구로서 사업을 돕거나 여행에 동행하고, 힘들 때 위로해 주는 등 좋은 관계를 유지하고 있다.`,
         ability: `투예는 달에서 살아온 존재로, 달의 환경에서도 자연스럽게 호흡하고 움직일 수 있는 능력을 가지고 있다. 토끼의 본능으로 복잡한 지하 굴을 파는 능력이 뛰어나다. 그는 루런전 뒤쪽에 큰 굴을 파서 집으로 사용하고 있으며 내부도 화려하게 꾸며 놓았다. 토끼의 반사신경 덕분에 매우 빠르고 민첩하게 움직인다. 인류의 숭배와 수행을 통해 신의 경지에 올라 긴 수명을 얻었다. 의인화된 모습과 본래의 달 토끼 모습 사이를 자유롭게 변할 수 있다. 체력이 떨어지면 의도하지 않게 토끼 모습으로 변하기도 한다. 다양한 약과 영약을 만드는 능력을 가지고 있다. 옛날에 역병을 치료해 사람들을 구하면서 신으로 숭배받게 되었다. 현대 사회에서 살아가기 위해 다양한 사업에 참여해 큰 재산을 모았다. 뛰어난 이발사이자 스타일리스트이기도 하다. 머리, 털, 깃털 등 다양한 손님을 손질할 수 있으며 미용실을 운영하고 있다. 요리 실력도 뛰어나며 특히 월병을 잘 만든다. 월병을 매우 좋아하고 만드는 실력도 뛰어나 <b>“수석 월병 요리사”</b>라는 칭호를 얻었다.`,
         motif: `동아시아 전설에서는 토끼가 절구와 공이를 사용해 약을 찧는 모습으로 묘사되며, 중국 신화에서는 달의 여신 항아의 동료로 알려져 있다.`,
-        name_origin: `**토야(토끼 兔, 아비 爷)**/투예. 문자 그대로 <b>“토끼 어르신” 또는 “토끼 대인”</b>이라는 의미를 가진다. 이 이름은 중국 민속 전승과 관련되어 있으며 두 가지 유래가 추정된다.<br><br>첫 번째는 <b>토아야(兔儿爷)</b>에서 유래했을 가능성이다. 토얼예는 중국 민속에서 항아와 함께 달에 사는 옥토끼를 가리키는 존재이다.<br>두 번째는 <b>토아신(兔儿신)</b>과 <b>대야(大爷)</b>의 이름이 합쳐졌을 가능성이다. 토아신은 중국 민간 신앙에서 토끼와 남성 간 사랑을 관장하는 신으로 전해진다. 또한 공식 설정에서는 그의 영어 이름이 토니라고 표시되어 있다.`,
+        name_origin: `<b>토야(토끼 兔, 아비 爷) / 투예:</b> 문자 그대로 <b>“토끼 어르신” 또는 “토끼 대인”</b>이라는 의미를 가진다.<br><br>이 이름은 중국 민속 전승과 관련되어 있으며 두 가지 유래가 추정된다.<br><br>첫 번째는 <b>토아야(兔儿爷)</b>에서 유래했을 가능성이다. 토얼예는 중국 민속에서 항아와 함께 달에 사는 옥토끼를 가리키는 존재이다.<br>두 번째는 <b>토아신(兔儿신)</b>과 <b>대야(大爷)</b>의 이름이 합쳐졌을 가능성이다. 토아신은 중국 민간 신앙에서 토끼와 남성 간 사랑을 관장하는 신으로 전해진다. 또한 공식 설정에서는 그의 영어 이름이 토니라고 표시되어 있다.`,
         trivia: `<ul><li>예전에 인간 세계에서 역병을 치료해 많은 사람들에게 숭배받았다.</li><li>달에서 어린 시절 집에서 쫓겨난 뒤 항아의 궁전에 있는 월병 공장에서 일하게 되었다.</li><li>월병을 좋아하는 유일한 달 토끼라고 한다.</li><li>눈이 보라색인 것은 토끼들 사이에서 희귀한 특징이었다.</li><li>예전에 자동차를 소유했지만 토끼의 습성 때문에 브레이크를 계속 밟아 운전이 어려워 포기했다.</li><li>한때 여장을 하고 사람들의 눈을 피한 적도 있다.</li><li>미래의 자신을 만났을 때 사불상과 관련된 비극적인 미래가 암시되기도 했다.</li><li>사불상을 위해 유수연 테마 놀이공원을 지을 계획을 가지고 있으며 완성까지 약 30년이 걸린다고 한다.</li></ul>`,
-        yusu_huihwa: ``
+        yusu_huihwa: ``,
+        infobox: `
+            <div class="infobox">
+                <div class="infobox-row"><strong>이름:</strong> 투예 (兔爷 / 토야)</div>
+                <div class="infobox-row"><strong>성별:</strong> 남</div>
+                <div class="infobox-row"><strong>나이:</strong> 수천 세 이상</div>
+                <div class="infobox-row"><strong>종:</strong> 월토</div>
+                <div class="infobox-row"><strong>키:</strong> 178cm</div>
+                <div class="infobox-row"><strong>생일:</strong> 1월 21일</div>
+                <div class="infobox-row"><strong>출생지:</strong> 달</div>
+                <div class="infobox-row"><strong>국적:</strong> 중국</div>
+                
+                <div class="infobox-section-title">직업</div>
+                <div class="infobox-row">기업가, 미용실 주인, 월병 수석 요리사 (과거)</div>
+                
+                <div class="infobox-section-title">별명 및 호칭</div>
+                <div class="infobox-row">토토니(兔托尼), 토사부(兔师傅), 토토(兔兔 - 비비), 토니(tony), 죄수 번호 010</div>
+                
+                <div class="infobox-section-title">관계</div>
+                <div class="infobox-row"><strong>가족 관계:</strong> 어머니, 토삼성(양아들)</div>
+                <div class="infobox-row"><strong>연애 관계:</strong> 사불상(짝사랑), 소우(전 여자친구)</div>
+                <div class="infobox-row"><strong>소속:</strong> 달/월궁, 녹인점, 마스터 토니 미용실(주인), 옥토 월병 공장(과거)</div>
+                
+                <div class="infobox-section-title">배경 및 거주지</div>
+                <div class="infobox-row">토끼 굴 (녹인점, 운남 채운산), 월궁, 달 (과거)</div>
+                
+                <div class="infobox-section-title">기타 정보</div>
+                <div class="infobox-row"><strong>만화 첫 등장:</strong> 2화</div>
+                <div class="infobox-row"><strong>애니 첫 등장:</strong> 2화</div>
+                <div class="infobox-row"><strong>성우:</strong> 학상해(郝祥海 - 만화 오디오), 도아(涂鸦 - 애니), 유유(幽幽 - 애니 어린 시절)</div>
+                <div class="infobox-row"><strong>등장 작품:</strong> 《비인재》</div>
+            </div>
+        `
     },
 
     // --- 녹인점 ---
@@ -165,9 +228,52 @@ export const CHARACTERS = [
     {
         id: 'nok-호두', 
         category: '녹인점', 
-        name: '호두', 
-        title: '녹인점 소속', 
-        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fc1GFuC%2FdJMcaflokNi%2FAAAAAAAAAAAAAAAAAAAAAOpP4fGd27YAcumI_OJe6yJKOWt2KnG4amElTd4au8XT%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3Dsw%252FG8yScJDB3RvBIyQVkoqKCZQ4%253D'
+        name: '호두 (核桃)', 
+        title: '두 꼬리를 가진 맹극', 
+        image: 'https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2Fc1GFuC%2FdJMcaflokNi%2FAAAAAAAAAAAAAAAAAAAAAOpP4fGd27YAcumI_OJe6yJKOWt2KnG4amElTd4au8XT%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1774969199%26allow_ip%3D%26allow_referer%3D%26signature%3Dsw%252FG8yScJDB3RvBIyQVkoqKCZQ4%253D',
+        nickname: '아들, 도도', gender: '남', species: '맹극', height: '55cm ~ 61cm', furColor: '흰색 (검은 반점)', eyeColor: '검은색', nationality: '중국', birthday: '8월 8일',
+        appearance_debut: `어린 나이에 부모에게 버려져 녹인점 문 앞에 나타난 맹극. 꿈속에 들어갈 수 있는 능력이 있다.`,
+        appearance: `호두는 어린 맹극으로, 눈표범처럼 생긴 흰색 고양잇과 동물이다.<br><br>꼬리는 두 개이며 몸에는 검은색 또는 짙은 회색의 반점과 줄무늬가 있다. 특히 두 꼬리 위쪽에는 각각 세 줄의 줄무늬가 있다.`,
+        personality: `호두는 아직 어린 탓에 미숙하고 순진하며 쉽게 울기도 하는 성격이다. 또한 크게 똑똑한 편은 아니어서 다른 사람의 말을 결과를 잘 생각하지 않고 그대로 따르는 경우가 많다.<br><br>하지만 대부분의 짐승들이 가지고 있는 위험을 감지하는 감각은 가지고 있으며, 본인도 이를 “고양잇과의 감각”이라고 말한다.<br><br>순진하고 어린아이 같은 면이 있지만 의외로 여러 능력을 자연스럽게 사용할 수 있는 잠재력도 보인다. 예를 들어 두 발로 걷기나 사유의 세계(생각의 세계)에 들어가는 것 같은 능력을 보여준다.<br><br>그의 조심스러운 성격은 때때로 주변 사람을 보호하려는 행동으로 나타나기도 한다. 예를 들어 사불상의 비밀을 알게 된 후 그 사실을 다른 사람에게 말하지 않도록 하기도 한다.<br><br>후쿠와는 처음에는 사이가 좋지 않았지만 결국 가장 친한 친구가 된다. 매우 아끼며 시간이 지나면서 자신도 모르게 감정이 깊어지지만 호두는 아직 사랑이라는 개념을 제대로 이해하지 못하고, 단지 매우 가까운 친구 관계라고 생각한다.`,
+        ability: `꼬리로 하트 만들기<br>꼬리로 헬리콥터 만들기<br>꿈의 세계를 자유롭게 이동할 수 있으며 다른 생물의 꿈에도 들어갈 수 있다.<br>어린이날에 사불상에게 낚싯대를 받고 낚시를 배우게 되었으며 의외로 매우 잘한다.<br>후쿠와 함께 살게 된 뒤 일을 돕기 위해 사불상에게 요리를 배웠으며, 집안일도 맡아 하고 있다.`,
+        motif: `산해경 북산경 석자산에서 출몰하며 외형은 표범, 이마에 무늬, 흰 몸빛이며 자신의 이름같은 소리를 낸다. 엎드려 숨기를 잘한다.`,
+        name_origin: `<b>핵도(씨 核, 복숭아 桃) / 허타오:</b> ‘호두’를 의미하는 이름이다.<br><br><b>맹극(맹렬할 孟, 다할 极):</b> 중국 신화에 등장하는 신수로, 표범과 비슷한 모습에 두 개의 꼬리를 가지고 있으며 꿈에 들어갈 수 있는 능력을 지닌 존재이다.`,
+        trivia: `<ul><li>맹극은 보통 자신의 종 이름을 말하는 습성이 있는데, 호두는 아직 어려서 “모찌”라고 발음한다.</li><li>처음 등장했을 때 이름이 밝혀지지 않아 독자들이 맹극 또는 모찌가 이름이라고 착각했다.</li><li>글쓰기를 아직 잘하지 못해 맞춤법을 자주 틀린다.</li><li>녹인점 직원은 아니지만 용돈을 벌기 위해 집안일을 돕는다.</li><li>유리 구슬을 모으는 취미가 있다.</li><li>그가 잠을 자는 골판지 상자는 사실 다른 사람들이 몰래 계속 새 것으로 바꿔주고 있었다.</li><li>공식 설정에 따르면 초등학교 6학년 수준의 교육을 받고 있다.</li></ul>`,
+        yusu_huihwa: ``,
+        infobox: `
+            <div class="infobox">
+                <div class="infobox-row"><strong>이름:</strong> 호두 (核桃)</div>
+                <div class="infobox-row"><strong>성별:</strong> 남</div>
+                <div class="infobox-row"><strong>나이:</strong> 204세 (549화 기준)</div>
+                <div class="infobox-row"><strong>종:</strong> 맹극 (孟极)</div>
+                <div class="infobox-row"><strong>생일:</strong> 8월 8일</div>
+                
+                <div class="infobox-section-title">신체 특징</div>
+                <div class="infobox-row"><strong>키:</strong> 55cm ~ 61cm</div>
+                
+                <div class="infobox-section-title">직업</div>
+                <div class="infobox-row">가정주부, 해치의 반 학생</div>
+                
+                <div class="infobox-section-title">별명 및 호칭</div>
+                <div class="infobox-row">아들(儿 - 운두, 면도, 전호), 도도(桃桃 - 후쿠), 두 꼬리를 가진 맹극 점무늬 고양이</div>
+                
+                <div class="infobox-section-title">관계</div>
+                <div class="infobox-row"><strong>가족 관계:</strong> 목화(모), 운두(부), 협죽도(외삼촌), 전호(의부)</div>
+                <div class="infobox-row"><strong>연인:</strong> 후쿠 (동거 중)</div>
+                
+                <div class="infobox-section-title">소속</div>
+                <div class="infobox-row">녹인점, 꿈의 세계, 해치의 반</div>
+                
+                <div class="infobox-section-title">배경 및 거주지</div>
+                <div class="infobox-row">후쿠의 집, 채운산, 운남 (현재) / 녹인점 (과거)</div>
+                
+                <div class="infobox-section-title">기타 정보</div>
+                <div class="infobox-row"><strong>만화 첫 등장:</strong> 165화</div>
+                <div class="infobox-row"><strong>애니 첫 등장:</strong> 31화</div>
+                <div class="infobox-row"><strong>등장 횟수:</strong> 220화</div>
+                <div class="infobox-row"><strong>등장 작품:</strong> Schrödinger's Sheep</div>
+            </div>
+        `
     },
     {
         id: 'nok-파혁', 
