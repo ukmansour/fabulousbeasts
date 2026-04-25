@@ -24,7 +24,7 @@ onAuthStateChanged(auth, (user) => {
                 e.preventDefault();
                 if (confirm("로그아웃하시겠습니까?")) {
                     signOut(auth).then(() => {
-                        window.location.href = 'index.html'; // 로그아웃 후 홈으로
+                        window.location.href = 'index.html';
                     });
                 }
             };
@@ -50,8 +50,19 @@ async function loadDetail() {
         console.warn("Firestore fetch error:", e);
     }
 
+    // 캐릭터 데이터가 아예 없는 경우 처리
     if (!char) {
-        container.innerHTML = `<h2 style="padding: 5rem; text-align: center;">캐릭터를 찾을 수 없습니다.</h2>`;
+        container.innerHTML = `
+            <div style="padding: 8rem 2rem; text-align: center; background: #fff; border-radius: 24px;">
+                <h1 style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1.5rem;">새로운 발견!</h1>
+                <p style="font-size: 1.2rem; color: #666; margin-bottom: 3rem;">아직 이 캐릭터에 대한 정보가 위키에 등록되지 않았습니다.<br>직접 첫 번째 기록을 남겨보시겠어요?</p>
+                <button id="create-btn" class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.3rem;">정보 등록하기</button>
+            </div>
+        `;
+        document.getElementById('create-btn').addEventListener('click', () => {
+            if (auth.currentUser) window.location.href = `edit.html#${charId}`;
+            else { alert("정보를 등록하려면 로그인이 필요합니다."); window.location.href = 'auth.html'; }
+        });
         return;
     }
 
@@ -69,7 +80,10 @@ async function loadDetail() {
         return content && content.trim() !== '' && content !== '-';
     });
 
-    const quickNavHtml = activeSections.length > 0 ? `
+    // 상세 내용이 하나도 없는 경우 처리
+    const hasContent = activeSections.length > 0;
+
+    const quickNavHtml = hasContent ? `
         <nav class="detail-quick-nav">
             <ul style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem; margin: 0;">
                 ${activeSections.map((s, index) => `<li><a href="#${charId}-${s.id}">${index + 1}. ${s.label}</a></li>`).join('')}
@@ -77,33 +91,28 @@ async function loadDetail() {
         </nav>
     ` : '';
 
-    const sectionsHtml = activeSections.map((section, index) => {
+    const sectionsHtml = hasContent ? activeSections.map((section, index) => {
         let contentHtml = '';
         if (section.id === 'gallery') {
-            // 갤러리 섹션 특수 처리: 줄바꿈으로 구분된 이미지 URL들을 그리드로 렌더링
             const images = char[section.id].split('\n').filter(url => url.trim().startsWith('http'));
             if (images.length > 0) {
-                contentHtml = `
-                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                        ${images.map(img => `<img src="${img.trim()}" style="width:100%; border-radius:8px; cursor:pointer;" onclick="window.open(this.src)">`).join('')}
-                    </div>
-                `;
-            } else {
-                contentHtml = renderMarkdown(char[section.id]);
-            }
-        } else {
-            contentHtml = renderMarkdown(char[section.id]);
-        }
+                contentHtml = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                    ${images.map(img => `<img src="${img.trim()}" style="width:100%; border-radius:8px; cursor:pointer;" onclick="window.open(this.src)">`).join('')}
+                </div>`;
+            } else { contentHtml = renderMarkdown(char[section.id]); }
+        } else { contentHtml = renderMarkdown(char[section.id]); }
 
         return `
             <div class="detail-section" id="${charId}-${section.id}">
                 <h2>${index + 1}. ${section.label}</h2>
-                <div class="detail-content wiki-content">
-                    ${contentHtml}
-                </div>
+                <div class="detail-content wiki-content">${contentHtml}</div>
             </div>
         `;
-    }).join('');
+    }).join('') : `
+        <div style="padding: 3rem; background: #f9f9f9; border-radius: 12px; border: 2px dashed #ddd; text-align: center; margin-top: 2rem;">
+            <p style="color: #888;">상세 정보가 아직 작성되지 않았습니다.<br>오른쪽 상단의 [편집] 버튼을 눌러 내용을 채워주세요!</p>
+        </div>
+    `;
 
     const infoboxHtml = `
         <div class="infobox">
@@ -117,7 +126,6 @@ async function loadDetail() {
         </div>
     `;
 
-    // 편집 이력 섹션
     let historyHtml = '';
     if (char.history && char.history.length > 0) {
         historyHtml = `
@@ -166,7 +174,6 @@ async function loadDetail() {
         </div>
     `;
 
-    // 편집 버튼 로직
     const editContainer = document.getElementById('edit-action-container');
     if (editContainer) {
         editContainer.innerHTML = `<button id="edit-btn" class="btn-primary" style="padding: 0.6rem 1.2rem;">편집</button>`;

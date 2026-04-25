@@ -53,7 +53,15 @@ async function loadCharacterData() {
         if (docSnap.exists()) char = { ...char, ...docSnap.data() };
     } catch (e) { console.error(e); }
 
-    if (!char) return;
+    // 데이터가 없는 경우 새로운 캐릭터로 취급 (초기값 설정)
+    if (!char) {
+        char = {
+            id: charId,
+            name: "새로운 캐릭터",
+            category: "기타",
+            title: "정보를 입력해 주세요."
+        };
+    }
 
     document.getElementById('edit-title').textContent = `${char.name} (편집)`;
     document.getElementById('field-title').value = char.title || '';
@@ -115,7 +123,14 @@ editForm.addEventListener('submit', async (e) => {
     const user = auth.currentUser;
     const summary = document.getElementById('edit-summary').value.trim() || '내용 수정';
     
+    // 저장 시점에 캐릭터 이름을 물어보거나 기본값 사용 (새 캐릭터인 경우 대비)
+    let charName = "새로운 캐릭터";
+    const existingChar = CHARACTERS.find(c => c.id === charId);
+    if (existingChar) charName = existingChar.name;
+
     const updatedData = {
+        id: charId, // ID 저장 보장
+        name: charName,
         title: document.getElementById('field-title').value,
         updatedAt: new Date(),
         updatedBy: user.displayName || user.email.split('@')[0]
