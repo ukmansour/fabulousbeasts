@@ -1,7 +1,7 @@
 import { CHARACTERS, DETAIL_SECTIONS } from './data.js';
 import { db, auth } from './firebase-config.js';
 import { doc, getDoc, setDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const charId = window.location.hash.replace('#', '');
 const dynamicSections = document.getElementById('dynamic-sections');
@@ -11,7 +11,27 @@ const previewBox = document.getElementById('preview-box');
 const editTabs = document.querySelectorAll('.edit-tab');
 const editPanels = document.querySelectorAll('.edit-panel');
 
+// 유저 상태 관리
 onAuthStateChanged(auth, async (user) => {
+    const userInfo = document.getElementById('user-info');
+    if (userInfo) {
+        if (user) {
+            const displayName = user.displayName || user.email.split('@')[0];
+            userInfo.innerHTML = `
+                <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${displayName}님</span>
+                <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
+            `;
+            document.getElementById('logout-btn')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (confirm("로그아웃하시겠습니까?")) {
+                    signOut(auth);
+                }
+            });
+        } else {
+            userInfo.innerHTML = `<a href="auth.html" class="nav-link" id="login-link">로그인</a>`;
+        }
+    }
+
     if (!user) {
         alert("로그인이 필요합니다.");
         window.location.href = 'auth.html';

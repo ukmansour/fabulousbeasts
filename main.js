@@ -16,7 +16,9 @@ if (auth && typeof auth.onAuthStateChanged === 'function') {
             `;
             document.getElementById('logout-btn')?.addEventListener('click', (e) => {
                 e.preventDefault();
-                signOut(auth);
+                if (confirm("로그아웃하시겠습니까?")) {
+                    signOut(auth);
+                }
             });
         } else {
             userInfo.innerHTML = `<a href="auth.html" class="nav-link" id="login-link">로그인</a>`;

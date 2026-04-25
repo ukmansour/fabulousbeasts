@@ -8,6 +8,27 @@ const script = document.createElement('script');
 script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
 document.head.appendChild(script);
 
+// 유저 상태 관리
+onAuthStateChanged(auth, (user) => {
+    const userInfo = document.getElementById('user-info');
+    if (!userInfo) return;
+    if (user) {
+        const displayName = user.displayName || user.email.split('@')[0];
+        userInfo.innerHTML = `
+            <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${displayName}님</span>
+            <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
+        `;
+        document.getElementById('logout-btn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm("로그아웃하시겠습니까?")) {
+                signOut(auth);
+            }
+        });
+    } else {
+        userInfo.innerHTML = `<a href="auth.html" class="nav-link" id="login-link">로그인</a>`;
+    }
+});
+
 async function loadDetail() {
     const charId = window.location.hash.split('-')[0].replace('#', '');
     const container = document.getElementById('detail-container');
