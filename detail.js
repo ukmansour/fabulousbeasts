@@ -18,12 +18,17 @@ onAuthStateChanged(auth, (user) => {
             <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${displayName}님</span>
             <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
         `;
-        document.getElementById('logout-btn')?.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (confirm("로그아웃하시겠습니까?")) {
-                signOut(auth);
-            }
-        });
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.onclick = (e) => {
+                e.preventDefault();
+                if (confirm("로그아웃하시겠습니까?")) {
+                    signOut(auth).then(() => {
+                        window.location.href = 'index.html'; // 로그아웃 후 홈으로
+                    });
+                }
+            };
+        }
     } else {
         userInfo.innerHTML = `<a href="auth.html" class="nav-link" id="login-link">로그인</a>`;
     }

@@ -14,12 +14,18 @@ if (auth && typeof auth.onAuthStateChanged === 'function') {
                 <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${displayName}님</span>
                 <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
             `;
-            document.getElementById('logout-btn')?.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (confirm("로그아웃하시겠습니까?")) {
-                    signOut(auth);
-                }
-            });
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                // 기존 리스너 제거 효과를 위해 새로 복제하거나, 직접 바인딩 확인
+                logoutBtn.onclick = (e) => {
+                    e.preventDefault();
+                    if (confirm("로그아웃하시겠습니까?")) {
+                        signOut(auth).then(() => {
+                            window.location.reload(); // 상태 반영을 위한 새로고침
+                        });
+                    }
+                };
+            }
         } else {
             userInfo.innerHTML = `<a href="auth.html" class="nav-link" id="login-link">로그인</a>`;
         }
