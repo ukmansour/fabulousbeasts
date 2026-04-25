@@ -4,17 +4,17 @@ import { collection, getDocs, orderBy, query, limit } from "https://www.gstatic.
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 onAuthStateChanged(auth, (user) => {
-    const userInfo = document.getElementById('user-info');
-    if (!userInfo) return;
+    const info = document.getElementById('user-info');
+    if (!info) return;
     if (user) {
-        userInfo.innerHTML = `<span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName || '유저'}님</span>
-                              <a href="#" class="nav-link" id="logout-btn">로그아웃</a>`;
+        info.innerHTML = `<span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName || '유저'}님</span>
+                          <a href="#" class="nav-link" id="logout-btn">로그아웃</a>`;
         document.getElementById('logout-btn').onclick = (e) => {
             e.preventDefault();
             if (confirm("로그아웃하시겠습니까?")) signOut(auth).then(() => location.reload());
         };
     } else {
-        userInfo.innerHTML = `<a href="auth.html" class="nav-link">로그인</a>`;
+        info.innerHTML = `<a href="auth.html" class="nav-link">로그인</a>`;
     }
 });
 
@@ -28,8 +28,8 @@ async function initHome() {
 function renderFeatured() {
     const container = document.getElementById('featured-characters-grid');
     if (!container) return;
-    const featuredIds = ['tianlu', 'pixiu', 'sibuxiang', 'tony'];
-    const featured = CHARACTERS.filter(c => featuredIds.includes(c.id));
+    const ids = ['tianlu', 'pixiu', 'sibuxiang', 'tony'];
+    const featured = CHARACTERS.filter(c => ids.includes(c.id));
     container.innerHTML = featured.map(c => `
         <a href="detail.html#${c.id}" class="char-card-mini">
             <img src="${c.image}" alt="${c.name}">
@@ -41,14 +41,18 @@ async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     try {
-        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(12));
+        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(15));
         const snap = await getDocs(q);
         list.innerHTML = snap.docs.map(doc => {
             const d = doc.data();
-            return `<div class="recent-item">
-                <a href="detail.html#${doc.id}" class="recent-link">${d.name}</a>
-                <div class="recent-meta"><span>${d.updatedBy || '익명'}</span><span>${new Date(d.updatedAt?.seconds*1000||d.updatedAt).toLocaleDateString()}</span></div>
-            </div>`;
+            return `
+                <div class="recent-item">
+                    <a href="detail.html#${doc.id}" class="recent-link">${d.name}</a>
+                    <div class="recent-meta">
+                        <span>${d.updatedBy || '익명'}</span>
+                        <span>${new Date(d.updatedAt?.seconds*1000||d.updatedAt).toLocaleDateString()}</span>
+                    </div>
+                </div>`;
         }).join('');
     } catch (e) { console.error(e); }
 }
@@ -61,7 +65,7 @@ function renderCategoryGrid() {
         if (catChars.length === 0) return '';
         return `
             <div class="category-section" style="margin-top:2.5rem;">
-                <h3 class="category-title" style="font-size:1.4rem; border-bottom:1px solid #ddd; padding-bottom:0.5rem; margin-bottom:1rem; color:var(--primary-dark); font-weight:800;">${cat}</h3>
+                <h3 class="category-title" style="font-size:1.2rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; color:var(--primary-dark); font-weight:800;">${cat}</h3>
                 <div class="char-grid-portal">
                     ${catChars.map(c => `<a href="detail.html#${c.id}" class="char-card-mini"><img src="${c.image}" alt="${c.name}"><span>${c.name}</span></a>`).join('')}
                 </div>
@@ -78,8 +82,8 @@ function initSearch() {
         if (val.length < 1) { results.classList.remove('active'); return; }
         const matches = CHARACTERS.filter(c => c.name.toLowerCase().includes(val) || c.id.toLowerCase().includes(val)).slice(0, 10);
         results.innerHTML = matches.length > 0 
-            ? matches.map(m => `<div class="search-item" onclick="location.href='detail.html#${m.id}'"><strong>${m.name}</strong> <span style="font-size:0.7rem; color:#999;">(${m.id})</span></div>`).join('')
-            : `<div class="search-item" onclick="location.href='edit.html#${val}'">"${val}" 신규 문서 만들기</div>`;
+            ? matches.map(m => `<div class="search-item" onclick="location.href='detail.html#${m.id}'"><strong>${m.name}</strong> <span style="font-size:0.7rem; color:#999;">(${m.id})</span></div>`)
+            : `<div class="search-item" onclick="location.href='edit.html#${val}'">"${val}" 문서 만들기</div>`;
         results.classList.add('active');
     };
 }

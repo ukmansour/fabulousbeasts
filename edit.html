@@ -6,31 +6,12 @@
     <title>문서 편집 - 유수언 위키</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
-    <style>
-        .editor-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
-        .editor-header { margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem; }
-        
-        .edit-box { background: white; border: 1px solid var(--border-color); padding: 2rem; }
-        
-        .field-group { margin-bottom: 2rem; }
-        .field-label { font-weight: 800; font-size: 1.1rem; margin-bottom: 0.8rem; display: block; color: #333; }
-        .field-input { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
-        .field-textarea { width: 100%; min-height: 250px; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.95rem; line-height: 1.6; resize: vertical; }
-        
-        .admin-action-bar { background: #f8f9fa; padding: 0.8rem; border: 1px solid #eee; margin-top: -1px; display: flex; justify-content: flex-end; }
-        
-        .summary-box { margin-top: 2rem; padding: 1.5rem; background: #f0f9ff; border: 1px solid var(--primary-color); border-radius: 4px; }
-        
-        .edit-actions { display: flex; gap: 1rem; margin-top: 2rem; justify-content: center; }
-        .btn-save { background: var(--primary-color); color: white; border: none; padding: 1rem 3rem; font-weight: 800; font-size: 1.1rem; border-radius: 4px; cursor: pointer; }
-        .btn-cancel { background: #666; color: white; border: none; padding: 1rem 2rem; font-weight: 700; border-radius: 4px; text-decoration: none; display: inline-block; }
-    </style>
 </head>
 <body>
     <header class="site-header">
         <div class="header-content">
             <a href="index.html" class="logo">
-                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo" class="logo-img">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
                 <span>유수언 위키</span>
             </a>
             <div class="search-container">
@@ -38,52 +19,47 @@
                 <div class="search-results" id="search-results"></div>
             </div>
             <nav class="top-nav">
-                <a href="index.html#characters" class="nav-link">캐릭터</a>
+                <a href="index.html#characters" class="nav-link">전체 캐릭터</a>
                 <span id="user-info"></span>
             </nav>
         </div>
     </header>
 
-    <main class="editor-container">
-        <div class="editor-header">
-            <h1 id="edit-title">문서 편집</h1>
-            <div class="wiki-tabs">
-                <div class="wiki-tab active" id="tab-edit">편집</div>
-                <div class="wiki-tab" id="tab-preview">미리보기</div>
-            </div>
-        </div>
-
-        <form id="edit-form">
-            <!-- 편집 패널 -->
-            <div id="panel-edit" class="edit-box">
-                <div class="field-group">
-                    <label class="field-label">한 줄 소개</label>
-                    <input type="text" id="field-title" class="field-input" placeholder="이 문서를 설명하는 짧은 문구">
-                </div>
-
-                <div id="dynamic-sections">
-                    <!-- 8단계 섹션이 여기에 생성됨 -->
+    <div class="wiki-outer-container" style="grid-template-columns: 1fr;">
+        <main class="wiki-article" style="padding: 2rem;">
+            <div class="wiki-tabs-wrapper">
+                <h1 id="edit-title" style="font-size: 1.5rem; border: none; margin: 0;">문서 편집</h1>
+                <div class="wiki-tabs">
+                    <div class="wiki-tab active" id="tab-edit">편집</div>
+                    <div class="wiki-tab" id="tab-preview">미리보기</div>
                 </div>
             </div>
 
-            <!-- 미리보기 패널 -->
-            <div id="panel-preview" class="edit-box" style="display: none;">
-                <div id="preview-content" class="wiki-content">
-                    <!-- 실시간 렌더링 결과 -->
+            <form id="edit-form">
+                <div id="panel-edit" class="editor-wrap">
+                    <div id="dynamic-sections">
+                        <!-- JS injects fields here -->
+                    </div>
                 </div>
-            </div>
 
-            <div class="summary-box">
-                <label class="field-label">편집 요약</label>
-                <input type="text" id="edit-summary" class="field-input" placeholder="수정 내용을 간단히 적어주세요 (예: 오타 수정, 정보 보강)">
-            </div>
+                <div id="panel-preview" class="editor-wrap" style="display: none;">
+                    <div id="preview-content" class="wiki-content">
+                        <!-- Preview renders here -->
+                    </div>
+                </div>
 
-            <div class="edit-actions">
-                <button type="submit" class="btn-save">저장</button>
-                <a href="#" id="cancel-link" class="btn-cancel">취소</a>
-            </div>
-        </form>
-    </main>
+                <div class="edit-summary-wrap">
+                    <label class="field-label">편집 요약 (필수)</label>
+                    <input type="text" id="edit-summary" class="field-input" style="margin-bottom:0;" placeholder="예: 정보 보강, 오타 수정, 이미지 교체 등">
+                </div>
+
+                <div class="btn-group">
+                    <button type="submit" class="btn-save">저장</button>
+                    <a href="#" id="cancel-link" class="btn-cancel">취소</a>
+                </div>
+            </form>
+        </main>
+    </div>
 
     <script type="module" src="edit.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
