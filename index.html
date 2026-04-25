@@ -15,35 +15,61 @@
                 <span>유수언 위키</span>
             </a>
             <div class="search-container">
-                <input type="text" class="search-input" id="global-search" placeholder="문서 검색 (이름, ID 등)">
+                <input type="text" class="search-input" id="global-search" placeholder="문서 검색 (예: 천록, pixiu)">
                 <div class="search-results" id="search-results"></div>
             </div>
             <nav class="top-nav">
                 <a href="#characters" class="nav-link">전체 캐릭터</a>
+                <a href="watch.html" class="nav-link">애니 보기</a>
                 <span id="user-info"></span>
-            </nav>
+            </div>
         </div>
     </header>
 
     <div class="wiki-outer-container">
         <main class="wiki-article">
             <h1 class="wiki-title">유수언 위키:대문</h1>
-            <div class="wiki-subtitle">세상의 모든 신수 정보가 모이는 곳</div>
+            <div class="wiki-subtitle">유수언(有兽焉) 공식 정보를 집대성하는 공간</div>
             
             <div class="wiki-content">
-                <div class="portal-card">
-                    <h2 style="margin-top:0; border:none; font-size:1.4rem;">👋 환영합니다!</h2>
-                    <p>이곳은 애니메이션 <strong>'유수언(有兽焉)'</strong>에 등장하는 다양한 신수들과 캐릭터들의 정보를 집대성하는 공유 위키입니다. 여러분의 편집 참여로 더욱 풍성한 기록을 만들어갈 수 있습니다.</p>
+                <!-- 애니메이션 시청 홍보 배너 -->
+                <div class="portal-card" style="background: linear-gradient(135deg, var(--primary-color), #51C3F7); color: white; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="location.href='watch.html'">
+                    <div>
+                        <h2 style="margin-top:0; border:none; color: white; font-size: 1.5rem;">🎬 유수언 애니메이션 시청하기</h2>
+                        <p style="margin-bottom:0; opacity: 0.9;">공식 채널의 모든 에피소드를 한곳에서 감상하세요.</p>
+                    </div>
+                    <span style="font-size: 2rem;">▶️</span>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 3rem;">
+                    <!-- 최근 소식 섹션 -->
+                    <div style="background: #fff; border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 4px;">
+                        <h2 style="margin-top:0; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.5rem; font-size: 1.1rem;">📢 최근 소식</h2>
+                        <ul id="news-list" style="list-style: none; padding: 0; font-size: 0.9rem;">
+                            <li style="padding: 0.5rem 0; border-bottom: 1px dashed #eee;">• 유수언 위키 디자인 전면 개편 안내 (2026.04.25)</li>
+                            <li style="padding: 0.5rem 0; border-bottom: 1px dashed #eee;">• 애니메이션 시청 전용 페이지 오픈</li>
+                            <li style="padding: 0.5rem 0; border-bottom: 1px dashed #eee;">• 신규 캐릭터 정보 업데이트 모집 중</li>
+                        </ul>
+                    </div>
+                    <!-- 위키 가이드 -->
+                    <div style="background: #fff; border: 1px solid var(--border-color); padding: 1.5rem; border-radius: 4px;">
+                        <h2 style="margin-top:0; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.5rem; font-size: 1.1rem;">💡 위키 가이드</h2>
+                        <p style="font-size: 0.85rem; color: #666;">
+                            • [[캐릭터ID]] 형식으로 링크를 생성하세요.<br>
+                            • 마크다운 문법을 사용하여 풍성하게 꾸미세요.<br>
+                            • 로그인 후 누구나 편집할 수 있습니다.
+                        </p>
+                    </div>
                 </div>
 
                 <div style="margin-bottom: 3rem;">
-                    <h2 id="featured">⭐ 주요 캐릭터 바로가기</h2>
+                    <h2 id="featured">⭐ 주요 캐릭터</h2>
                     <div id="featured-characters-grid" class="char-grid-portal">
                         <!-- JS injects here -->
                     </div>
                 </div>
 
-                <h2 id="characters">📜 전체 캐릭터 목록</h2>
+                <h2 id="characters">📜 전체 목록</h2>
                 <div id="char-grid">
                     <!-- JS injects categories and cards here -->
                 </div>
@@ -53,20 +79,11 @@
         <aside class="wiki-sidebar">
             <div class="sidebar-box">
                 <div class="sidebar-title">🕒 최근 변경 내역</div>
-                <div id="home-recent-list">
-                    <!-- Recent items -->
-                </div>
+                <div id="home-recent-list"></div>
             </div>
-            <div class="sidebar-box">
-                <div class="sidebar-title">📢 편집 안내</div>
-                <p style="font-size: 0.8rem; color: #666; margin-bottom: 0.8rem;">
-                    누구나 로그인을 통해 문서를 편집할 수 있습니다. 
-                </p>
-                <ul style="font-size: 0.75rem; color: #888; padding-left: 1.2rem;">
-                    <li>마크다운 문법 지원</li>
-                    <li>[[문서ID]]로 링크 생성</li>
-                    <li>편집 요약 필수 작성</li>
-                </ul>
+            <div class="sidebar-box" style="background: var(--primary-light);">
+                <div class="sidebar-title">🤝 커뮤니티</div>
+                <p style="font-size: 0.8rem; color: #555;">여러분의 작은 기여가 큰 기록이 됩니다. 지금 바로 편집에 참여해 보세요!</p>
             </div>
         </aside>
     </div>

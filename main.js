@@ -41,7 +41,7 @@ async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     try {
-        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(15));
+        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(12));
         const snap = await getDocs(q);
         list.innerHTML = snap.docs.map(doc => {
             const d = doc.data();
@@ -77,15 +77,38 @@ function initSearch() {
     const input = document.getElementById('global-search');
     const results = document.getElementById('search-results');
     if (!input) return;
+
     input.oninput = () => {
         const val = input.value.trim().toLowerCase();
-        if (val.length < 1) { results.classList.remove('active'); return; }
-        const matches = CHARACTERS.filter(c => c.name.toLowerCase().includes(val) || c.id.toLowerCase().includes(val)).slice(0, 10);
-        results.innerHTML = matches.length > 0 
-            ? matches.map(m => `<div class="search-item" onclick="location.href='detail.html#${m.id}'"><strong>${m.name}</strong> <span style="font-size:0.7rem; color:#999;">(${m.id})</span></div>`)
-            : `<div class="search-item" onclick="location.href='edit.html#${val}'">"${val}" 문서 만들기</div>`;
+        if (val.length < 1) { 
+            results.classList.remove('active'); 
+            return; 
+        }
+        
+        // 1. 캐릭터 리스트에서 검색
+        const matches = CHARACTERS.filter(c => 
+            c.name.toLowerCase().includes(val) || 
+            c.id.toLowerCase().includes(val)
+        ).slice(0, 10);
+
+        if (matches.length > 0) {
+            results.innerHTML = matches.map(m => `
+                <div class="search-item" onclick="location.href='detail.html#${m.id}'">
+                    <strong>${m.name}</strong> <span style="font-size:0.7rem; color:#999;">(${m.id})</span>
+                </div>`).join('');
+        } else {
+            results.innerHTML = `
+                <div class="search-item" onclick="location.href='edit.html#${val}'">
+                    <span style="color:var(--primary-color);">"${val}"</span> 신규 문서 만들기
+                </div>`;
+        }
         results.classList.add('active');
     };
+
+    // 바깥 클릭 시 닫기
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target)) results.classList.remove('active');
+    });
 }
 
 window.addEventListener('load', initHome);
