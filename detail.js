@@ -1,36 +1,29 @@
 import { CHARACTERS, DETAIL_SECTIONS } from './data.js';
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// 마크다운 파서 라이브러리 로드 (CDN)
+// 마크다운 파서 로드
 const script = document.createElement('script');
 script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
 document.head.appendChild(script);
+
+let currentUserID = null;
 
 // 유저 상태 관리
 onAuthStateChanged(auth, (user) => {
     const userInfo = document.getElementById('user-info');
     if (!userInfo) return;
     if (user) {
-        const displayName = user.displayName || user.email.split('@')[0];
-        userInfo.innerHTML = `
-            <span class="nav-link" style="color: var(--secondary-color); font-weight: 700;">${displayName}님</span>
-            <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
-        `;
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.onclick = (e) => {
-                e.preventDefault();
-                if (confirm("로그아웃하시겠습니까?")) {
-                    signOut(auth).then(() => {
-                        window.location.href = 'index.html';
-                    });
-                }
-            };
-        }
+        currentUserID = user.uid;
+        userInfo.innerHTML = `<span style="color:white; font-size:0.8rem; margin-right:0.5rem;">${user.displayName || '유저'}님</span>
+                              <a href="#" class="nav-link" id="logout-btn">로그아웃</a>`;
+        document.getElementById('logout-btn').onclick = (e) => {
+            e.preventDefault();
+            if (confirm("로그아웃하시겠습니까?")) signOut(auth).then(() => location.reload());
+        };
     } else {
-        userInfo.innerHTML = `<a href="auth.html" class="nav-link" id="login-link">로그인</a>`;
+        userInfo.innerHTML = `<a href="auth.html" class="nav-link">로그인</a>`;
     }
 });
 
@@ -43,148 +36,145 @@ async function loadDetail() {
     try {
         const docRef = doc(db, "characters", charId);
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            char = { ...char, ...docSnap.data() };
-        }
-    } catch (e) {
-        console.warn("Firestore fetch error:", e);
-    }
+        if (docSnap.exists()) char = { ...char, ...docSnap.data() };
+    } catch (e) { console.warn(e); }
 
-    // 캐릭터 데이터가 아예 없는 경우 처리
     if (!char) {
-        container.innerHTML = `
-            <div style="padding: 8rem 2rem; text-align: center; background: #fff; border-radius: 24px;">
-                <h1 style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 1.5rem;">새로운 발견!</h1>
-                <p style="font-size: 1.2rem; color: #666; margin-bottom: 3rem;">아직 이 캐릭터에 대한 정보가 위키에 등록되지 않았습니다.<br>직접 첫 번째 기록을 남겨보시겠어요?</p>
-                <button id="create-btn" class="btn-primary" style="padding: 1.2rem 3rem; font-size: 1.3rem;">정보 등록하기</button>
-            </div>
-        `;
-        document.getElementById('create-btn').addEventListener('click', () => {
-            if (auth.currentUser) window.location.href = `edit.html#${charId}`;
-            else { alert("정보를 등록하려면 로그인이 필요합니다."); window.location.href = 'auth.html'; }
-        });
+        renderNotFound(container, charId);
         return;
     }
 
     document.title = `${char.name} - 유수언 위키`;
-
-    const renderMarkdown = (text) => {
-        if (typeof marked !== 'undefined' && text) {
-            return marked.parse(text);
-        }
-        return text || '';
-    };
-
-    const activeSections = DETAIL_SECTIONS.filter(s => {
-        const content = char[s.id];
-        return content && content.trim() !== '' && content !== '-';
-    });
-
-    // 상세 내용이 하나도 없는 경우 처리
-    const hasContent = activeSections.length > 0;
-
-    const quickNavHtml = hasContent ? `
-        <nav class="detail-quick-nav">
-            <ul style="list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem; margin: 0;">
-                ${activeSections.map((s, index) => `<li><a href="#${charId}-${s.id}">${index + 1}. ${s.label}</a></li>`).join('')}
-            </ul>
-        </nav>
-    ` : '';
-
-    const sectionsHtml = hasContent ? activeSections.map((section, index) => {
-        let contentHtml = '';
-        if (section.id === 'gallery') {
-            const images = char[section.id].split('\n').filter(url => url.trim().startsWith('http'));
-            if (images.length > 0) {
-                contentHtml = `<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                    ${images.map(img => `<img src="${img.trim()}" style="width:100%; border-radius:8px; cursor:pointer;" onclick="window.open(this.src)">`).join('')}
-                </div>`;
-            } else { contentHtml = renderMarkdown(char[section.id]); }
-        } else { contentHtml = renderMarkdown(char[section.id]); }
-
-        return `
-            <div class="detail-section" id="${charId}-${section.id}">
-                <h2>${index + 1}. ${section.label}</h2>
-                <div class="detail-content wiki-content">${contentHtml}</div>
-            </div>
-        `;
-    }).join('') : `
-        <div style="padding: 3rem; background: #f9f9f9; border-radius: 12px; border: 2px dashed #ddd; text-align: center; margin-top: 2rem;">
-            <p style="color: #888;">상세 정보가 아직 작성되지 않았습니다.<br>오른쪽 상단의 [편집] 버튼을 눌러 내용을 채워주세요!</p>
-        </div>
-    `;
-
-    const infoboxHtml = `
-        <div class="infobox">
-            <div class="infobox-row"><strong>이름:</strong> ${char.name}</div>
-            <div class="infobox-row"><strong>별명:</strong> ${char.nickname || '-'}</div>
-            <div class="infobox-row"><strong>성별:</strong> ${char.gender || '-'}</div>
-            <div class="infobox-row"><strong>종족:</strong> ${char.species || '-'}</div>
-            <div class="infobox-row"><strong>국적:</strong> ${char.nationality || '-'}</div>
-            <div class="infobox-row"><strong>생일:</strong> ${char.birthday || '-'}</div>
-            <div class="infobox-row"><strong>키:</strong> ${char.height || '-'}</div>
-        </div>
-    `;
-
-    let historyHtml = '';
-    if (char.history && char.history.length > 0) {
-        historyHtml = `
-            <div class="detail-section" style="margin-top: 5rem; border-top: 1px solid #ddd; padding-top: 2rem;">
-                <h2 style="font-size: 1.2rem; color: #555;">최근 편집 기록</h2>
-                <div class="wiki-history">
-                    ${char.history.slice(0, 5).map(entry => `
-                        <div style="display: flex; gap: 1rem; font-size: 0.9rem; margin-bottom: 0.5rem; border-bottom: 1px dashed #eee; padding-bottom: 0.5rem;">
-                            <span style="color: #888;">${new Date(entry.timestamp?.seconds * 1000 || entry.timestamp).toLocaleString()}</span>
-                            <span style="font-weight: 700; color: var(--primary-color);">${entry.user}</span>
-                            <span style="color: #444;">(${entry.note || '내용 수정'})</span>
-                        </div>
-                    `).join('')}
-                </div>
-            </div>
-        `;
-    }
-
-    container.innerHTML = `
-        <div class="detail-main-layout">
-            <div class="detail-left-col">
-                <div class="detail-header-group">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                        <div>
-                            <h1 style="font-size: 3rem; margin-bottom: 0.5rem;">${char.name}</h1>
-                            <p style="color: #888; font-size: 1.2rem;">${char.title || ''}</p>
-                        </div>
-                        <div id="edit-action-container"></div>
-                    </div>
-                </div>
-                
-                <div class="sticky-nav-wrapper">${quickNavHtml}</div>
-
-                <div class="detail-sections-wrapper" style="margin-top: 2rem;">
-                    ${sectionsHtml}
-                </div>
-                ${historyHtml}
-            </div>
-
-            <div class="detail-right-col">
-                <div class="detail-image-container">
-                    <img src="${char.image}" alt="${char.name}">
-                </div>
-                ${infoboxHtml}
-            </div>
-        </div>
-    `;
-
-    const editContainer = document.getElementById('edit-action-container');
-    if (editContainer) {
-        editContainer.innerHTML = `<button id="edit-btn" class="btn-primary" style="padding: 0.6rem 1.2rem;">편집</button>`;
-        document.getElementById('edit-btn').addEventListener('click', () => {
-            if (auth.currentUser) window.location.href = `edit.html#${charId}`;
-            else { alert("로그인이 필요합니다."); window.location.href = 'auth.html'; }
-        });
-    }
+    renderWikiArticle(char);
+    renderRecentChanges();
+    initSearch();
 }
 
-window.addEventListener('load', () => {
-    setTimeout(loadDetail, 100);
-});
+function renderWikiArticle(char) {
+    const container = document.getElementById('detail-container');
+    const actionTabs = document.getElementById('action-tabs');
+
+    // 탭 주입
+    actionTabs.innerHTML = `
+        <a href="edit.html#${char.id}" class="wiki-tab">편집</a>
+        <div class="wiki-tab">역사</div>
+    `;
+
+    // 마크다운 & 위키링크 파서
+    const parseWikiText = (text) => {
+        if (!text) return '';
+        // [[ID|표시명]] 또는 [[ID]] 처리
+        let parsed = text.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g, (match, id, label) => {
+            const targetId = id.trim();
+            const displayLabel = (label || id).trim();
+            return `<a href="detail.html#${targetId}">${displayLabel}</a>`;
+        });
+        return typeof marked !== 'undefined' ? marked.parse(parsed) : parsed;
+    };
+
+    const activeSections = DETAIL_SECTIONS.filter(s => char[s.id] && char[s.id].trim() !== '');
+
+    // 목차 생성
+    const tocHtml = activeSections.length > 1 ? `
+        <div class="wiki-toc">
+            <div class="wiki-toc-title">목차</div>
+            <ul>
+                ${activeSections.map((s, i) => `<li><a href="#s-${s.id}">${s.label}</a></li>`).join('')}
+            </ul>
+        </div>
+    ` : '';
+
+    // 본문 섹션
+    const sectionsHtml = activeSections.map(s => {
+        let content = '';
+        if (s.id === 'gallery') {
+            const imgs = char[s.id].split('\n').filter(u => u.trim().startsWith('http'));
+            content = `<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:1rem;">
+                ${imgs.map(img => `<img src="${img.trim()}" style="width:100%; border-radius:4px; cursor:pointer;" onclick="window.open(this.src)">`).join('')}
+            </div>`;
+        } else {
+            content = parseWikiText(char[s.id]);
+        }
+        return `<div class="detail-section" id="s-${s.id}"><h2>${s.label}</h2><div class="wiki-content">${content}</div></div>`;
+    }).join('');
+
+    container.innerHTML = `
+        <h1 class="wiki-title">${char.name}</h1>
+        <div class="wiki-subtitle">최근 수정 시각: ${char.updatedAt ? new Date(char.updatedAt.seconds * 1000 || char.updatedAt).toLocaleString() : '기록 없음'}</div>
+        
+        <div class="infobox">
+            <div class="infobox-title">${char.name}</div>
+            <div class="infobox-image"><img src="${char.image}" alt="${char.name}"></div>
+            <table class="infobox-table">
+                <tr><th>별명</th><td>${char.nickname || '-'}</td></tr>
+                <tr><th>종족</th><td>${char.species || '-'}</td></tr>
+                <tr><th>성별</th><td>${char.gender || '-'}</td></tr>
+                <tr><th>국적</th><td>${char.nationality || '-'}</td></tr>
+                <tr><th>생일</th><td>${char.birthday || '-'}</td></tr>
+                <tr><th>키</th><td>${char.height || '-'}</td></tr>
+            </table>
+        </div>
+
+        <p>${char.title || ''}</p>
+        ${tocHtml}
+        <div style="clear: both;"></div>
+        ${sectionsHtml}
+    `;
+}
+
+async function renderRecentChanges() {
+    const list = document.getElementById('recent-changes-list');
+    if (!list) return;
+
+    try {
+        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(10));
+        const snap = await getDocs(q);
+        list.innerHTML = snap.docs.map(doc => {
+            const data = doc.data();
+            return `
+                <div class="recent-item">
+                    <a href="detail.html#${doc.id}" class="recent-link">${data.name}</a>
+                    <div class="recent-meta">
+                        <span>${data.updatedBy || '익명'}</span>
+                        <span>${new Date(data.updatedAt?.seconds * 1000 || data.updatedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } catch (e) { list.innerHTML = '<p style="font-size:0.7rem; color:red;">불러오기 실패</p>'; }
+}
+
+function initSearch() {
+    const input = document.getElementById('global-search');
+    const results = document.getElementById('search-results');
+    if (!input) return;
+
+    input.oninput = () => {
+        const val = input.value.trim().toLowerCase();
+        if (val.length < 1) { results.classList.remove('active'); return; }
+        
+        const matches = CHARACTERS.filter(c => c.name.toLowerCase().includes(val) || c.id.toLowerCase().includes(val)).slice(0, 8);
+        if (matches.length > 0) {
+            results.innerHTML = matches.map(m => `<div class="search-item" onclick="location.href='detail.html#${m.id}'">${m.name} (${m.category})</div>`).join('');
+            results.classList.add('active');
+        } else {
+            results.innerHTML = `<div class="search-item">검색 결과가 없습니다.</div>`;
+            results.classList.add('active');
+        }
+    };
+
+    document.onclick = (e) => { if (!input.contains(e.target)) results.classList.remove('active'); };
+}
+
+function renderNotFound(container, id) {
+    container.innerHTML = `
+        <h1 class="wiki-title">${id}</h1>
+        <div style="padding: 4rem 2rem; text-align: center; border: 1px dashed #ccc; margin-top: 2rem;">
+            <p style="margin-bottom: 2rem; color: #666;">해당 문서를 찾을 수 없습니다. 직접 문서를 만드시겠습니까?</p>
+            <button class="btn-primary" onclick="location.href='edit.html#${id}'">문서 만들기</button>
+        </div>
+    `;
+}
+
+window.addEventListener('load', () => setTimeout(loadDetail, 100));
 window.addEventListener('hashchange', loadDetail);

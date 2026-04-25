@@ -1,155 +1,64 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TQX8FG22Y7"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-TQX8FG22Y7');
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>유수언 위키 (You Shou Yan Wiki) - 공식 애니메이션 & 캐릭터 정보</title>
-    <meta name="description" content="유수언(有兽焉)의 공식 위키입니다. 신수들의 현대 적응기 애니메이션 시청과 천록(天禄), 사불상(四不像) 등 모든 캐릭터 정보를 확인하세요.">
-    <meta name="keywords" content="유수언, 有兽焉, All Saints Street, 천록, 벽사, 사불상, 애니메이션, 캐릭터 위키">
-    <link rel="canonical" href="https://youshouyan-wiki.web.app/">
+    <title>유수언 위키 - 세상의 모든 신수 정보</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
 </head>
-<body class="light-mode">
+<body>
     <header class="site-header">
         <div class="header-content">
-            <button id="sidebar-toggle" aria-label="사이드바 토글">
-                <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
-            </button>
-            <a href="#home" class="logo">
+            <a href="index.html" class="logo">
                 <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo" class="logo-img">
                 <span>유수언 위키</span>
             </a>
-            <nav class="top-nav">
-                <a href="#home" class="nav-link active">홈</a>
-                <a href="#watch" class="nav-link">애니 보기</a>
-                <a href="#characters" class="nav-link">캐릭터</a>
-                <a href="#news" class="nav-link">뉴스</a>
-                <a href="#about" class="nav-link">소개</a>
-                <span id="user-info">
-                    <a href="auth.html" class="nav-link" id="login-link">로그인</a>
-                </span>
-            </nav>
             <div class="search-container">
-                <input type="text" placeholder="문서 검색..." id="wiki-search" autocomplete="off">
+                <input type="text" class="search-input" id="global-search" placeholder="문서 검색 (예: 천록, pixiu)">
+                <div class="search-results" id="search-results"></div>
             </div>
+            <nav class="top-nav">
+                <a href="#characters" class="nav-link">전체 캐릭터</a>
+                <span id="user-info"></span>
+            </nav>
         </div>
     </header>
 
-    <div class="page-container">
-        <aside class="sidebar" id="main-sidebar">
-            <nav class="sidebar-nav">
-                <section>
-                    <h3>탐색</h3>
-                    <ul>
-                        <li><a href="#home">대문</a></li>
-                        <li><a href="#watch">최신 에피소드</a></li>
-                        <li><a href="#characters">캐릭터</a></li>
-                    </ul>
-                </section>
-                <section>
-                    <h3>공식 채널</h3>
-                    <ul>
-                        <li><a href="https://manga.bilibili.com/detail/mc24237">Bilibili 만화</a></li>
-                        <li><a href="https://www.youtube.com/@AllSaintsStreet">YouTube 공식</a></li>
-                    </ul>
-                </section>
-            </nav>
-        </aside>
-
-        <main class="content-area" id="main-content">
-            <div id="view-home" class="view">
-                <section class="hero-banner">
-                    <div class="hero-text">
-                        <h1>유수언 (有兽焉) 위키</h1>
-                        <p>신수들의 유쾌한 현대 적응기! 애니메이션 시청과 캐릭터 정보를 한곳에서 확인하세요.</p>
-                        <div class="hero-actions">
-                            <a href="#watch" class="btn-primary">지금 바로 시청하기</a>
-                            <a href="#characters" class="btn-secondary">캐릭터 알아보기</a>
-                        </div>
-                    </div>
-                </section>
-
-                <h2 class="section-title">추천 에피소드</h2>
-                <div class="featured-video-preview">
-                    <img src="https://i.ytimg.com/vi/qS80GidYyvM/maxresdefault.jpg" alt="Episode Preview">
-                    <div class="preview-overlay">
-                        <h3>시즌 1 시작하기</h3>
-                        <p>천록과 룸메이트들의 첫 만남</p>
+    <div class="wiki-outer-container">
+        <main class="wiki-article">
+            <h1 class="wiki-title">유수언 위키에 오신 것을 환영합니다!</h1>
+            <div class="wiki-content">
+                <p>이곳은 애니메이션 <strong>'유수언(有兽焉)'</strong>에 등장하는 다양한 신수들과 캐릭터들의 정보를 정리하는 공유 위키입니다. 누구나 편집에 참여하여 지식을 나눌 수 있습니다.</p>
+                
+                <div style="margin: 2rem 0; padding: 2rem; background: #f0f9ff; border: 1px solid var(--primary-color); border-radius: 8px;">
+                    <h3 style="margin-bottom: 1rem; color: var(--primary-color);">🌟 주요 캐릭터 바로가기</h3>
+                    <div id="featured-characters-grid" class="char-grid-home">
+                        <!-- JS injects here -->
                     </div>
                 </div>
-            </div>
 
-            <div id="view-watch" class="view" style="display: none;">
-                <h2 class="section-title">애니메이션</h2>
-                <div class="video-theater">
-                    <div class="video-container">
-                        <video id="main-player" controls>
-                            <source src="https://media.fabulousbeasts.kr/1화.mp4" type="video/mp4">
-                            브라우저가 video 태그를 지원하지 않습니다.
-                        </video>
-                    </div>
-                    <div class="video-sidebar">
-                        <h3>에피소드 목록</h3>
-                        <div class="playlist-container">
-                            <ul class="playlist" id="episode-playlist"></ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="view-characters" class="view" style="display: none;">
-                <h2 class="section-title">캐릭터</h2>
-                <div class="character-grid" id="char-grid"></div>
-            </div>
-
-            <div id="view-news" class="view" style="display: none;">
-                <h2 class="section-title">최신 뉴스 & 업데이트</h2>
-                <div class="news-list">
-                    <article class="news-item">
-                        <span class="news-date">2026.02.26</span>
-                        <h3>유수언 위키 공식 오픈 및 캐릭터 업데이트</h3>
-                        <p>주요 캐릭터의 상세 정보가 추가되었습니다.</p>
-                    </article>
-                </div>
-            </div>
-
-            <div id="view-about" class="view" style="display: none;">
-                <h2 class="section-title">유수언 위키 소개</h2>
-                <div class="content-text-card">
-                    <p>이 웹사이트는 '유수언(有兽焉)'의 팬들을 위해 제작된 정보 포털입니다.</p>
-                </div>
-            </div>
-
-            <div id="view-privacy" class="view" style="display: none;">
-                <h2 class="section-title">개인정보처리방침</h2>
-                <div class="content-text-card">
-                    <p>우리는 사용자의 개인 신상 정보를 수집하지 않습니다.</p>
+                <h2 id="characters">전체 캐릭터 목록</h2>
+                <div id="char-grid">
+                    <!-- JS injects categories and cards here -->
                 </div>
             </div>
         </main>
+
+        <aside class="wiki-sidebar">
+            <div class="sidebar-box">
+                <div class="sidebar-title">🕒 최근 변경된 문서</div>
+                <div id="home-recent-list">
+                    <!-- JS injects here -->
+                </div>
+            </div>
+            <div class="sidebar-box" style="background: #fafafa;">
+                <div class="sidebar-title">📢 알림</div>
+                <p style="font-size: 0.8rem; color: #666;">위키 문법 안내: 마크다운을 지원하며, <code>[[캐릭터ID]]</code> 형식으로 다른 문서로 링크를 걸 수 있습니다.</p>
+            </div>
+        </aside>
     </div>
 
-    <footer class="site-footer">
-        <div class="footer-content">
-            <div class="footer-links">
-                <a href="#privacy">개인정보처리방침</a>
-                <a href="#about">사이트 소개</a>
-            </div>
-            <p>© 2026 You Shou Yan Wiki Hub.</p>
-        </div>
-    </footer>
-
-    <script src="main.js" type="module"></script>
+    <script type="module" src="main.js"></script>
 </body>
 </html>
