@@ -1,10 +1,19 @@
-import { auth } from './firebase-config.js';
+import { auth, db } from './firebase-config.js';
 import { 
     signInWithEmailAndPassword, 
     createUserWithEmailAndPassword,
     updateProfile,
     onAuthStateChanged 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { 
+    doc, 
+    setDoc, 
+    getDoc, 
+    collection, 
+    query, 
+    where, 
+    getDocs 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const authForm = document.getElementById('auth-form');
 const nicknameInput = document.getElementById('nickname');
@@ -18,18 +27,17 @@ const signupTab = document.getElementById('signup-tab');
 const errorMessage = document.getElementById('error-message');
 
 let isLogin = true;
+const INTERNAL_DOMAIN = "@youshouyan.wiki"; // 이 사이트만의 전용 도메인
 
-// 내부적으로 사용할 도메인 (이메일 미입력 시)
-const INTERNAL_DOMAIN = "@fbwiki.com";
-
+// 탭 전환 로직
 loginTab.addEventListener('click', () => {
     isLogin = true;
     loginTab.classList.add('active');
     signupTab.classList.remove('active');
-    submitBtn.textContent = '로그인';
+    submitBtn.textContent = '위키 로그인';
     emailGroup.style.display = 'none';
     passwordConfirmInput.style.display = 'none';
-    nicknameInput.placeholder = "닉네임 (또는 이메일)";
+    nicknameInput.placeholder = "닉네임";
     errorMessage.style.display = 'none';
 });
 
@@ -37,93 +45,79 @@ signupTab.addEventListener('click', () => {
     isLogin = false;
     signupTab.classList.add('active');
     loginTab.classList.remove('active');
-    submitBtn.textContent = '회원가입';
+    submitBtn.textContent = '위키 멤버 가입';
     emailGroup.style.display = 'flex';
     passwordConfirmInput.style.display = 'block';
-    passwordConfirmInput.required = true;
-    nicknameInput.placeholder = "사용할 닉네임 (필수)";
+    nicknameInput.placeholder = "사용할 닉네임 (중복 불가)";
     errorMessage.style.display = 'none';
 });
+
+// 닉네임 중복 체크 함수
+async function isNicknameTaken(nickname) {
+    const q = query(collection(db, "users"), where("nickname", "==", nickname));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+}
 
 authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // Firebase 설정 확인 (더미 객체 여부 체크)
-    // 실제 Firebase Auth 객체는 내부적으로 'config' 또는 'app' 프로퍼티를 가집니다.
-    if (!auth || !auth.app || !auth.app.options || auth.app.options.apiKey === "YOUR_API_KEY") {
-        errorMessage.textContent = "Firebase 설정이 완료되지 않았습니다. 'firebase-config.js' 파일에 실제 API Key와 설정값들을 입력해 주세요.";
-        errorMessage.style.display = 'block';
-        return;
-    }
-
     const nickname = nicknameInput.value.trim();
     const email = emailInput.value.trim();
     const password = passwordInput.value;
     const passwordConfirm = passwordConfirmInput.value;
     
     errorMessage.style.display = 'none';
-
-    // 닉네임 유효성 검사 (회원가입 시)
-    if (!isLogin && (nickname.length < 2 || nickname.length > 20)) {
-        errorMessage.textContent = "닉네임은 2~20자 사이여야 합니다.";
-        errorMessage.style.display = 'block';
-        return;
-    }
-
-    // 최종 이메일 결정 로직 (한글 및 특수문자 대응을 위한 인코딩 지양, 대신 단순화)
-    let finalEmail = nickname;
-    if (!nickname.includes('@')) {
-        // Firebase Auth 이메일 규칙 준수를 위해 공백 제거 및 영문/숫자 위주 추천
-        // 하지만 한글 닉네임 사용을 위해 내부적으로는 ID처럼 취급
-        const safeId = nickname.replace(/[^a-zA-Z0-9가-힣]/g, '');
-        finalEmail = safeId + INTERNAL_DOMAIN;
-    }
+    submitBtn.disabled = true;
+    submitBtn.textContent = '처리 중...';
 
     try {
         if (isLogin) {
-            // 로그인
-            await signInWithEmailAndPassword(auth, finalEmail, password);
+            // [로그인 로직]
+            // 닉네임으로 가입했으므로 내부 도메인을 붙여서 인증
+            const loginEmail = nickname.includes('@') ? nickname : nickname + INTERNAL_DOMAIN;
+            await signInWithEmailAndPassword(auth, loginEmail, password);
             window.location.href = 'index.html';
         } else {
-            // 회원가입 유효성 검사
-            if (password !== passwordConfirm) {
-                throw new Error("비밀번호가 일치하지 않습니다.");
-            }
-            if (password.length < 6) {
-                throw new Error("비밀번호는 최소 6자리 이상이어야 합니다.");
-            }
-
-            // 만약 유저가 진짜 이메일을 입력했다면 그것을 사용
-            const signupEmail = email || finalEmail;
-
-            const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, password);
+            // [회원가입 로직]
+            if (password !== passwordConfirm) throw new Error("비밀번호 확인이 일치하지 않습니다.");
+            if (password.length < 6) throw new Error("비밀번호는 6자리 이상이어야 합니다.");
             
-            // 프로필에 닉네임 저장
-            await updateProfile(userCredential.user, {
-                displayName: nickname
+            // 1. 닉네임 중복 체크
+            const taken = await isNicknameTaken(nickname);
+            if (taken) throw new Error("이미 존재하는 닉네임입니다. 다른 이름을 사용해 주세요.");
+
+            // 2. 계정 생성
+            const signupEmail = email || (nickname + INTERNAL_DOMAIN);
+            const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, password);
+            const user = userCredential.user;
+
+            // 3. Firebase Auth 프로필 업데이트
+            await updateProfile(user, { displayName: nickname });
+
+            // 4. Firestore에 유수언 위키 전용 유저 문서 생성
+            await setDoc(doc(db, "users", user.uid), {
+                uid: user.uid,
+                nickname: nickname,
+                realEmail: email || null,
+                role: 'member', // 기본 역할
+                joinedAt: new Date(),
+                contributionCount: 0
             });
 
-            alert("회원가입이 완료되었습니다!");
+            alert(`${nickname}님, 유수언 위키의 멤버가 되신 것을 환영합니다!`);
             window.location.href = 'index.html';
         }
     } catch (error) {
         console.error(error);
-        let msg = error.message;
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-            msg = "닉네임 또는 비밀번호가 올바르지 않습니다.";
-        } else if (error.code === 'auth/email-already-in-use') {
-            msg = "이미 사용 중인 닉네임 또는 이메일입니다.";
-        } else if (error.code === 'auth/invalid-email') {
-            msg = "유효하지 않은 이메일 형식입니다. 닉네임에 특수문자를 제외해 주세요.";
-        } else if (error.code === 'auth/operation-not-allowed') {
-            msg = "Firebase Console에서 Email/Password 인증이 활성화되어 있지 않습니다.";
-        }
-        errorMessage.textContent = msg;
+        errorMessage.textContent = error.message;
         errorMessage.style.display = 'block';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = isLogin ? '위키 로그인' : '위키 멤버 가입';
     }
 });
 
-// 로그인 상태면 인덱스로 리다이렉트 (로그인/회원가입 페이지 진입 방지)
 onAuthStateChanged(auth, (user) => {
     if (user && !window.location.hash.includes('logout')) {
         window.location.href = 'index.html';
