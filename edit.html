@@ -3,71 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>편집 - 유수언 위키</title>
+    <title>문서 편집 - 유수언 위키</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        .edit-container { max-width: 1100px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
-        .edit-tabs { display: flex; gap: 1rem; border-bottom: 1px solid #eee; margin-bottom: 1.5rem; }
-        .edit-tab { padding: 0.8rem 1.5rem; cursor: pointer; font-weight: 700; color: #888; border-bottom: 3px solid transparent; }
-        .edit-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .editor-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .editor-header { margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem; }
         
-        .edit-panel { display: none; }
-        .edit-panel.active { display: block; }
+        .edit-box { background: white; border: 1px solid var(--border-color); padding: 2rem; }
         
-        .wiki-editor-textarea { width: 100%; min-height: 400px; padding: 1.5rem; border: 1px solid #ddd; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 1rem; line-height: 1.6; resize: vertical; }
-        .preview-box { padding: 2rem; border: 1px solid #eee; border-radius: 8px; background: #fdfdfd; min-height: 400px; }
+        .field-group { margin-bottom: 2rem; }
+        .field-label { font-weight: 800; font-size: 1.1rem; margin-bottom: 0.8rem; display: block; color: #333; }
+        .field-input { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+        .field-textarea { width: 100%; min-height: 250px; padding: 1rem; border: 1px solid #ddd; border-radius: 4px; font-family: 'Consolas', 'Monaco', monospace; font-size: 0.95rem; line-height: 1.6; resize: vertical; }
         
-        .summary-group { margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 8px; }
-        .summary-input { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; margin-top: 0.5rem; }
+        .admin-action-bar { background: #f8f9fa; padding: 0.8rem; border: 1px solid #eee; margin-top: -1px; display: flex; justify-content: flex-end; }
         
-        .edit-actions { display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end; }
-        .btn-save { padding: 1rem 2.5rem; background: #00a0e9; color: white; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; }
-        .btn-cancel { padding: 1rem 2rem; background: #666; color: white; border: none; border-radius: 4px; font-weight: 700; text-decoration: none; }
+        .summary-box { margin-top: 2rem; padding: 1.5rem; background: #f0f9ff; border: 1px solid var(--primary-color); border-radius: 4px; }
         
-        .form-section-title { font-size: 1.2rem; font-weight: 700; margin: 2rem 0 1rem; color: #333; border-left: 4px solid var(--primary-color); padding-left: 0.8rem; }
+        .edit-actions { display: flex; gap: 1rem; margin-top: 2rem; justify-content: center; }
+        .btn-save { background: var(--primary-color); color: white; border: none; padding: 1rem 3rem; font-weight: 800; font-size: 1.1rem; border-radius: 4px; cursor: pointer; }
+        .btn-cancel { background: #666; color: white; border: none; padding: 1rem 2rem; font-weight: 700; border-radius: 4px; text-decoration: none; display: inline-block; }
     </style>
 </head>
 <body>
     <header class="site-header">
         <div class="header-content">
-            <a href="index.html" class="logo"><span>유수언 위키</span></a>
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo" class="logo-img">
+                <span>유수언 위키</span>
+            </a>
+            <div class="search-container">
+                <input type="text" class="search-input" id="global-search" placeholder="문서 검색...">
+                <div class="search-results" id="search-results"></div>
+            </div>
             <nav class="top-nav">
-                <a href="index.html#home" class="nav-link">홈</a>
                 <a href="index.html#characters" class="nav-link">캐릭터</a>
                 <span id="user-info"></span>
             </nav>
         </div>
     </header>
 
-    <main class="edit-container">
-        <h1 id="edit-title">편집</h1>
-        
-        <div class="edit-tabs">
-            <div class="edit-tab active" data-target="editor-panel">편집</div>
-            <div class="edit-tab" data-target="preview-panel">미리보기</div>
+    <main class="editor-container">
+        <div class="editor-header">
+            <h1 id="edit-title">문서 편집</h1>
+            <div class="wiki-tabs">
+                <div class="wiki-tab active" id="tab-edit">편집</div>
+                <div class="wiki-tab" id="tab-preview">미리보기</div>
+            </div>
         </div>
 
         <form id="edit-form">
-            <div id="editor-panel" class="edit-panel active">
-                <div class="form-group">
-                    <label>한 줄 소개</label>
-                    <input type="text" id="field-title" class="summary-input" style="margin-bottom: 1.5rem;">
+            <!-- 편집 패널 -->
+            <div id="panel-edit" class="edit-box">
+                <div class="field-group">
+                    <label class="field-label">한 줄 소개</label>
+                    <input type="text" id="field-title" class="field-input" placeholder="이 문서를 설명하는 짧은 문구">
                 </div>
-                
+
                 <div id="dynamic-sections">
-                    <!-- 각 섹션별 편집 창 -->
+                    <!-- 8단계 섹션이 여기에 생성됨 -->
                 </div>
             </div>
 
-            <div id="preview-panel" class="edit-panel">
-                <div id="preview-box" class="preview-box wiki-content">
-                    미리보기가 여기에 표시됩니다.
+            <!-- 미리보기 패널 -->
+            <div id="panel-preview" class="edit-box" style="display: none;">
+                <div id="preview-content" class="wiki-content">
+                    <!-- 실시간 렌더링 결과 -->
                 </div>
             </div>
 
-            <div class="summary-group">
-                <label><strong>편집 요약</strong> (나무위키처럼 무엇을 수정했는지 간단히 적어주세요)</label>
-                <input type="text" id="edit-summary" class="summary-input" placeholder="예: 오타 수정, 이미지 교체, 내용 보강 등">
+            <div class="summary-box">
+                <label class="field-label">편집 요약</label>
+                <input type="text" id="edit-summary" class="field-input" placeholder="수정 내용을 간단히 적어주세요 (예: 오타 수정, 정보 보강)">
             </div>
 
             <div class="edit-actions">
