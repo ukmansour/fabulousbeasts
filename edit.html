@@ -3,98 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>캐릭터 편집 - 유수언 위키</title>
+    <title>편집 - 유수언 위키</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        .edit-container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 3rem;
-            background: var(--card-bg);
-            border-radius: 24px;
-            box-shadow: var(--shadow-md);
-        }
-        .edit-form {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
-        }
-        .form-group label {
-            font-weight: 700;
-            font-size: 1.2rem;
-            color: var(--primary-color);
-        }
-        .form-group textarea, .form-group input {
-            padding: 1.2rem;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-family: inherit;
-            line-height: 1.6;
-        }
-        .form-group textarea {
-            min-height: 200px;
-            resize: vertical;
-        }
-        .edit-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-        .btn-save {
-            padding: 1rem 2.5rem;
-            background: var(--secondary-color);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            cursor: pointer;
-        }
-        .btn-cancel {
-            padding: 1rem 2.5rem;
-            background: #eee;
-            color: #333;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1.1rem;
-            cursor: pointer;
-            text-decoration: none;
-            text-align: center;
-        }
+        .edit-container { max-width: 1100px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .edit-tabs { display: flex; gap: 1rem; border-bottom: 1px solid #eee; margin-bottom: 1.5rem; }
+        .edit-tab { padding: 0.8rem 1.5rem; cursor: pointer; font-weight: 700; color: #888; border-bottom: 3px solid transparent; }
+        .edit-tab.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        
+        .edit-panel { display: none; }
+        .edit-panel.active { display: block; }
+        
+        .wiki-editor-textarea { width: 100%; min-height: 400px; padding: 1.5rem; border: 1px solid #ddd; border-radius: 8px; font-family: 'Consolas', monospace; font-size: 1rem; line-height: 1.6; resize: vertical; }
+        .preview-box { padding: 2rem; border: 1px solid #eee; border-radius: 8px; background: #fdfdfd; min-height: 400px; }
+        
+        .summary-group { margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 8px; }
+        .summary-input { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; margin-top: 0.5rem; }
+        
+        .edit-actions { display: flex; gap: 1rem; margin-top: 2rem; justify-content: flex-end; }
+        .btn-save { padding: 1rem 2.5rem; background: #00a0e9; color: white; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; }
+        .btn-cancel { padding: 1rem 2rem; background: #666; color: white; border: none; border-radius: 4px; font-weight: 700; text-decoration: none; }
+        
+        .form-section-title { font-size: 1.2rem; font-weight: 700; margin: 2rem 0 1rem; color: #333; border-left: 4px solid var(--primary-color); padding-left: 0.8rem; }
     </style>
 </head>
 <body>
     <header class="site-header">
         <div class="header-content">
-            <a href="index.html" class="logo">
-                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo" class="logo-img">
-                <span>유수언 위키</span>
-            </a>
+            <a href="index.html" class="logo"><span>유수언 위키</span></a>
         </div>
     </header>
 
     <main class="edit-container">
-        <h1 id="edit-title">캐릭터 편집</h1>
-        <p id="edit-subtitle" style="margin-bottom: 3rem; color: #666;">내용을 수정하고 저장 버튼을 눌러주세요.</p>
+        <h1 id="edit-title">편집</h1>
+        
+        <div class="edit-tabs">
+            <div class="edit-tab active" data-target="editor-panel">편집</div>
+            <div class="edit-tab" data-target="preview-panel">미리보기</div>
+        </div>
 
-        <form id="edit-form" class="edit-form">
-            <!-- Dynamically generated fields -->
-            <div id="dynamic-fields"></div>
+        <form id="edit-form">
+            <div id="editor-panel" class="edit-panel active">
+                <div class="form-group">
+                    <label>한 줄 소개</label>
+                    <input type="text" id="field-title" class="summary-input" style="margin-bottom: 1.5rem;">
+                </div>
+                
+                <div id="dynamic-sections">
+                    <!-- 각 섹션별 편집 창 -->
+                </div>
+            </div>
+
+            <div id="preview-panel" class="edit-panel">
+                <div id="preview-box" class="preview-box wiki-content">
+                    미리보기가 여기에 표시됩니다.
+                </div>
+            </div>
+
+            <div class="summary-group">
+                <label><strong>편집 요약</strong> (나무위키처럼 무엇을 수정했는지 간단히 적어주세요)</label>
+                <input type="text" id="edit-summary" class="summary-input" placeholder="예: 오타 수정, 이미지 교체, 내용 보강 등">
+            </div>
 
             <div class="edit-actions">
-                <button type="submit" class="btn-save">저장하기</button>
+                <button type="submit" class="btn-save">저장</button>
                 <a href="#" id="cancel-link" class="btn-cancel">취소</a>
             </div>
         </form>
     </main>
 
     <script type="module" src="edit.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </body>
 </html>
