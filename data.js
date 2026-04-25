@@ -6,14 +6,14 @@ export const CATEGORIES = [
 ];
 
 export const DETAIL_SECTIONS = [
-    { id: 'appearance_debut', label: '설정', num: 1 },
+    { id: 'debut', label: '설정', num: 1 },
     { id: 'appearance', label: '외형', num: 2 },
     { id: 'personality', label: '성격', num: 3 },
     { id: 'ability', label: '능력', num: 4 },
     { id: 'motif', label: '실제 신화 속 모습', num: 5 },
     { id: 'name_origin', label: '이름', num: 6 },
     { id: 'trivia', label: '여담', num: 7 },
-    { id: 'yusu_huihwa', label: '유수희화', num: 8 }
+    { id: 'gallery', label: '갤러리', num: 8 }
 ];
 
 export const CHARACTERS = ALL_CHARS;

@@ -56,10 +56,10 @@ async function loadCharacterData() {
 
     let sectionsHtml = '';
     DETAIL_SECTIONS.forEach(section => {
-        if (section.id === 'yusu_huihwa') return;
+        const placeholder = section.id === 'gallery' ? "이미지 URL을 한 줄에 하나씩 입력하세요." : `${section.label} 내용을 입력하세요 (마크다운 지원)`;
         sectionsHtml += `
             <div class="form-section-title">${section.label}</div>
-            <textarea id="field-${section.id}" class="wiki-editor-textarea" placeholder="${section.label} 내용을 입력하세요 (마크다운 지원)">${char[section.id] || ''}</textarea>
+            <textarea id="field-${section.id}" class="wiki-editor-textarea" placeholder="${placeholder}">${char[section.id] || ''}</textarea>
         `;
     });
     dynamicSections.innerHTML = sectionsHtml;
@@ -85,10 +85,20 @@ editTabs.forEach(tab => {
 function updatePreview() {
     let previewHtml = '';
     DETAIL_SECTIONS.forEach(section => {
-        if (section.id === 'yusu_huihwa') return;
         const content = document.getElementById(`field-${section.id}`).value;
         if (content.trim()) {
-            previewHtml += `<h3>${section.label}</h3><div>${marked.parse(content)}</div><hr>`;
+            let renderedContent = '';
+            if (section.id === 'gallery') {
+                const images = content.split('\n').filter(url => url.trim().startsWith('http'));
+                renderedContent = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        ${images.map(img => `<img src="${img.trim()}" style="width:100%; border-radius:8px;">`).join('')}
+                    </div>
+                `;
+            } else {
+                renderedContent = marked.parse(content);
+            }
+            previewHtml += `<h3>${section.label}</h3><div>${renderedContent}</div><hr>`;
         }
     });
     previewBox.innerHTML = previewHtml || '<p style="color:#888;">내용이 없습니다.</p>';
@@ -107,7 +117,6 @@ editForm.addEventListener('submit', async (e) => {
     };
 
     DETAIL_SECTIONS.forEach(section => {
-        if (section.id === 'yusu_huihwa') return;
         updatedData[section.id] = document.getElementById(`field-${section.id}`).value;
     });
 

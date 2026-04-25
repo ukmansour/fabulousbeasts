@@ -52,7 +52,6 @@ async function loadDetail() {
 
     document.title = `${char.name} - 유수언 위키`;
 
-    // 마크다운 변환 함수 (안전하게 실행)
     const renderMarkdown = (text) => {
         if (typeof marked !== 'undefined' && text) {
             return marked.parse(text);
@@ -73,14 +72,33 @@ async function loadDetail() {
         </nav>
     ` : '';
 
-    const sectionsHtml = activeSections.map((section, index) => `
-        <div class="detail-section" id="${charId}-${section.id}">
-            <h2>${index + 1}. ${section.label}</h2>
-            <div class="detail-content wiki-content">
-                ${renderMarkdown(char[section.id])}
+    const sectionsHtml = activeSections.map((section, index) => {
+        let contentHtml = '';
+        if (section.id === 'gallery') {
+            // 갤러리 섹션 특수 처리: 줄바꿈으로 구분된 이미지 URL들을 그리드로 렌더링
+            const images = char[section.id].split('\n').filter(url => url.trim().startsWith('http'));
+            if (images.length > 0) {
+                contentHtml = `
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                        ${images.map(img => `<img src="${img.trim()}" style="width:100%; border-radius:8px; cursor:pointer;" onclick="window.open(this.src)">`).join('')}
+                    </div>
+                `;
+            } else {
+                contentHtml = renderMarkdown(char[section.id]);
+            }
+        } else {
+            contentHtml = renderMarkdown(char[section.id]);
+        }
+
+        return `
+            <div class="detail-section" id="${charId}-${section.id}">
+                <h2>${index + 1}. ${section.label}</h2>
+                <div class="detail-content wiki-content">
+                    ${contentHtml}
+                </div>
             </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 
     const infoboxHtml = `
         <div class="infobox">
@@ -94,7 +112,7 @@ async function loadDetail() {
         </div>
     `;
 
-    // 편집 이력 섹션 (나무위키 스타일)
+    // 편집 이력 섹션
     let historyHtml = '';
     if (char.history && char.history.length > 0) {
         historyHtml = `
@@ -155,7 +173,6 @@ async function loadDetail() {
 }
 
 window.addEventListener('load', () => {
-    // 라이브러리 로드 대기 후 실행
     setTimeout(loadDetail, 100);
 });
 window.addEventListener('hashchange', loadDetail);
