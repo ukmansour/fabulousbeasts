@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>유수언 위키 - 세상의 모든 신수 정보</title>
+    <title>유수언 위키 - 신수들의 기록소</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <header class="site-header">
         <div class="header-content">
             <a href="index.html" class="logo">
-                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo" class="logo-img">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
                 <span>유수언 위키</span>
             </a>
             <div class="search-container">
-                <input type="text" class="search-input" id="global-search" placeholder="문서 검색 (예: 천록, pixiu)">
+                <input type="text" class="search-input" id="global-search" placeholder="문서 검색 (이름, ID 등)">
                 <div class="search-results" id="search-results"></div>
             </div>
             <nav class="top-nav">
@@ -27,18 +27,23 @@
 
     <div class="wiki-outer-container">
         <main class="wiki-article">
-            <h1 class="wiki-title">유수언 위키에 오신 것을 환영합니다!</h1>
+            <h1 class="wiki-title">유수언 위키:대문</h1>
+            <div class="wiki-subtitle">세상의 모든 신수 정보가 모이는 곳</div>
+            
             <div class="wiki-content">
-                <p>이곳은 애니메이션 <strong>'유수언(有兽焉)'</strong>에 등장하는 다양한 신수들과 캐릭터들의 정보를 정리하는 공유 위키입니다. 누구나 편집에 참여하여 지식을 나눌 수 있습니다.</p>
-                
-                <div style="margin: 2rem 0; padding: 2rem; background: #f0f9ff; border: 1px solid var(--primary-color); border-radius: 8px;">
-                    <h3 style="margin-bottom: 1rem; color: var(--primary-color);">🌟 주요 캐릭터 바로가기</h3>
-                    <div id="featured-characters-grid" class="char-grid-home">
+                <div class="portal-card">
+                    <h2 style="margin-top:0; border:none; font-size:1.4rem;">👋 환영합니다!</h2>
+                    <p>이곳은 애니메이션 <strong>'유수언(有兽焉)'</strong>에 등장하는 다양한 신수들과 캐릭터들의 정보를 집대성하는 공유 위키입니다. 여러분의 편집 참여로 더욱 풍성한 기록을 만들어갈 수 있습니다.</p>
+                </div>
+
+                <div style="margin-bottom: 3rem;">
+                    <h2 id="featured">⭐ 주요 캐릭터 바로가기</h2>
+                    <div id="featured-characters-grid" class="char-grid-portal">
                         <!-- JS injects here -->
                     </div>
                 </div>
 
-                <h2 id="characters">전체 캐릭터 목록</h2>
+                <h2 id="characters">📜 전체 캐릭터 목록</h2>
                 <div id="char-grid">
                     <!-- JS injects categories and cards here -->
                 </div>
@@ -47,14 +52,21 @@
 
         <aside class="wiki-sidebar">
             <div class="sidebar-box">
-                <div class="sidebar-title">🕒 최근 변경된 문서</div>
+                <div class="sidebar-title">🕒 최근 변경 내역</div>
                 <div id="home-recent-list">
-                    <!-- JS injects here -->
+                    <!-- Recent items -->
                 </div>
             </div>
-            <div class="sidebar-box" style="background: #fafafa;">
-                <div class="sidebar-title">📢 알림</div>
-                <p style="font-size: 0.8rem; color: #666;">위키 문법 안내: 마크다운을 지원하며, <code>[[캐릭터ID]]</code> 형식으로 다른 문서로 링크를 걸 수 있습니다.</p>
+            <div class="sidebar-box">
+                <div class="sidebar-title">📢 편집 안내</div>
+                <p style="font-size: 0.8rem; color: #666; margin-bottom: 0.8rem;">
+                    누구나 로그인을 통해 문서를 편집할 수 있습니다. 
+                </p>
+                <ul style="font-size: 0.75rem; color: #888; padding-left: 1.2rem;">
+                    <li>마크다운 문법 지원</li>
+                    <li>[[문서ID]]로 링크 생성</li>
+                    <li>편집 요약 필수 작성</li>
+                </ul>
             </div>
         </aside>
     </div>
