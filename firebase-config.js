@@ -8,7 +8,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCCmKvWTUstJ51H1d9fKcDP0mJZmI0LgkI",
   authDomain: "fabulousbeasts.firebaseapp.com",
   projectId: "fabulousbeasts",
-  storageBucket: "fabulousbeasts.appspot.com", // 수동 확인 결과 기본 버킷 주소
+  storageBucket: "fabulousbeasts.firebasestorage.app", // 원래 주소로 복구
   messagingSenderId: "839246553606",
   appId: "1:839246553606:web:a32f2aa13293436a4ad987",
   measurementId: "G-M0V4J73C85"

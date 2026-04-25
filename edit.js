@@ -11,7 +11,6 @@ const cancelLink = document.getElementById('cancel-link');
 
 let userRole = 'member';
 
-// 권한 확인 및 초기화
 onAuthStateChanged(auth, async (user) => {
     if (!user) {
         alert("로그인이 필요합니다.");
@@ -19,22 +18,25 @@ onAuthStateChanged(auth, async (user) => {
         return;
     }
 
-    // 관리자 권한 확인 (Firestore users 컬렉션 조회)
     try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
             userRole = userDoc.data().role || 'member';
         }
     } catch (e) {
-        console.warn("Role check error:", e);
+        console.error("사용자 권한 확인 중 오류:", e);
     }
 
     await loadCharacterData();
 });
 
 async function loadCharacterData() {
+    console.log("로드 중인 캐릭터 ID:", charId);
+    
+    // 로컬 데이터에서 먼저 찾기
     let char = CHARACTERS.find(c => c.id === charId);
     
+    // Firestore에서 최신 데이터 가져오기
     try {
         const docRef = doc(db, "characters", charId);
         const docSnap = await getDoc(docRef);
@@ -42,11 +44,11 @@ async function loadCharacterData() {
             char = { ...char, ...docSnap.data() };
         }
     } catch (e) {
-        console.warn("Firestore fetch error:", e);
+        console.error("Firestore 데이터 로드 실패:", e);
     }
 
     if (!char) {
-        alert("캐릭터를 찾을 수 없습니다.");
+        alert("캐릭터 정보를 불러올 수 없습니다. (ID: " + charId + ")");
         window.location.href = 'index.html';
         return;
     }
@@ -54,71 +56,76 @@ async function loadCharacterData() {
     document.getElementById('edit-title').textContent = `${char.name} 편집`;
     cancelLink.href = `detail.html#${charId}`;
 
-    // 필드 생성
     let fieldsHtml = `
         <div class="form-group">
             <label>캐릭터 이름 (변경 불가)</label>
-            <input type="text" value="${char.name}" disabled style="background: #f0f0f0;">
+            <input type="text" value="${char.name}" disabled style="background: #f4f4f4; color: #888;">
         </div>
         <div class="form-group">
             <label>한 줄 소개 (title)</label>
-            <input type="text" id="field-title" value="${char.title || ''}">
+            <input type="text" id="field-title" value="${char.title || ''}" placeholder="캐릭터를 설명하는 짧은 문구">
         </div>
         <div class="form-group">
             <label>이미지 설정</label>
-            <div style="display: flex; gap: 1rem; align-items: center;">
-                <input type="text" id="field-image" value="${char.image || ''}" style="flex: 1;">
-                <label for="image-upload" class="btn-cancel" style="padding: 0.8rem; cursor: pointer; margin: 0; font-size: 0.9rem;">파일 업로드</label>
+            <div style="display: flex; gap: 0.5rem;">
+                <input type="text" id="field-image" value="${char.image || ''}" style="flex: 1;" placeholder="이미지 URL">
+                <label for="image-upload" class="btn-cancel" style="padding: 0.8rem 1.2rem; cursor: pointer; white-space: nowrap; margin: 0;">파일 선택</label>
                 <input type="file" id="image-upload" style="display: none;" accept="image/*">
             </div>
-            <p style="font-size: 0.8rem; color: #888; margin-top: 0.5rem;">URL을 직접 입력하거나 파일을 업로드할 수 있습니다.</p>
         </div>
         
-        <h3 style="margin-top: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 0.5rem;">기본 프로필 정보</h3>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            ${['nickname', 'gender', 'species', 'nationality', 'birthday', 'height'].map(key => `
+        <h3 style="margin: 2.5rem 0 1rem; border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem; color: var(--primary-color);">기본 프로필</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+            ${[
+                { id: 'nickname', label: '별명' },
+                { id: 'gender', label: '성별' },
+                { id: 'species', label: '종족' },
+                { id: 'nationality', label: '국적' },
+                { id: 'birthday', label: '생일' },
+                { id: 'height', label: '키' }
+            ].map(item => `
                 <div class="form-group">
-                    <label>${key === 'nickname' ? '별명' : key === 'gender' ? '성별' : key === 'species' ? '종족' : key === 'nationality' ? '국적' : key === 'birthday' ? '생일' : '키'}</label>
-                    <input type="text" id="field-${key}" value="${char[key] || ''}">
+                    <label>${item.label}</label>
+                    <input type="text" id="field-${item.id}" value="${char[item.id] || ''}">
                 </div>
             `).join('')}
         </div>
 
-        <h3 style="margin-top: 2rem; border-bottom: 1px solid #ccc; padding-bottom: 0.5rem;">상세 설정 내용</h3>
+        <h3 style="margin: 2.5rem 0 1rem; border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem; color: var(--primary-color);">상세 설정</h3>
     `;
 
     DETAIL_SECTIONS.forEach(section => {
-        if (section.id === 'yusu_huihwa') return; 
+        if (section.id === 'yusu_huihwa') return;
         fieldsHtml += `
             <div class="form-group">
                 <label>${section.label}</label>
-                <textarea id="field-${section.id}">${char[section.id] || ''}</textarea>
+                <textarea id="field-${section.id}" placeholder="${section.label} 내용을 입력하세요...">${char[section.id] || ''}</textarea>
             </div>
         `;
     });
 
     dynamicFields.innerHTML = fieldsHtml;
 
-    // 이미지 업로드 이벤트 핸들러
+    // 파일 업로드 핸들러
     document.getElementById('image-upload').addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const uploadLabel = document.querySelector('label[for="image-upload"]');
-        const originalText = uploadLabel.textContent;
-        uploadLabel.textContent = "업로드 중...";
+        const btnLabel = document.querySelector('label[for="image-upload"]');
+        const originalText = btnLabel.textContent;
+        btnLabel.textContent = "업로드 중...";
 
         try {
-            const storageRef = ref(storage, `characters/${charId}/${Date.now()}_${file.name}`);
-            const snapshot = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
-            
-            document.getElementById('field-image').value = downloadURL;
-            alert("이미지가 성공적으로 업로드되었습니다.");
-        } catch (error) {
-            alert("이미지 업로드 실패: " + error.message);
+            const fileRef = ref(storage, `characters/${charId}/${Date.now()}_${file.name}`);
+            const uploadTask = await uploadBytes(fileRef, file);
+            const url = await getDownloadURL(uploadTask.ref);
+            document.getElementById('field-image').value = url;
+            alert("이미지 업로드가 완료되었습니다.");
+        } catch (err) {
+            console.error(err);
+            alert("업로드 실패: " + err.message);
         } finally {
-            uploadLabel.textContent = originalText;
+            btnLabel.textContent = originalText;
         }
     });
 }
@@ -126,22 +133,22 @@ async function loadCharacterData() {
 editForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    // 관리자 전용 권한 체크 (선택 사항: 원하시면 관리자만 저장 가능하게 활성화)
+    // 현재는 누구나 편집 가능하지만, 관리자 전용으로 바꾸고 싶다면 아래 주석을 해제하세요.
     /*
     if (userRole !== 'admin') {
-        alert("편집 권한이 없습니다. 관리자에게 문의하세요.");
+        alert("관리자만 문서를 편집할 수 있는 설정입니다.");
         return;
     }
     */
 
-    const currentUser = auth.currentUser;
-    const editorName = currentUser.displayName || currentUser.email.split('@')[0];
+    const user = auth.currentUser;
+    const editorName = user.displayName || user.email.split('@')[0];
     
     const historyEntry = {
         user: editorName,
         timestamp: new Date(),
         type: 'edit',
-        note: '문서 내용 수정'
+        note: '문서 수정'
     };
 
     const updatedData = {
@@ -159,30 +166,34 @@ editForm.addEventListener('submit', async (e) => {
 
     DETAIL_SECTIONS.forEach(section => {
         if (section.id === 'yusu_huihwa') return;
-        updatedData[section.id] = document.getElementById(`field-${section.id}`).value;
+        const el = document.getElementById(`field-${section.id}`);
+        if (el) updatedData[section.id] = el.value;
     });
 
     try {
         const docRef = doc(db, "characters", charId);
         
-        // 이력 추가 (arrayUnion 사용)
+        // 데이터 저장 및 이력 추가
         await setDoc(docRef, { 
             ...updatedData, 
             history: arrayUnion(historyEntry) 
         }, { merge: true });
 
-        // 기여도 점수 업데이트 (users 컬렉션)
-        const userDocRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userDocRef);
-        if (userSnap.exists()) {
-            await updateDoc(userDocRef, {
-                contributionCount: (userSnap.data().contributionCount || 0) + 1
-            });
-        }
+        // 기여도 업데이트
+        try {
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists()) {
+                await updateDoc(userRef, {
+                    contributionCount: (userSnap.data().contributionCount || 0) + 1
+                });
+            }
+        } catch (e) { console.warn("기여도 업데이트 실패:", e); }
 
-        alert("성공적으로 저장되었습니다.");
+        alert("저장이 완료되었습니다!");
         window.location.href = `detail.html#${charId}`;
     } catch (error) {
+        console.error("저장 실패:", error);
         alert("저장 중 오류가 발생했습니다: " + error.message);
     }
 });
