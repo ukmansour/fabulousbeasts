@@ -51,7 +51,8 @@ const KNOWN_TITLES = {
 };
 
 const EPISODES = {};
-for (let s = 1; s <= 6; s++) {
+// 한 시즌당 12화씩, 총 5개 시즌(60화) 생성
+for (let s = 1; s <= 5; s++) {
     EPISODES[s.toString()] = [];
     for (let e = 1; e <= 12; e++) {
         const globalNum = (s - 1) * 12 + e;
