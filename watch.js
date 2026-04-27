@@ -33,7 +33,6 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-// 제공된 제목 리스트 (1화 ~ 57화)
 const KNOWN_TITLES = {
     1: "비휴가 왔다", 2: "속세에 온 사불상", 3: "금각과 은각의 등장", 4: "금각과 은각의 과거",
     5: "멀리서 온 토끼", 6: "피피 쓰다듬기", 7: "혼혈 왕자", 8: "보석을 토해내는 토끼",
@@ -52,32 +51,19 @@ const KNOWN_TITLES = {
 };
 
 const EPISODES = {};
-// 한 시즌당 12화씩, 총 5개 시즌(60화) + 시즌 6까지 생성
 for (let s = 1; s <= 6; s++) {
     EPISODES[s.toString()] = [];
     for (let e = 1; e <= 12; e++) {
         const globalNum = (s - 1) * 12 + e;
         const subTitle = KNOWN_TITLES[globalNum] || `에피소드 ${e}`;
         const title = `제${globalNum}화: ${subTitle}`;
-
-        EPISODES[s.toString()].push({
-            num: globalNum,
-            title: title,
-            vid: "bS6q_WlW_Y8" // 샘플 영상 ID
-        });
+        EPISODES[s.toString()].push({ num: globalNum, title: title });
     }
 }
 
 function renderEpisodes(season) {
-    console.log("Rendering season:", season); // 디버깅용
     epList.innerHTML = '';
     const eps = EPISODES[season] || [];
-    
-    if (eps.length === 0) {
-        epList.innerHTML = '<div style="padding:1rem; color:#999;">에피소드가 없습니다.</div>';
-        return;
-    }
-
     eps.forEach(ep => {
         const item = document.createElement('div');
         item.className = 'ep-item';
@@ -92,18 +78,36 @@ function renderEpisodes(season) {
 }
 
 function playVideo(ep) {
-    const videoUrl = `https://media.fabulousbeasts.kr/${ep.num}화.mp4`;
+    // 한글 '화'와 숫자를 포함한 파일명 인코딩
+    const fileName = `${ep.num}화.mp4`;
+    const videoUrl = `https://media.fabulousbeasts.kr/${encodeURIComponent(fileName)}`;
+    
+    console.log("Playing video:", videoUrl);
+    
+    videoFrame.pause();
     videoFrame.src = videoUrl;
-    videoFrame.load(); // 새로운 소스를 로드
-    videoFrame.play(); // 재생 시작
+    videoFrame.load();
+    
+    const playPromise = videoFrame.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(error => {
+            console.warn("Autoplay was prevented:", error);
+            // 브라우저 정책으로 차단된 경우 수동 재생 대기
+        });
+    }
+
     displayTitle.textContent = ep.title;
     displayDesc.textContent = `${ep.num}화 에피소드입니다. 유수언의 세계를 감상하세요.`;
 }
 
-// 시즌 선택 시 즉시 렌더링
-seasonSelect.onchange = (e) => {
-    renderEpisodes(e.target.value);
+// 비디오 에러 핸들링
+videoFrame.onerror = () => {
+    const currentSrc = videoFrame.src;
+    console.error("Video failed to load:", currentSrc);
+    if (currentSrc && currentSrc !== window.location.href) {
+        alert("영상을 불러올 수 없습니다.\n서버 연결 상태나 파일 존재 여부를 확인해 주세요.\nURL: " + currentSrc);
+    }
 };
 
-// 초기 로드 (시즌 1)
+seasonSelect.onchange = (e) => renderEpisodes(e.target.value);
 renderEpisodes("1");
