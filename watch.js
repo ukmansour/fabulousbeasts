@@ -78,36 +78,22 @@ function renderEpisodes(season) {
 }
 
 function playVideo(ep) {
-    // 한글 '화'와 숫자를 포함한 파일명 인코딩
-    const fileName = `${ep.num}화.mp4`;
-    const videoUrl = `https://media.fabulousbeasts.kr/${encodeURIComponent(fileName)}`;
+    // 사용자가 지정한 정확한 인코딩 형식 적용: 번호 + %ED%99%94 + .mp4
+    const videoUrl = `https://media.fabulousbeasts.kr/${ep.num}%ED%99%94.mp4`;
     
-    console.log("Playing video:", videoUrl);
+    console.log("재생 요청 URL:", videoUrl);
     
-    videoFrame.pause();
     videoFrame.src = videoUrl;
     videoFrame.load();
     
-    const playPromise = videoFrame.play();
-    if (playPromise !== undefined) {
-        playPromise.catch(error => {
-            console.warn("Autoplay was prevented:", error);
-            // 브라우저 정책으로 차단된 경우 수동 재생 대기
-        });
-    }
+    // 재생 시도 (사용자 클릭 이벤트 안이므로 자동 재생 차단에 걸리지 않음)
+    videoFrame.play().catch(err => {
+        console.error("재생 실패:", err);
+    });
 
     displayTitle.textContent = ep.title;
-    displayDesc.textContent = `${ep.num}화 에피소드입니다. 유수언의 세계를 감상하세요.`;
+    displayDesc.textContent = `${ep.num}화 에피소드입니다. 즐겁게 감상하세요.`;
 }
-
-// 비디오 에러 핸들링
-videoFrame.onerror = () => {
-    const currentSrc = videoFrame.src;
-    console.error("Video failed to load:", currentSrc);
-    if (currentSrc && currentSrc !== window.location.href) {
-        alert("영상을 불러올 수 없습니다.\n서버 연결 상태나 파일 존재 여부를 확인해 주세요.\nURL: " + currentSrc);
-    }
-};
 
 seasonSelect.onchange = (e) => renderEpisodes(e.target.value);
 renderEpisodes("1");
