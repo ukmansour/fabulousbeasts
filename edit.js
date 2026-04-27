@@ -18,41 +18,40 @@ let currentUser = null;
 onAuthStateChanged(auth, (user) => {
     currentUser = user;
     if (!user) {
-        alert("편집을 위해 로그인이 필요합니다. (닉네임 설정)");
-        location.href = 'auth.html';
+        console.warn("User not logged in");
     }
 });
 
 async function loadInitialData() {
     if (!charId) return;
 
-    // 1. 기본 데이터 가져오기 (data.js)
-    const baseData = CHARACTERS.find(c => c.id === charId) || {};
-    
-    // 2. Firestore 데이터 가져오기
-    const docRef = doc(db, "characters", charId);
-    const snap = await getDoc(docRef);
-    const dbData = snap.exists() ? snap.data() : {};
+    try {
+        const baseData = CHARACTERS.find(c => c.id === charId) || {};
+        const docRef = doc(db, "characters", charId);
+        const snap = await getDoc(docRef);
+        const dbData = snap.exists() ? snap.data() : {};
 
-    const data = { ...baseData, ...dbData };
+        const data = { ...baseData, ...dbData };
 
-    document.getElementById('edit-page-title').textContent = `${data.name || charId} 문서 편집`;
-    document.getElementById('edit-name').value = data.name || charId;
-    document.getElementById('edit-content').value = data.details || '';
-    document.getElementById('info-species').value = data.species || '';
-    document.getElementById('info-nation').value = data.nation || '';
-    document.getElementById('info-alias').value = data.alias || '';
-    document.getElementById('info-birthday').value = data.birthday || '';
-    document.getElementById('image-url').value = data.image || '';
+        document.getElementById('edit-page-title').textContent = `${data.name || charId} 문서 편집`;
+        document.getElementById('edit-name').value = data.name || charId;
+        document.getElementById('edit-content').value = data.details || '';
+        document.getElementById('info-species').value = data.species || '';
+        document.getElementById('info-nation').value = data.nation || '';
+        document.getElementById('info-alias').value = data.alias || '';
+        document.getElementById('info-birthday').value = data.birthday || '';
+        document.getElementById('image-url').value = data.image || '';
 
-    if (data.image) {
-        previewImg.src = data.image;
-        previewImg.style.display = 'block';
-        uploadMsg.style.display = 'none';
+        if (data.image) {
+            previewImg.src = data.image;
+            previewImg.style.display = 'block';
+            uploadMsg.style.display = 'none';
+        }
+    } catch (err) {
+        console.error("Initial load failed:", err);
     }
 }
 
-// 이미지 업로드 핸들러
 dropZone.onclick = () => imageInput.click();
 
 imageInput.onchange = async (e) => {
@@ -60,16 +59,21 @@ imageInput.onchange = async (e) => {
     if (!file) return;
 
     if (!currentUser) {
-        alert("로그인이 필요합니다.");
+        alert("편집 및 업로드를 위해 로그인이 필요합니다. (닉네임 설정)");
+        location.href = 'auth.html';
         return;
     }
 
     try {
         uploadStatus.style.display = 'block';
-        uploadStatus.textContent = '이미지 업로드 중...';
+        uploadStatus.textContent = '이미지 업로드 중... (서버 응답 대기)';
         saveBtn.disabled = true;
 
-        const storageRef = ref(storage, `characters/${charId}/${Date.now()}_${file.name}`);
+        // 파일명에서 특수문자 제거
+        const safeFileName = file.name.replace(/[^a-z0-9.]/gi, '_');
+        const storageRef = ref(storage, `characters/${charId}/${Date.now()}_${safeFileName}`);
+        
+        console.log("Starting upload to:", storageRef.fullPath);
         const snapshot = await uploadBytes(storageRef, file);
         const url = await getDownloadURL(snapshot.ref);
 
@@ -77,10 +81,11 @@ imageInput.onchange = async (e) => {
         previewImg.src = url;
         previewImg.style.display = 'block';
         uploadMsg.style.display = 'none';
-        uploadStatus.textContent = '업로드 완료!';
+        uploadStatus.textContent = '이미지 업로드 완료!';
+        console.log("Upload successful:", url);
     } catch (err) {
-        console.error(err);
-        alert("이미지 업로드 실패: " + err.message);
+        console.error("Upload Error:", err);
+        alert("이미지 업로드에 실패했습니다.\n사유: " + err.message + "\n\nFirebase Storage 보안 규칙을 확인해 주세요.");
         uploadStatus.textContent = '업로드 실패';
     } finally {
         saveBtn.disabled = false;
@@ -89,7 +94,10 @@ imageInput.onchange = async (e) => {
 
 form.onsubmit = async (e) => {
     e.preventDefault();
-    if (!currentUser) return;
+    if (!currentUser) {
+        alert("로그인이 필요합니다.");
+        return;
+    }
 
     saveBtn.disabled = true;
     saveBtn.textContent = '저장 중...';
@@ -111,8 +119,8 @@ form.onsubmit = async (e) => {
         alert("문서가 성공적으로 저장되었습니다.");
         location.href = `detail.html#${charId}`;
     } catch (err) {
-        console.error(err);
-        alert("저장 실패: " + err.message);
+        console.error("Save Error:", err);
+        alert("저장에 실패했습니다: " + err.message);
         saveBtn.disabled = false;
         saveBtn.textContent = '저장하기';
     }
