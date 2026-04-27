@@ -6,56 +6,112 @@
     <title>문서 편집 - 유수언 위키</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        .editor-container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .editor-header { border-bottom: 2px solid var(--primary-color); padding-bottom: 1rem; margin-bottom: 2rem; }
+        .editor-header h1 { font-size: 2rem; font-weight: 800; }
+        
+        .edit-grid { display: grid; grid-template-columns: 1fr 350px; gap: 2rem; }
+        
+        .main-edit-area { background: white; padding: 2rem; border: 1px solid var(--border-color); border-radius: 4px; }
+        .sidebar-edit-area { background: #f9f9f9; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 4px; }
+        
+        .section-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; color: var(--primary-dark); display: flex; align-items: center; gap: 0.5rem; }
+        .section-title::before { content: ''; display: block; width: 4px; height: 1.2rem; background: var(--primary-color); }
+
+        .image-upload-box { border: 2px dashed #ccc; padding: 1.5rem; text-align: center; margin-bottom: 1rem; cursor: pointer; transition: 0.2s; position: relative; }
+        .image-upload-box:hover { border-color: var(--primary-color); background: #f0f9ff; }
+        .image-preview { max-width: 100%; max-height: 200px; margin-top: 1rem; display: none; }
+        .upload-status { font-size: 0.8rem; color: var(--primary-color); margin-top: 0.5rem; display: none; }
+
+        .guide-box { margin-top: 2rem; background: #fffbe6; border: 1px solid #ffe58f; padding: 1rem; font-size: 0.85rem; border-radius: 4px; }
+        .guide-box ul { padding-left: 1.2rem; margin-top: 0.5rem; }
+        
+        @media (max-width: 850px) {
+            .edit-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
     <header class="site-header">
         <div class="header-content">
             <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
                 <span>유수언 위키</span>
             </a>
-            <div class="search-container">
-                <input type="text" class="search-input" id="global-search" placeholder="문서 검색">
-                <div class="search-results" id="search-results"></div>
-            </div>
             <nav class="top-nav">
-                <a href="index.html#characters" class="nav-link">캐릭터</a>
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="watch.html" class="nav-link">애니 보기</a>
                 <span id="user-info"></span>
             </nav>
         </div>
     </header>
 
-    <div class="wiki-outer-container" style="grid-template-columns: 1fr;">
-        <main class="wiki-article" style="padding: 2rem;">
-            <div class="wiki-tabs-wrapper">
-                <h1 id="edit-title" style="font-size: 1.5rem; border: none; margin: 0;">문서 편집</h1>
-                <div class="wiki-tabs">
-                    <div class="wiki-tab active" id="tab-edit">편집</div>
-                    <div class="wiki-tab" id="tab-preview">미리보기</div>
+    <div class="editor-container">
+        <div class="editor-header">
+            <h1 id="edit-page-title">문서 편집</h1>
+            <p style="color: #666; font-size: 0.9rem;">작성하신 내용은 모든 사용자에게 공개됩니다. 타인에 대한 비방이나 허위 사실 기재는 삼가주세요.</p>
+        </div>
+
+        <form id="edit-form">
+            <div class="edit-grid">
+                <div class="main-edit-area">
+                    <div class="field-group">
+                        <label class="section-title">본문 내용</label>
+                        <textarea id="edit-content" class="field-textarea" placeholder="나무위키처럼 HTML 태그나 자유로운 서술이 가능합니다."></textarea>
+                    </div>
+
+                    <div class="guide-box">
+                        <strong>💡 작성 팁</strong>
+                        <ul>
+                            <li><strong>## 제목</strong> : 큰 섹션 제목을 만듭니다. (자동 목차 생성)</li>
+                            <li><strong>### 소제목</strong> : 하위 섹션 제목을 만듭니다.</li>
+                            <li>텍스트 사이에 링크를 걸거나 이미지를 삽입할 수 있습니다.</li>
+                        </ul>
+                    </div>
                 </div>
+
+                <aside class="sidebar-edit-area">
+                    <div class="section-title">대표 이미지</div>
+                    <div class="image-upload-box" id="drop-zone">
+                        <p id="upload-msg">클릭하거나 파일을 드래그하여 업로드</p>
+                        <input type="file" id="image-input" accept="image/*" style="display: none;">
+                        <img id="preview-img" class="image-preview" src="" alt="미리보기">
+                        <div id="upload-status" class="upload-status">업로드 중...</div>
+                    </div>
+                    <input type="hidden" id="image-url">
+
+                    <div class="section-title">인포박스 설정</div>
+                    <div class="field-group" style="margin-bottom: 0.8rem;">
+                        <label class="field-label">표시 이름</label>
+                        <input type="text" id="edit-name" class="field-input">
+                    </div>
+                    <div class="field-group" style="margin-bottom: 0.8rem;">
+                        <label class="field-label">종족</label>
+                        <input type="text" id="info-species" class="field-input">
+                    </div>
+                    <div class="field-group" style="margin-bottom: 0.8rem;">
+                        <label class="field-label">국적</label>
+                        <input type="text" id="info-nation" class="field-input">
+                    </div>
+                    <div class="field-group" style="margin-bottom: 0.8rem;">
+                        <label class="field-label">별명</label>
+                        <input type="text" id="info-alias" class="field-input">
+                    </div>
+                    <div class="field-group" style="margin-bottom: 0.8rem;">
+                        <label class="field-label">생일</label>
+                        <input type="text" id="info-birthday" class="field-input">
+                    </div>
+                </aside>
             </div>
 
-            <form id="edit-form">
-                <div id="panel-edit" class="editor-wrap">
-                    <div id="dynamic-sections">
-                        <!-- JS injects fields here -->
-                    </div>
-                </div>
-
-                <div id="panel-preview" class="editor-wrap" style="display: none;">
-                    <div id="preview-content" class="wiki-content">
-                        <!-- Preview renders here -->
-                    </div>
-                </div>
-
-                <div class="btn-group">
-                    <button type="submit" class="btn-save">저장</button>
-                    <a href="#" id="cancel-link" class="btn-cancel">취소</a>
-                </div>
-            </form>
-        </main>
+            <div class="btn-group">
+                <button type="submit" class="btn-save" id="save-btn">저장하기</button>
+                <a href="javascript:history.back()" class="btn-cancel">취소</a>
+            </div>
+        </form>
     </div>
 
     <script type="module" src="edit.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </body>
 </html>
