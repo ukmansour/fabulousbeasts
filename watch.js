@@ -92,7 +92,10 @@ function renderEpisodes(season) {
 }
 
 function playVideo(ep) {
-    videoFrame.src = `https://www.youtube.com/embed/${ep.vid}?autoplay=1`;
+    const videoUrl = `https://media.fabulousbeasts.kr/${ep.num}화.mp4`;
+    videoFrame.src = videoUrl;
+    videoFrame.load(); // 새로운 소스를 로드
+    videoFrame.play(); // 재생 시작
     displayTitle.textContent = ep.title;
     displayDesc.textContent = `${ep.num}화 에피소드입니다. 유수언의 세계를 감상하세요.`;
 }
