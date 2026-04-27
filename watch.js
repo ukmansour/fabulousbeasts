@@ -8,14 +8,14 @@ const displayTitle = document.getElementById('display-title');
 const displayDesc = document.getElementById('display-desc');
 const seasonSelect = document.getElementById('season-select');
 
-// 헤더 검색바 작동을 위해 추가
+// 헤더 검색바
 const input = document.getElementById('global-search');
 const results = document.getElementById('search-results');
 if (input) {
     input.oninput = () => {
         const val = input.value.trim().toLowerCase();
         if (val.length < 1) { results.classList.remove('active'); return; }
-        const matches = CHARACTERS.filter(c => c.name.toLowerCase().includes(val) || c.id.toLowerCase().includes(val)).slice(0, 8);
+        const matches = CHARACTERS.filter(c => (c.name||'').toLowerCase().includes(val) || c.id.toLowerCase().includes(val)).slice(0, 8);
         results.innerHTML = matches.map(m => `<div class="search-item" onclick="location.href='detail.html#${m.id}'">${m.name}</div>`).join('');
         results.classList.add('active');
     };
@@ -33,6 +33,7 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
+// 제공된 제목 리스트 (1화 ~ 57화)
 const KNOWN_TITLES = {
     1: "비휴가 왔다", 2: "속세에 온 사불상", 3: "금각과 은각의 등장", 4: "금각과 은각의 과거",
     5: "멀리서 온 토끼", 6: "피피 쓰다듬기", 7: "혼혈 왕자", 8: "보석을 토해내는 토끼",
@@ -51,24 +52,32 @@ const KNOWN_TITLES = {
 };
 
 const EPISODES = {};
+// 한 시즌당 12화씩, 총 5개 시즌(60화) + 시즌 6까지 생성
 for (let s = 1; s <= 6; s++) {
-    EPISODES[s] = [];
+    EPISODES[s.toString()] = [];
     for (let e = 1; e <= 12; e++) {
         const globalNum = (s - 1) * 12 + e;
         const subTitle = KNOWN_TITLES[globalNum] || `에피소드 ${e}`;
         const title = `제${globalNum}화: ${subTitle}`;
 
-        EPISODES[s].push({
+        EPISODES[s.toString()].push({
             num: globalNum,
             title: title,
-            vid: "bS6q_WlW_Y8" 
+            vid: "bS6q_WlW_Y8" // 샘플 영상 ID
         });
     }
 }
 
 function renderEpisodes(season) {
+    console.log("Rendering season:", season); // 디버깅용
     epList.innerHTML = '';
     const eps = EPISODES[season] || [];
+    
+    if (eps.length === 0) {
+        epList.innerHTML = '<div style="padding:1rem; color:#999;">에피소드가 없습니다.</div>';
+        return;
+    }
+
     eps.forEach(ep => {
         const item = document.createElement('div');
         item.className = 'ep-item';
@@ -88,5 +97,10 @@ function playVideo(ep) {
     displayDesc.textContent = `${ep.num}화 에피소드입니다. 유수언의 세계를 감상하세요.`;
 }
 
-seasonSelect.onchange = (e) => renderEpisodes(e.target.value);
+// 시즌 선택 시 즉시 렌더링
+seasonSelect.onchange = (e) => {
+    renderEpisodes(e.target.value);
+};
+
+// 초기 로드 (시즌 1)
 renderEpisodes("1");
