@@ -1,6 +1,6 @@
 import { db, auth, storage } from './firebase-config.js';
 import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
+import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
 
@@ -52,46 +52,62 @@ imageInput.onchange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // 1. 용량 체크 (25MB)
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-        alert(`파일 용량이 너무 큽니다. ${MAX_SIZE_MB}MB 이하의 파일만 업로드 가능합니다.\n현재 용량: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        alert(`파일 용량이 너무 큽니다. ${MAX_SIZE_MB}MB 이하만 가능합니다.`);
         return;
     }
 
     if (!currentUser) {
         alert("로그인이 필요합니다.");
+        location.href = 'auth.html';
         return;
     }
 
     try {
         uploadStatus.style.display = 'block';
-        uploadStatus.textContent = '이미지 최적화 및 업로드 중...';
+        uploadStatus.textContent = '이미지 최적화 중...';
         saveBtn.disabled = true;
 
-        // 2. 이미지 압축 및 리사이징 (Canvas 사용)
         const compressedFile = await compressImage(file);
-
+        
         const safeFileName = file.name.replace(/[^a-z0-9.]/gi, '_');
         const storageRef = ref(storage, `characters/${charId}/${Date.now()}_${safeFileName}`);
         
-        const snapshot = await uploadBytes(storageRef, compressedFile);
-        const url = await getDownloadURL(snapshot.ref);
+        // 실시간 업로드 진행 상황 감시
+        const uploadTask = uploadBytesResumable(storageRef, compressedFile);
 
-        document.getElementById('image-url').value = url;
-        previewImg.src = url;
-        previewImg.style.display = 'block';
-        uploadMsg.style.display = 'none';
-        uploadStatus.textContent = '업로드 완료!';
+        uploadTask.on('state_changed', 
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                uploadStatus.textContent = `업로드 중... (${Math.round(progress)}%)`;
+                uploadStatus.style.color = 'var(--primary-color)';
+            }, 
+            (error) => {
+                console.error("Upload failed:", error);
+                alert("업로드 실패: " + error.message + "\nFirebase Storage 권한 설정을 확인해 주세요.");
+                uploadStatus.textContent = '업로드 실패';
+                uploadStatus.style.color = 'red';
+                saveBtn.disabled = false;
+            }, 
+            async () => {
+                const url = await getDownloadURL(uploadTask.snapshot.ref);
+                document.getElementById('image-url').value = url;
+                previewImg.src = url;
+                previewImg.style.display = 'block';
+                uploadMsg.style.display = 'none';
+                uploadStatus.textContent = '업로드 완료! 저장 버튼을 눌러주세요.';
+                uploadStatus.style.color = 'green';
+                saveBtn.disabled = false;
+            }
+        );
+
     } catch (err) {
         console.error(err);
-        alert("업로드 실패: " + err.message);
-        uploadStatus.textContent = '업로드 실패';
-    } finally {
+        alert("에러 발생: " + err.message);
         saveBtn.disabled = false;
     }
 };
 
-// 이미지 압축 함수
 async function compressImage(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -103,23 +119,18 @@ async function compressImage(file) {
                 const canvas = document.createElement('canvas');
                 let width = img.width;
                 let height = img.height;
-
-                // 최대 너비 1200px로 제한 (용량 최적화)
                 const MAX_WIDTH = 1200;
                 if (width > MAX_WIDTH) {
                     height *= MAX_WIDTH / width;
                     width = MAX_WIDTH;
                 }
-
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-
-                // JPEG 품질 0.8로 압축
                 canvas.toBlob((blob) => {
                     resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                }, 'image/jpeg', 0.8);
+                }, 'image/jpeg', 0.85);
             };
         };
         reader.onerror = error => reject(error);
@@ -131,7 +142,7 @@ form.onsubmit = async (e) => {
     if (!currentUser) return;
 
     saveBtn.disabled = true;
-    saveBtn.textContent = '저장 중...';
+    saveBtn.textContent = '문서 저장 중...';
 
     const updatedData = {
         name: document.getElementById('edit-name').value,
@@ -147,11 +158,12 @@ form.onsubmit = async (e) => {
 
     try {
         await setDoc(doc(db, "characters", charId), updatedData, { merge: true });
-        alert("성공적으로 저장되었습니다.");
+        alert("문서가 성공적으로 저장되었습니다!");
         location.href = `detail.html#${charId}`;
     } catch (err) {
         alert("저장 실패: " + err.message);
         saveBtn.disabled = false;
+        saveBtn.textContent = '저장하기';
     }
 };
 
