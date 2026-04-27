@@ -30,32 +30,50 @@ onAuthStateChanged(auth, (user) => {
 });
 
 async function loadDetail() {
-    if (!charId) return;
+    if (!charId) {
+        contentArea.innerHTML = '<h2>캐릭터 ID가 없습니다.</h2>';
+        return;
+    }
 
     // 1. 기본 데이터 (data.js)
-    const baseData = CHARACTERS.find(c => c.id === charId) || { name: charId };
+    const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
 
-    // 2. Firestore 데이터
-    const snap = await getDoc(doc(db, "characters", charId));
-    const dbData = snap.exists() ? snap.data() : {};
+    // 먼저 기본 데이터로 화면 표시
+    renderInfobox(baseData);
+    renderContent(baseData.details || '불러오는 중...');
 
-    const data = { ...baseData, ...dbData };
+    try {
+        // 2. Firestore 데이터 비동기 로딩
+        const snap = await getDoc(doc(db, "characters", charId));
+        if (snap.exists()) {
+            const dbData = snap.data();
+            const data = { ...baseData, ...dbData };
 
-    document.title = `${data.name} - 유수언 위키`;
-    document.getElementById('display-name').textContent = data.name;
-    document.getElementById('last-edit').textContent = data.updatedAt 
-        ? new Date(data.updatedAt.seconds * 1000).toLocaleString() 
-        : '데이터 없음';
-    document.getElementById('last-editor').textContent = data.updatedBy || '시스템';
+            document.title = `${data.name} - 유수언 위키`;
+            document.getElementById('display-name').textContent = data.name;
+            
+            const date = data.updatedAt?.seconds ? new Date(data.updatedAt.seconds * 1000) : new Date(data.updatedAt);
+            document.getElementById('last-edit').textContent = isNaN(date) ? '최근' : date.toLocaleString();
+            document.getElementById('last-editor').textContent = data.updatedBy || '시스템';
 
-    renderInfobox(data);
-    renderContent(data.details || '본문 내용이 없습니다. 편집을 통해 내용을 채워주세요.');
+            renderInfobox(data);
+            renderContent(data.details || '본문 내용이 없습니다. 편집을 통해 내용을 채워주세요.');
+        } else {
+            // Firestore에 데이터가 없더라도 기본 데이터로 최종 유지
+            document.title = `${baseData.name} - 유수언 위키`;
+            document.getElementById('display-name').textContent = baseData.name;
+            renderContent(baseData.details || '본문 내용이 없습니다. 편집을 통해 내용을 채워주세요.');
+        }
+    } catch (e) {
+        console.error("Firestore load failed in detail page:", e);
+        // 에러 발생 시에도 기본 데이터는 유지됨
+    }
 }
 
 function renderInfobox(data) {
     infoboxArea.innerHTML = `
         <div class="infobox">
-            <div class="infobox-title">${data.name}</div>
+            <div class="infobox-title">${data.name || data.id}</div>
             <div class="infobox-image">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="${data.name}">
             </div>
@@ -70,14 +88,15 @@ function renderInfobox(data) {
 }
 
 function renderContent(details) {
-    // ## 섹션 -> h2, ### 섹션 -> h3 로 변환하는 아주 간단한 파서
+    if (!details) return;
+    
+    // ## 섹션 -> h2, ### 섹션 -> h3 로 변환
     let html = details
         .replace(/^## (.*$)/gim, '<h2 id="$1">$1</h2>')
         .replace(/^### (.*$)/gim, '<h3 id="$1">$1</h3>')
         .replace(/\n/g, '<br>');
 
     contentArea.innerHTML = html;
-
     generateTOC();
 }
 
@@ -93,7 +112,7 @@ function generateTOC() {
     headers.forEach((h, idx) => {
         const level = h.tagName === 'H2' ? 1 : 2;
         const id = h.textContent.replace(/\s+/g, '_');
-        h.id = id; // 아이디 부여
+        h.id = id;
         
         tocHtml += `<li style="margin-left: ${level === 2 ? '1rem' : '0'}">
             <a href="#${id}">${h.textContent}</a>

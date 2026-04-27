@@ -21,23 +21,37 @@ onAuthStateChanged(auth, (user) => {
 });
 
 async function initHome() {
-    await fetchFirestoreData();
+    // 1. 먼저 기본 데이터로 렌더링 (즉각적인 반응성)
     renderFeatured();
-    renderRecentChanges();
-    initSearch();
     renderCategoryGrid();
+    initSearch();
+    
+    // 2. 비동기로 클라우드 데이터 가져와서 업데이트
+    await fetchFirestoreData();
+    
+    // 3. 업데이트된 데이터로 다시 렌더링
+    renderFeatured();
+    renderCategoryGrid();
+    renderRecentChanges();
 }
 
 async function fetchFirestoreData() {
     try {
         const snap = await getDocs(collection(db, "characters"));
         const firestoreChars = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
         firestoreChars.forEach(fChar => {
             const idx = mergedCharacters.findIndex(c => c.id === fChar.id);
-            if (idx !== -1) mergedCharacters[idx] = { ...mergedCharacters[idx], ...fChar };
-            else mergedCharacters.push(fChar);
+            if (idx !== -1) {
+                mergedCharacters[idx] = { ...mergedCharacters[idx], ...fChar };
+            } else {
+                mergedCharacters.push(fChar);
+            }
         });
-    } catch (e) { console.error("Cloud data load failed:", e); }
+        console.log("Firestore data merged successfully");
+    } catch (e) { 
+        console.error("Cloud data load failed:", e); 
+    }
 }
 
 function renderFeatured() {
@@ -47,7 +61,7 @@ function renderFeatured() {
     const featured = mergedCharacters.filter(c => ids.includes(c.id));
     container.innerHTML = featured.map(c => `
         <a href="detail.html#${c.id}" class="char-card-mini">
-            <img src="${c.image}" alt="${c.name}">
+            <img src="${c.image || 'https://via.placeholder.com/150'}" alt="${c.name}">
             <span>${c.name}</span>
         </a>`).join('');
 }
@@ -58,18 +72,26 @@ async function renderRecentChanges() {
     try {
         const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(12));
         const snap = await getDocs(q);
+        if (snap.empty) {
+            list.innerHTML = '<p style="font-size:0.8rem; color:#999;">변경 내역이 없습니다.</p>';
+            return;
+        }
         list.innerHTML = snap.docs.map(doc => {
             const d = doc.data();
+            const date = d.updatedAt?.seconds ? new Date(d.updatedAt.seconds * 1000) : new Date(d.updatedAt);
             return `
                 <div class="recent-item">
                     <a href="detail.html#${doc.id}" class="recent-link">${d.name || doc.id}</a>
                     <div class="recent-meta">
                         <span>${d.updatedBy || '익명'}</span>
-                        <span>${new Date(d.updatedAt?.seconds*1000||d.updatedAt).toLocaleDateString()}</span>
+                        <span>${isNaN(date) ? '최근' : date.toLocaleDateString()}</span>
                     </div>
                 </div>`;
         }).join('');
-    } catch (e) { list.innerHTML = '<p style="font-size:0.8rem; color:#999;">변경 내역이 없습니다.</p>'; }
+    } catch (e) { 
+        console.error(e);
+        list.innerHTML = '<p style="font-size:0.8rem; color:#999;">변경 내역을 불러올 수 없습니다.</p>'; 
+    }
 }
 
 function renderCategoryGrid() {
@@ -82,7 +104,7 @@ function renderCategoryGrid() {
             <div class="category-section" style="margin-top:2.5rem;">
                 <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">${cat}</h3>
                 <div class="char-grid-portal">
-                    ${catChars.map(c => `<a href="detail.html#${c.id}" class="char-card-mini"><img src="${c.image}" alt="${c.name}"><span>${c.name}</span></a>`).join('')}
+                    ${catChars.map(c => `<a href="detail.html#${c.id}" class="char-card-mini"><img src="${c.image || 'https://via.placeholder.com/150'}" alt="${c.name}"><span>${c.name}</span></a>`).join('')}
                 </div>
             </div>`;
     }).join('');
