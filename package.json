@@ -1,5 +1,13 @@
 {
+  "name": "fabulousbeasts",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "mkdir -p dist && cp -r *.html *.js *.css characters firebase.json wrangler.json dist/ && echo 'Build complete'"
+  },
   "dependencies": {
-    "firebase-admin": "^13.7.0"
+    "firebase": "^10.8.0"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
   }
 }
