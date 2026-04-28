@@ -14,10 +14,21 @@ const uploadStatus = document.getElementById('upload-status');
 const uploadMsg = document.getElementById('upload-msg');
 
 let currentUser = null;
+let userRole = 'member';
+let isProtected = false;
 const MAX_SIZE_MB = 25;
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     currentUser = user;
+    if (user) {
+        // 유저 역할 확인
+        try {
+            const userSnap = await getDoc(doc(db, "users", user.uid));
+            if (userSnap.exists()) {
+                userRole = userSnap.data().role || 'member';
+            }
+        } catch (e) { console.error("Error fetching user role:", e); }
+    }
 });
 
 async function loadInitialData() {
@@ -28,6 +39,14 @@ async function loadInitialData() {
         const snap = await getDoc(docRef);
         const dbData = snap.exists() ? snap.data() : {};
         const data = { ...baseData, ...dbData };
+
+        isProtected = data.isProtected || false;
+        
+        // 보호된 문서이고 관리자가 아니면 경고 (저장 시에도 서버에서 체크됨)
+        if (isProtected) {
+            uploadMsg.textContent = "🔒 이 문서는 보호되어 있습니다 (관리자 전용)";
+            uploadMsg.style.color = "red";
+        }
 
         document.getElementById('edit-page-title').textContent = `${data.name || charId} 문서 편집`;
         document.getElementById('edit-name').value = data.name || charId;
@@ -72,7 +91,13 @@ document.querySelectorAll('.toolbar-btn').forEach(btn => {
     };
 });
 
-dropZone.onclick = () => imageInput.click();
+dropZone.onclick = () => {
+    if (isProtected && userRole !== 'admin') {
+        alert("이 문서는 보호되어 있어 이미지를 변경할 수 없습니다.");
+        return;
+    }
+    imageInput.click();
+};
 
 imageInput.onchange = async (e) => {
     const file = e.target.files[0];
@@ -194,6 +219,11 @@ async function compressImage(file) {
 form.onsubmit = async (e) => {
     e.preventDefault();
     if (!currentUser) return;
+
+    if (isProtected && userRole !== 'admin') {
+        alert("이 문서는 보호되어 있어 관리자만 수정할 수 있습니다.");
+        return;
+    }
 
     saveBtn.disabled = true;
     saveBtn.textContent = '문서 저장 중...';
