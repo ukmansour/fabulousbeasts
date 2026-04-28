@@ -87,7 +87,37 @@ body {
 .infobox-table td { padding: 0.5rem; border: 1px solid #eee; font-weight: 700; }
 
 /* Content Detail */
-.wiki-content h2 { border-bottom: 1px solid var(--border-color); padding-bottom: 0.2rem; margin: 2.5rem 0 1rem 0; font-size: 1.6rem; color: #000; }
+.wiki-content h2 { 
+    border-bottom: 1px solid var(--border-color); 
+    padding-bottom: 0.2rem; 
+    margin: 2.5rem 0 1rem 0; 
+    font-size: 1.6rem; 
+    color: #000; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.wiki-content h3 {
+    margin: 2rem 0 0.8rem 0;
+    font-size: 1.3rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.section-edit-link {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    text-decoration: none;
+    border: 1px solid #ddd;
+    padding: 0.1rem 0.4rem;
+    border-radius: 2px;
+}
+.section-edit-link:hover {
+    background: #f8f8f8;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
 .wiki-content p { margin-bottom: 1.1rem; line-height: 1.8; font-size: 1rem; }
 .wiki-content a { color: var(--text-link); text-decoration: none; }
 .wiki-content a:hover { text-decoration: underline; }

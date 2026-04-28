@@ -95,9 +95,16 @@ function renderInfobox(data) {
 }
 
 function renderContent(details) {
+    // ## 제목 -> <h2>제목 <a href="edit.html#id" class="section-edit-link">[편집]</a></h2> 형식으로 변경
     let html = details
-        .replace(/^## (.*$)/gim, '<h2 id="$1">$1</h2>')
-        .replace(/^### (.*$)/gim, '<h3 id="$1">$1</h3>')
+        .replace(/^## (.*$)/gim, (match, p1) => {
+            const cleanTitle = p1.trim();
+            return `<h2><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h2>`;
+        })
+        .replace(/^### (.*$)/gim, (match, p1) => {
+            const cleanTitle = p1.trim();
+            return `<h3><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h3>`;
+        })
         .replace(/\n/g, '<br>');
 
     contentArea.innerHTML = html;
@@ -109,11 +116,12 @@ function generateTOC() {
     if (headers.length === 0) { tocWrapper.style.display = 'none'; return; }
     tocWrapper.style.display = 'block';
     let tocHtml = '<ul>';
-    headers.forEach(h => {
+    headers.forEach((h, index) => {
         const level = h.tagName === 'H2' ? 1 : 2;
-        const id = h.textContent.replace(/\s+/g, '_');
+        const headerText = h.querySelector('.header-text').textContent;
+        const id = `section-${index}`; // 텍스트 대신 인덱스로 안전하게 ID 생성
         h.id = id;
-        tocHtml += `<li style="margin-left: ${level === 2 ? '1rem' : '0'}"><a href="#${id}">${h.textContent}</a></li>`;
+        tocHtml += `<li style="margin-left: ${level === 2 ? '1rem' : '0'}"><a href="#${id}">${headerText}</a></li>`;
     });
     tocHtml += '</ul>';
     tocArea.innerHTML = tocHtml;
