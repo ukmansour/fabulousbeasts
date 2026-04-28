@@ -46,6 +46,32 @@ async function loadInitialData() {
     } catch (err) { console.error(err); }
 }
 
+// 툴바 기능 추가
+const editor = document.getElementById('edit-content');
+document.querySelectorAll('.toolbar-btn').forEach(btn => {
+    btn.onclick = () => {
+        const type = btn.dataset.type;
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selectedText = editor.value.substring(start, end);
+        let replacement = '';
+
+        switch (type) {
+            case 'h2': replacement = `\n## ${selectedText || '제목'}\n`; break;
+            case 'h3': replacement = `\n### ${selectedText || '소제목'}\n`; break;
+            case 'bold': replacement = `**${selectedText || '굵은글씨'}**`; break;
+            case 'italic': replacement = `*${selectedText || '기울임'}*`; break;
+            case 'link': replacement = `[${selectedText || '링크이름'}](주소)`; break;
+            case 'image': replacement = `![${selectedText || '설명'}](이미지주소)`; break;
+            case 'list': replacement = `\n* ${selectedText || '항목'}`; break;
+            case 'hr': replacement = `\n---\n`; break;
+        }
+
+        editor.setRangeText(replacement, start, end, 'select');
+        editor.focus();
+    };
+});
+
 dropZone.onclick = () => imageInput.click();
 
 imageInput.onchange = async (e) => {

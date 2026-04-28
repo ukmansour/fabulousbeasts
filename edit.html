@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        .editor-container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .editor-container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
         .editor-header { border-bottom: 2px solid var(--primary-color); padding-bottom: 1rem; margin-bottom: 2rem; }
         .editor-header h1 { font-size: 2rem; font-weight: 800; }
         
@@ -16,6 +16,39 @@
         .main-edit-area { background: white; padding: 2rem; border: 1px solid var(--border-color); border-radius: 4px; }
         .sidebar-edit-area { background: #f9f9f9; padding: 1.5rem; border: 1px solid var(--border-color); border-radius: 4px; }
         
+        /* Toolbar */
+        .editor-toolbar { 
+            display: flex; 
+            gap: 0.2rem; 
+            background: #f1f1f1; 
+            padding: 0.4rem; 
+            border: 1px solid #ddd; 
+            border-bottom: none;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 46px; /* Header height */
+            z-index: 10;
+        }
+        .toolbar-btn {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            font-weight: 700;
+            border-radius: 2px;
+            transition: 0.1s;
+        }
+        .toolbar-btn:hover { background: var(--primary-light); border-color: var(--primary-color); }
+        .field-textarea { 
+            margin-top: 0; 
+            border-top-left-radius: 0; 
+            border-top-right-radius: 0; 
+            font-family: 'Consolas', 'Monaco', monospace;
+            background: #fff;
+            min-height: 500px;
+        }
+
         .section-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; color: var(--primary-dark); display: flex; align-items: center; gap: 0.5rem; }
         .section-title::before { content: ''; display: block; width: 4px; height: 1.2rem; background: var(--primary-color); }
 
@@ -25,9 +58,12 @@
         .upload-status { font-size: 0.8rem; color: var(--primary-color); margin-top: 0.5rem; display: none; }
 
         .guide-box { margin-top: 2rem; background: #fffbe6; border: 1px solid #ffe58f; padding: 1rem; font-size: 0.85rem; border-radius: 4px; }
-        .guide-box ul { padding-left: 1.2rem; margin-top: 0.5rem; }
+        .guide-box h4 { margin-bottom: 0.5rem; }
+        .guide-box ul { padding-left: 1.2rem; margin-top: 0.5rem; list-style-type: none; }
+        .guide-box li { margin-bottom: 0.5rem; }
+        .syntax { display: inline-block; background: #eee; padding: 0.1rem 0.3rem; border-radius: 3px; font-family: monospace; font-weight: bold; }
         
-        @media (max-width: 850px) {
+        @media (max-width: 950px) {
             .edit-grid { grid-template-columns: 1fr; }
         }
     </style>
@@ -50,7 +86,7 @@
     <div class="editor-container">
         <div class="editor-header">
             <h1 id="edit-page-title">문서 편집</h1>
-            <p style="color: #666; font-size: 0.9rem;">작성하신 내용은 모든 사용자에게 공개됩니다. 타인에 대한 비방이나 허위 사실 기재는 삼가주세요.</p>
+            <p style="color: #666; font-size: 0.9rem;">자유롭게 정보를 기록하고 꾸밀 수 있습니다. 다른 사람과 함께 만드는 위키를 만들어보세요!</p>
         </div>
 
         <form id="edit-form">
@@ -58,33 +94,48 @@
                 <div class="main-edit-area">
                     <div class="field-group">
                         <label class="section-title">본문 내용</label>
-                        <textarea id="edit-content" class="field-textarea" placeholder="나무위키처럼 HTML 태그나 자유로운 서술이 가능합니다."></textarea>
+                        <div class="editor-toolbar">
+                            <button type="button" class="toolbar-btn" data-type="h2">제목</button>
+                            <button type="button" class="toolbar-btn" data-type="h3">소제목</button>
+                            <button type="button" class="toolbar-btn" data-type="bold">굵게</button>
+                            <button type="button" class="toolbar-btn" data-type="italic">기울임</button>
+                            <button type="button" class="toolbar-btn" data-type="link">링크</button>
+                            <button type="button" class="toolbar-btn" data-type="image">이미지</button>
+                            <button type="button" class="toolbar-btn" data-type="list">리스트</button>
+                            <button type="button" class="toolbar-btn" data-type="hr">구분선</button>
+                        </div>
+                        <textarea id="edit-content" class="field-textarea" placeholder="이곳에 내용을 입력하세요. 마크다운 형식을 지원합니다."></textarea>
                     </div>
 
                     <div class="guide-box">
-                        <strong>💡 작성 팁</strong>
+                        <h4>💡 작성 가이드</h4>
                         <ul>
-                            <li><strong>## 제목</strong> : 큰 섹션 제목을 만듭니다. (자동 목차 생성)</li>
-                            <li><strong>### 소제목</strong> : 하위 섹션 제목을 만듭니다.</li>
-                            <li>텍스트 사이에 링크를 걸거나 이미지를 삽입할 수 있습니다.</li>
+                            <li><span class="syntax">## 제목</span> : 가장 큰 제목 섹션을 만듭니다.</li>
+                            <li><span class="syntax">### 소제목</span> : 하위 섹션을 만듭니다.</li>
+                            <li><span class="syntax">**텍스트**</span> : 글자를 <strong>굵게</strong> 표시합니다.</li>
+                            <li><span class="syntax">*텍스트*</span> : 글자를 <em>기울여서</em> 표시합니다.</li>
+                            <li><span class="syntax">[링크이름](주소)</span> : 외부 사이트나 내부 문서를 연결합니다.</li>
+                            <li><span class="syntax">![설명](이미지주소)</span> : 본문에 이미지를 삽입합니다.</li>
+                            <li><span class="syntax">* 항목</span> : 앞에 별표를 붙이면 리스트가 됩니다.</li>
                         </ul>
+                        <p style="margin-top:0.5rem; color:#666;">* 툴바의 버튼을 클릭하면 문법이 자동으로 삽입됩니다.</p>
                     </div>
                 </div>
 
                 <aside class="sidebar-edit-area">
                     <div class="section-title">대표 이미지</div>
                     <div class="image-upload-box" id="drop-zone">
-                        <p id="upload-msg">클릭하거나 파일을 드래그하여 업로드</p>
+                        <p id="upload-msg">이미지 업로드 (인포박스용)</p>
                         <input type="file" id="image-input" accept="image/*" style="display: none;">
                         <img id="preview-img" class="image-preview" src="" alt="미리보기">
                         <div id="upload-status" class="upload-status">업로드 중...</div>
                     </div>
                     <input type="hidden" id="image-url">
 
-                    <div class="section-title">인포박스 설정</div>
+                    <div class="section-title">인포박스 정보</div>
                     <div class="field-group" style="margin-bottom: 0.8rem;">
                         <label class="field-label">표시 이름</label>
-                        <input type="text" id="edit-name" class="field-input">
+                        <input type="text" id="edit-name" class="field-input" placeholder="캐릭터 이름 등">
                     </div>
                     <div class="field-group" style="margin-bottom: 0.8rem;">
                         <label class="field-label">종족</label>
