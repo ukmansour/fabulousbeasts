@@ -16,7 +16,6 @@ const editor = document.getElementById('edit-content');
 
 let currentUser = null;
 let userRole = 'member';
-let isProtected = false;
 const MAX_SIZE_MB = 25;
 
 onAuthStateChanged(auth, async (user) => {
@@ -29,13 +28,34 @@ onAuthStateChanged(auth, async (user) => {
             }
         } catch (e) { console.error("Error fetching user role:", e); }
     }
+    checkPermission();
 });
+
+function checkPermission() {
+    const canEdit = userRole === 'admin' || userRole === 'editor';
+    if (!canEdit) {
+        if (currentUser) {
+            uploadMsg.textContent = "🔒 이 문서는 잠겨 있습니다. 허가된 편집자만 수정할 수 있습니다.";
+            uploadMsg.style.display = 'block';
+            uploadMsg.style.color = "red";
+            saveBtn.disabled = true;
+            saveBtn.title = "권한이 없습니다.";
+            // 모든 입력 필드 비활성화
+            form.querySelectorAll('input, textarea').forEach(el => el.disabled = true);
+        } else {
+            uploadMsg.textContent = "🔒 편집을 위해 로그인이 필요합니다.";
+            uploadMsg.style.display = 'block';
+            saveBtn.disabled = true;
+        }
+    }
+}
 
 function initToolbar() {
     if (!editor) return;
     document.querySelectorAll('.toolbar-btn').forEach(btn => {
         btn.onclick = (e) => {
             e.preventDefault();
+            if (saveBtn.disabled) return;
             const type = btn.dataset.type;
             const start = editor.selectionStart;
             const end = editor.selectionEnd;
@@ -54,13 +74,11 @@ function initToolbar() {
                 case 'hr': replacement = `\n---\n`; break;
             }
 
-            // 텍스트 삽입 및 포커스 유지
             editor.focus();
             const before = text.substring(0, start);
             const after = text.substring(end);
             editor.value = before + replacement + after;
             
-            // 커서 위치 조정
             const newCursorPos = start + replacement.length;
             editor.setSelectionRange(newCursorPos, newCursorPos);
         };
@@ -76,13 +94,6 @@ async function loadInitialData() {
         const dbData = snap.exists() ? snap.data() : {};
         const data = { ...baseData, ...dbData };
 
-        isProtected = data.isProtected || false;
-        if (isProtected) {
-            uploadMsg.textContent = "🔒 이 문서는 보호되어 있습니다 (관리자 전용)";
-            uploadMsg.style.display = 'block';
-            uploadMsg.style.color = "red";
-        }
-
         document.getElementById('edit-page-title').textContent = `${data.name || charId} 문서 편집`;
         document.getElementById('edit-name').value = data.name || charId;
         editor.value = data.details || '';
@@ -95,22 +106,18 @@ async function loadInitialData() {
         if (data.image) {
             previewImg.src = data.image;
             previewImg.style.display = 'block';
-            if (!isProtected) uploadMsg.style.display = 'none';
         }
     } catch (err) { console.error(err); }
 }
 
 dropZone.onclick = () => {
-    if (isProtected && userRole !== 'admin') {
-        alert("이 문서는 보호되어 있어 이미지를 변경할 수 없습니다.");
-        return;
-    }
+    if (saveBtn.disabled) return;
     imageInput.click();
 };
 
 imageInput.onchange = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || saveBtn.disabled) return;
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
         alert(`파일 용량이 너무 큽니다. ${MAX_SIZE_MB}MB 이하만 가능합니다.`);
         return;
@@ -136,7 +143,7 @@ imageInput.onchange = async (e) => {
             (error) => {
                 alert("업로드 실패: " + error.message);
                 uploadStatus.textContent = '업로드 실패';
-                saveBtn.disabled = false;
+                checkPermission(); // 권한에 따라 버튼 상태 복구
             }, 
             async () => {
                 const url = await getDownloadURL(uploadTask.snapshot.ref);
@@ -144,12 +151,12 @@ imageInput.onchange = async (e) => {
                 previewImg.src = url;
                 previewImg.style.display = 'block';
                 uploadStatus.textContent = '업로드 완료!';
-                saveBtn.disabled = false;
+                checkPermission(); // 권한에 따라 버튼 상태 복구
             }
         );
     } catch (err) {
         alert("에러 발생: " + err.message);
-        saveBtn.disabled = false;
+        checkPermission();
     }
 };
 
@@ -178,11 +185,8 @@ async function compressImage(file) {
 
 form.onsubmit = async (e) => {
     e.preventDefault();
-    if (!currentUser) return;
-    if (isProtected && userRole !== 'admin') {
-        alert("이 문서는 보호되어 있어 관리자만 수정할 수 있습니다.");
-        return;
-    }
+    if (!currentUser || saveBtn.disabled) return;
+    
     saveBtn.disabled = true;
     saveBtn.textContent = '저장 중...';
     const updatedData = {
@@ -201,7 +205,7 @@ form.onsubmit = async (e) => {
         location.href = `detail.html#${charId}`;
     } catch (err) {
         alert("저장 실패: " + err.message);
-        saveBtn.disabled = false;
+        checkPermission();
         saveBtn.textContent = '저장하기';
     }
 };

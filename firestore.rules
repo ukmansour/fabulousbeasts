@@ -2,31 +2,37 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // 관리자인지 확인하는 함수
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     function isAdmin() {
-      return request.auth != null && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      return isAuthenticated() && getUserData().role == 'admin';
+    }
+
+    function isEditor() {
+      return isAuthenticated() && (getUserData().role == 'editor' || getUserData().role == 'admin');
     }
 
     match /users/{userId} {
       allow read: if true;
-      allow create: if request.auth != null && request.auth.uid == userId;
-      allow update: if isAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
     }
 
     match /characters/{charId} {
       allow read: if true;
-      // 1. 관리자는 모든 문서 수정 가능
-      // 2. 일반 유저는 'isProtected'가 true가 아닌 문서만 수정 가능
-      allow write: if isAdmin() || (
-        request.auth != null && 
-        (resource == null || resource.data.isProtected != true)
-      );
+      // 테러 방지를 위해 모든 문서를 잠금: 허락된 사람(관리자, 편집자)만 수정 가능
+      allow write: if isEditor();
     }
     
     match /categories/{catId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isEditor();
     }
   }
 }

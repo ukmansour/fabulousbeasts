@@ -11,35 +11,47 @@ const tocWrapper = document.getElementById('wiki-toc');
 const editBtn = document.getElementById('go-edit');
 
 let currentUser = null;
+let userRole = 'member';
 
-// 헤더 검색바
-const input = document.getElementById('global-search');
-const results = document.getElementById('search-results');
-if (input) {
-    input.oninput = () => {
-        const val = input.value.trim().toLowerCase();
-        if (val.length < 1) { results.classList.remove('active'); return; }
-        const matches = CHARACTERS.filter(c => (c.name||'').toLowerCase().includes(val) || c.id.toLowerCase().includes(val)).slice(0, 8);
-        results.innerHTML = matches.map(m => `<div class="search-item" onclick="location.href='detail.html#${m.id}'">${m.name}</div>`).join('');
-        results.classList.add('active');
-    };
-}
-
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     const info = document.getElementById('user-info');
     if (user && info) {
         info.innerHTML = `<span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName}님</span>`;
+        try {
+            const userSnap = await getDoc(doc(db, "users", user.uid));
+            if (userSnap.exists()) {
+                userRole = userSnap.data().role || 'member';
+            }
+        } catch (e) { console.error("Error fetching user role:", e); }
     }
+    updateEditVisibility();
 });
+
+function updateEditVisibility() {
+    const canEdit = userRole === 'admin' || userRole === 'editor';
+    if (!canEdit) {
+        // 본문의 섹션 편집 링크 숨기기
+        document.querySelectorAll('.section-edit-link').forEach(el => el.style.display = 'none');
+        // 상단 편집 버튼 스타일 변경 (선택 사항)
+        if (editBtn) {
+            editBtn.title = "편집 권한이 없습니다.";
+            // 완전히 숨기거나 비활성 시각 효과를 줄 수 있음
+        }
+    } else {
+        document.querySelectorAll('.section-edit-link').forEach(el => el.style.display = 'inline-block');
+    }
+}
 
 // 편집 버튼 클릭 시
 if (editBtn) {
     editBtn.onclick = (e) => {
         e.preventDefault();
         if (!currentUser) {
-            alert("편집을 위해 로그인이 필요합니다. (닉네임 설정)");
+            alert("편집을 위해 로그인이 필요합니다.");
             location.href = 'auth.html';
+        } else if (userRole !== 'admin' && userRole !== 'editor') {
+            alert("🔒 이 문서는 잠겨 있습니다. 허가된 편집자만 수정할 수 있습니다.");
         } else {
             location.href = `edit.html#${charId}`;
         }

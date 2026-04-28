@@ -1,38 +1,30 @@
-# 유수언 위키 프로젝트
+# Blueprint
 
-## 개요
+## Overview
 
-이 프로젝트는 중국 애니메이션 '유수언(有兽焉)'의 팬들을 위한 정보 제공 웹사이트입니다. 정적 데이터(`data.js`)와 Firebase Firestore를 연동하여 캐릭터 정보를 전시하고, 사용자들이 직접 정보를 수정하고 기여할 수 있는 동적인 위키 서비스입니다. 또한 공식 유튜브 영상을 통해 애니메이션을 시청할 수 있는 기능을 제공합니다.
+This project is a web application that provides information about various characters. It is built with HTML, CSS, and JavaScript, and it uses Web Components to create reusable UI elements.
 
-## 데이터 구조 및 관리
+## Implemented Features
 
-*   **캐릭터 데이터 통합 (`characters/index.js`):** 캐릭터 데이터를 하나의 파일로 통합하고 계층 구조를 도입하였습니다.
-*   **애니메이션 에피소드 관리 (`watch.js`):** 총 6개 시즌, 각 시즌당 12화씩 총 72화의 에피소드 데이터를 동적으로 관리합니다.
+*   **Character Data:** Displays information about characters, including their personality, name origin, and trivia.
+*   **Web Components:** Uses custom elements for displaying character information.
+*   **Global Document Locking (Anti-Vandalism):** To prevent unauthorized changes, all documents are locked by default. Only users with `admin` or `editor` roles can edit content.
+*   **Role-Based Access Control (RBAC):**
+    *   `admin`: Full control over all documents and user roles.
+    *   `editor`: Authorized to edit character documents and categories.
+    *   `member`: Regular users who can only read content and manage their own profiles.
+*   **Security Rules:** Firestore security rules enforce that only `isEditor()` (admin or editor) can perform write operations on protected collections.
 
-## 주요 기능
+## Current Plan: Performance Optimization
 
-*   **메인 페이지 (`index.html`):** 프로젝트 소개 및 캐릭터 탐색 기능을 제공합니다.
-*   **캐릭터 정보 (`detail.html`, `edit.html`):** 캐릭터 상세 정보 조회 및 위키형 편집 기능을 지원합니다.
-*   **애니 시청 (`watch.html`, `watch.js`):** 
-    *   시즌 1부터 6까지 선택하여 시청할 수 있습니다.
-    *   각 시즌별 12화의 에피소드 목록을 제공하며, 클릭 시 즉시 재생됩니다.
-    *   공식 유튜브 채널의 임베드 영상을 활용합니다.
+**Objective:** Improve the application's loading and rendering performance.
 
-## 현재 상태: 기능 확장 완료
+**Problem:** The `characters/index.js` file contains a large amount of hardcoded character data as JavaScript strings. This increases the initial script parsing time and memory usage, leading to a slow user experience.
 
-**목표:** 애니메이션 시청 기능을 포함하여 초기 기획된 모든 기능을 고도화하고 확장하였습니다.
+**Solution:**
 
-**주요 완료 사항:**
+1.  **Externalize Data:** Move the character data from `characters/index.js` into a separate `characters.json` file.
+2.  **Dynamic Loading:** Modify `characters/index.js` to dynamically fetch the character data from `characters.json` using the `fetch` API.
+3.  **Update Logic:** Update the application logic to process the fetched JSON data instead of the hardcoded strings.
 
-1.  **애니메이션 시청 시스템 구축:**
-    *   시즌 1~6, 총 72화 분량의 시청 환경을 구축하였습니다.
-    *   시즌 선택 및 에피소드 리스트 인터랙션을 구현하였습니다.
-2.  **Firebase 통합 및 위키 시스템:** Firestore와 Auth를 연동한 실시간 데이터 편집 시스템이 안정적으로 작동합니다.
-3.  **반응형 UI:** 데스크톱과 모바일 환경 모두에서 최적화된 레이아웃을 제공합니다.
-
-## 향후 계획
-
-*   **에피소드 상세 정보:** 각 화별 줄거리 및 등장 캐릭터 정보를 추가.
-*   **커뮤니티 기능:** 에피소드별 댓글 및 평점 기능 구현.
-*   **이미지 갤러리 강화:** 고화질 공식 스틸컷 및 팬아트 섹션 추가.
-
+This will result in a smaller initial JavaScript payload and on-demand loading of data, significantly improving performance.
