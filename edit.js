@@ -57,6 +57,11 @@ imageInput.onchange = async (e) => {
         return;
     }
 
+    if (!charId) {
+        alert("캐릭터 ID가 유효하지 않습니다.");
+        return;
+    }
+
     if (!currentUser) {
         alert("로그인이 필요합니다.");
         location.href = 'auth.html';
@@ -65,26 +70,33 @@ imageInput.onchange = async (e) => {
 
     try {
         uploadStatus.style.display = 'block';
-        uploadStatus.textContent = '이미지 최적화 중...';
+        uploadStatus.textContent = '이미지 준비 중...';
+        uploadStatus.style.color = 'var(--primary-color)';
         saveBtn.disabled = true;
 
+        console.log("Starting compression for file:", file.name, file.size);
         const compressedFile = await compressImage(file);
+        console.log("Compression finished:", compressedFile.size);
         
         const safeFileName = file.name.replace(/[^a-z0-9.]/gi, '_');
         const storageRef = ref(storage, `characters/${charId}/${Date.now()}_${safeFileName}`);
         
-        // 실시간 업로드 진행 상황 감시
+        uploadStatus.textContent = '업로드 시작 중...';
         const uploadTask = uploadBytesResumable(storageRef, compressedFile);
 
         uploadTask.on('state_changed', 
             (snapshot) => {
                 const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
                 uploadStatus.textContent = `업로드 중... (${Math.round(progress)}%)`;
-                uploadStatus.style.color = 'var(--primary-color)';
+                console.log(`Upload progress: ${progress}%`);
             }, 
             (error) => {
                 console.error("Upload failed:", error);
-                alert("업로드 실패: " + error.message + "\nFirebase Storage 권한 설정을 확인해 주세요.");
+                let msg = "업로드 실패: " + error.message;
+                if (error.code === 'storage/unauthorized') {
+                    msg += "\n권한이 없습니다. 다시 로그인해 보거나 관리자에게 문의하세요.";
+                }
+                alert(msg);
                 uploadStatus.textContent = '업로드 실패';
                 uploadStatus.style.color = 'red';
                 saveBtn.disabled = false;
@@ -95,45 +107,61 @@ imageInput.onchange = async (e) => {
                 previewImg.src = url;
                 previewImg.style.display = 'block';
                 uploadMsg.style.display = 'none';
-                uploadStatus.textContent = '업로드 완료! 저장 버튼을 눌러주세요.';
+                uploadStatus.textContent = '업로드 완료! 아래 저장 버튼을 눌러주세요.';
                 uploadStatus.style.color = 'green';
                 saveBtn.disabled = false;
             }
         );
 
     } catch (err) {
-        console.error(err);
+        console.error("Compression/Upload error:", err);
         alert("에러 발생: " + err.message);
+        uploadStatus.textContent = '처리 중 오류 발생';
         saveBtn.disabled = false;
     }
 };
 
 async function compressImage(file) {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                let width = img.width;
-                let height = img.height;
-                const MAX_WIDTH = 1200;
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+
+            if (width > height) {
                 if (width > MAX_WIDTH) {
                     height *= MAX_WIDTH / width;
                     width = MAX_WIDTH;
                 }
-                canvas.width = width;
-                canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                canvas.toBlob((blob) => {
+            } else {
+                if (height > MAX_HEIGHT) {
+                    width *= MAX_HEIGHT / height;
+                    height = MAX_HEIGHT;
+                }
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+                URL.revokeObjectURL(img.src);
+                if (blob) {
                     resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                }, 'image/jpeg', 0.85);
-            };
+                } else {
+                    reject(new Error("Canvas blob creation failed"));
+                }
+            }, 'image/jpeg', 0.8);
         };
-        reader.onerror = error => reject(error);
+        img.onerror = (err) => {
+            URL.revokeObjectURL(img.src);
+            reject(err);
+        };
     });
 }
 
