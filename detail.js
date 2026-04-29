@@ -107,8 +107,26 @@ function renderInfobox(data) {
 }
 
 function renderContent(details) {
-    // ## 제목 -> <h2>제목 <a href="edit.html#id" class="section-edit-link">[편집]</a></h2> 형식으로 변경
     let html = details
+        // 1. 이미지: ![설명](주소) -> <img src="주소" alt="설명" style="max-width:100%">
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:8px; margin: 10px 0;">')
+        
+        // 2. 링크: [텍스트](주소) -> <a href="주소" target="_blank">텍스트</a>
+        .replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
+            // 내부 문서 링크 처리 (예: [[천록]] 또는 [[tianlu]])
+            if (url.startsWith('#') || url.includes('.html')) {
+                return `<a href="${url}">${text}</a>`;
+            }
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+        })
+
+        // 3. 굵게: **텍스트** -> <strong>텍스트</strong>
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+
+        // 4. 기울임: *텍스트* -> <em>$1</em>
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+
+        // 5. 제목 (H2, H3) - 편집 링크 포함
         .replace(/^## (.*$)/gim, (match, p1) => {
             const cleanTitle = p1.trim();
             return `<h2><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h2>`;
@@ -117,7 +135,18 @@ function renderContent(details) {
             const cleanTitle = p1.trim();
             return `<h3><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h3>`;
         })
+
+        // 6. 구분선: --- -> <hr>
+        .replace(/^---$/gim, '<hr>')
+
+        // 7. 리스트: * 항목 -> <li>항목</li>
+        .replace(/^\* (.*$)/gim, '<li>$1</li>')
+
+        // 8. 줄바꿈 처리
         .replace(/\n/g, '<br>');
+
+    // <li> 태그들을 <ul>로 감싸기 (간단한 처리)
+    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
 
     contentArea.innerHTML = html;
     generateTOC();
@@ -125,18 +154,47 @@ function renderContent(details) {
 
 function generateTOC() {
     const headers = contentArea.querySelectorAll('h2, h3');
-    if (headers.length === 0) { tocWrapper.style.display = 'none'; return; }
+    if (headers.length === 0) {
+        tocWrapper.style.display = 'none';
+        return;
+    }
     tocWrapper.style.display = 'block';
-    let tocHtml = '<ul>';
+    tocArea.innerHTML = ''; // 기존 내용 초기화
+    
+    const ul = document.createElement('ul');
     headers.forEach((h, index) => {
         const level = h.tagName === 'H2' ? 1 : 2;
         const headerText = h.querySelector('.header-text').textContent;
-        const id = `section-${index}`; // 텍스트 대신 인덱스로 안전하게 ID 생성
+        const id = `section-${index}`;
         h.id = id;
-        tocHtml += `<li style="margin-left: ${level === 2 ? '1rem' : '0'}"><a href="#${id}">${headerText}</a></li>`;
+
+        const li = document.createElement('li');
+        li.style.marginLeft = level === 2 ? '1rem' : '0';
+        
+        const a = document.createElement('a');
+        a.href = `#${id}`;
+        a.textContent = headerText;
+        
+        // 해시 변경으로 인한 페이지 리로드 방지 (중요)
+        a.onclick = (e) => {
+            e.preventDefault();
+            const target = document.getElementById(id);
+            if (target) {
+                const headerOffset = 70; // 헤더 높이만큼 보정
+                const elementPosition = target.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth"
+                });
+            }
+        };
+        
+        li.appendChild(a);
+        ul.appendChild(li);
     });
-    tocHtml += '</ul>';
-    tocArea.innerHTML = tocHtml;
+    tocArea.appendChild(ul);
 }
 
 async function renderRecentChanges() {
