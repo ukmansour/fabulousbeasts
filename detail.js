@@ -71,7 +71,7 @@ async function loadDetail() {
         const snap = await getDoc(doc(db, "characters", charId));
         if (snap.exists()) {
             const data = { ...baseData, ...snap.data() };
-            document.title = `${data.name} - 유수언 위키`;
+            document.title = `${data.name} - 유수언`;
             document.getElementById('display-name').textContent = data.name;
             
             const date = data.updatedAt?.seconds ? new Date(data.updatedAt.seconds * 1000) : new Date(data.updatedAt);

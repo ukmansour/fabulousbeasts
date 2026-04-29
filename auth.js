@@ -95,7 +95,7 @@ authForm.addEventListener('submit', async (e) => {
             // 3. Firebase Auth 프로필 업데이트
             await updateProfile(user, { displayName: nickname });
 
-            // 4. Firestore에 유수언 위키 전용 유저 문서 생성
+            // 4. Firestore에 유수언 전용 유저 문서 생성
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 nickname: nickname,
@@ -105,7 +105,7 @@ authForm.addEventListener('submit', async (e) => {
                 contributionCount: 0
             });
 
-            alert(`${nickname}님, 유수언 위키의 멤버가 되신 것을 환영합니다!`);
+            alert(`${nickname}님, 유수언의 멤버가 되신 것을 환영합니다!`);
             window.location.href = 'index.html';
         }
     } catch (error) {
@@ -114,7 +114,7 @@ authForm.addEventListener('submit', async (e) => {
         errorMessage.style.display = 'block';
     } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = isLogin ? '위키 로그인' : '위키 멤버 가입';
+        submitBtn.textContent = isLogin ? '로그인' : '멤버 가입';
     }
 });
 

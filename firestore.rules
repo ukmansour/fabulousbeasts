@@ -2,11 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // [헬퍼 함수]
     function isAuthenticated() {
       return request.auth != null;
     }
 
     function getUserData() {
+      // 본인 문서를 가져와서 역할을 확인
       return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
@@ -15,21 +17,29 @@ service cloud.firestore {
     }
 
     function isEditor() {
-      return isAuthenticated() && (getUserData().role == 'editor' || getUserData().role == 'admin');
+      return isAuthenticated() && (getUserData().role in ['editor', 'admin']);
     }
 
+    // [유저 컬렉션]
     match /users/{userId} {
       allow read: if true;
       allow create: if isAuthenticated() && request.auth.uid == userId;
-      allow update: if isAdmin() || (isAuthenticated() && request.auth.uid == userId);
+      // 수정 시: 관리자이거나, 본인이면서 자신의 'role'을 변경하지 않는 경우만 허용
+      allow update: if isAdmin() || (
+        isAuthenticated() && 
+        request.auth.uid == userId && 
+        request.resource.data.role == resource.data.role
+      );
     }
 
+    // [캐릭터 문서]
     match /characters/{charId} {
       allow read: if true;
-      // 테러 방지를 위해 모든 문서를 잠금: 허락된 사람(관리자, 편집자)만 수정 가능
+      // 지정된 관리인(admin, editor)만 쓰기 가능
       allow write: if isEditor();
     }
     
+    // [카테고리]
     match /categories/{catId} {
       allow read: if true;
       allow write: if isEditor();
