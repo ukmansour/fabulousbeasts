@@ -27,7 +27,7 @@ onAuthStateChanged(auth, async (user) => {
         } catch (e) { console.error("Error fetching user role:", e); }
 
         info.innerHTML = `
-            ${isAdmin ? `<a href="admin.html" class="nav-link" style="color:var(--primary-color); font-weight:bold; margin-right:1rem;">관리자 설정</a>` : ''}
+            ${isAdmin ? `<a href="admin.html" class="nav-link" style="color:white; font-weight:bold; margin-right:1rem; border:1px solid rgba(255,255,255,0.3); padding:0.2rem 0.5rem; border-radius:3px;">관리자 설정</a>` : ''}
             <span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName}님</span>
         `;
     }
