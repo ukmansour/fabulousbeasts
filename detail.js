@@ -1,5 +1,5 @@
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc, collection, getDocs, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
 
@@ -90,24 +90,35 @@ async function loadDetail() {
     renderContent(baseData.details || '불러오는 중...');
 
     try {
-        // 2. Firestore 데이터
-        const snap = await getDoc(doc(db, "characters", charId));
-        if (snap.exists()) {
-            const data = { ...baseData, ...snap.data() };
-            document.title = `${data.name} - 유수언`;
-            document.getElementById('display-name').textContent = data.name;
-            
-            const date = data.updatedAt?.seconds ? new Date(data.updatedAt.seconds * 1000) : new Date(data.updatedAt);
-            document.getElementById('last-edit').textContent = isNaN(date) ? '-' : date.toLocaleString();
-            document.getElementById('last-editor').textContent = data.updatedBy || '시스템';
+        console.log("Fetching Firestore data for:", charId);
+        const docRef = doc(db, "characters", charId);
+        
+        // 실시간 업데이트 감시 (더 정확한 데이터 반영을 위해)
+        onSnapshot(docRef, (snap) => {
+            if (snap.exists()) {
+                const dbData = snap.data();
+                console.log("Firestore data received:", dbData);
+                const data = { ...baseData, ...dbData };
+                
+                document.title = `${data.name || charId} - 유수언`;
+                document.getElementById('display-name').textContent = data.name || charId;
+                
+                const date = data.updatedAt?.seconds ? new Date(data.updatedAt.seconds * 1000) : new Date(data.updatedAt);
+                document.getElementById('last-edit').textContent = isNaN(date) ? '-' : date.toLocaleString();
+                document.getElementById('last-editor').textContent = data.updatedBy || '시스템';
 
-            renderInfobox(data);
-            renderContent(data.details || '본문 내용이 없습니다.');
-        } else {
-            document.getElementById('display-name').textContent = baseData.name;
-            renderContent(baseData.details || '본문 내용이 없습니다.');
-        }
-    } catch (e) { console.error(e); }
+                renderInfobox(data);
+                renderContent(data.details || '본문 내용이 없습니다.');
+            } else {
+                console.log("No Firestore document found for:", charId);
+                document.getElementById('display-name').textContent = baseData.name;
+                renderContent(baseData.details || '본문 내용이 없습니다.');
+            }
+        }, (error) => {
+            console.error("Snapshot error:", error);
+            // 에러 발생 시 기존 데이터 유지 또는 안내
+        });
+    } catch (e) { console.error("LoadDetail error:", e); }
 
     renderRecentChanges();
 }
@@ -130,49 +141,55 @@ function renderInfobox(data) {
 }
 
 function renderContent(details) {
-    let html = details
-        // 1. 이미지: ![설명](주소) 또는 단순 URL (http...jpg/png/webp)
-        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; max-height:600px; object-fit:contain; border-radius:8px; margin: 20px auto; display:block;">')
-        .replace(/(?<!["'])(https?:\/\/[^\s<]+?\.(?:jpg|jpeg|gif|png|webp|svg))(?![^<]*>|[^<>]*<\/a>)/gi, '<img src="$1" style="max-width:100%; max-height:600px; object-fit:contain; border-radius:8px; margin: 20px auto; display:block;">')
-        
-        // 2. 링크: [텍스트](주소)
-        .replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
-            if (url.startsWith('#') || url.includes('.html')) return `<a href="${url}">${text}</a>`;
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
-        })
+    if (!details) return;
+    try {
+        let html = details
+            // 1. 이미지: ![설명](주소) 또는 단순 URL (http...jpg/png/webp)
+            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; max-height:600px; object-fit:contain; border-radius:8px; margin: 20px auto; display:block;">')
+            .replace(/(?<!["'])(https?:\/\/[^\s<]+?\.(?:jpg|jpeg|gif|png|webp|svg))(?![^<]*>|[^<>]*<\/a>)/gi, '<img src="$1" style="max-width:100%; max-height:600px; object-fit:contain; border-radius:8px; margin: 20px auto; display:block;">')
+            
+            // 2. 링크: [텍스트](주소)
+            .replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
+                if (url.startsWith('#') || url.includes('.html')) return `<a href="${url}">${text}</a>`;
+                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+            })
 
-        // 3. 굵게: **텍스트** 또는 __텍스트__
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/__(.*?)__/g, '<strong>$1</strong>')
+            // 3. 굵게: **텍스트** 또는 __텍스트__
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/__(.*?)__/g, '<strong>$1</strong>')
 
-        // 4. 기울임: *텍스트* 또는 _텍스트_
-        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-        .replace(/_(.*?)_/g, '<em>$1</em>')
+            // 4. 기울임: *텍스트* 또는 _텍스트_
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/_(.*?)_/g, '<em>$1</em>')
 
-        // 5. 제목 (H2, H3)
-        .replace(/^## (.*$)/gim, (match, p1) => {
-            const cleanTitle = p1.trim();
-            return `<h2><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h2>`;
-        })
-        .replace(/^### (.*$)/gim, (match, p1) => {
-            const cleanTitle = p1.trim();
-            return `<h3><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h3>`;
-        })
+            // 5. 제목 (H2, H3)
+            .replace(/^## (.*$)/gim, (match, p1) => {
+                const cleanTitle = p1.trim();
+                return `<h2><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h2>`;
+            })
+            .replace(/^### (.*$)/gim, (match, p1) => {
+                const cleanTitle = p1.trim();
+                return `<h3><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h3>`;
+            })
 
-        // 6. 구분선: ---
-        .replace(/^---$/gim, '<hr>')
+            // 6. 구분선: ---
+            .replace(/^---$/gim, '<hr>')
 
-        // 7. 리스트: * 항목 또는 - 항목
-        .replace(/^[\*\-] (.*$)/gim, '<li>$1</li>')
+            // 7. 리스트: * 항목 또는 - 항목
+            .replace(/^[\*\-] (.*$)/gim, '<li>$1</li>')
 
-        // 8. 줄바꿈 처리
-        .replace(/\n/g, '<br>');
+            // 8. 줄바꿈 처리
+            .replace(/\n/g, '<br>');
 
-    // <li> 태그들을 <ul>로 감싸기
-    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+        // <li> 태그들을 <ul>로 감싸기
+        html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
 
-    contentArea.innerHTML = html;
-    generateTOC();
+        contentArea.innerHTML = html;
+        generateTOC();
+    } catch (err) {
+        console.error("Rendering error:", err);
+        contentArea.innerHTML = `<p style="color:red;">문서를 렌더링하는 중 오류가 발생했습니다: ${err.message}</p><pre>${details}</pre>`;
+    }
 }
 
 function generateTOC() {
