@@ -2,7 +2,8 @@
   "name": "fabulousbeasts",
   "version": "1.0.0",
   "scripts": {
-    "build": "mkdir -p dist && cp -r *.html *.js *.css characters firebase.json dist/ && echo 'Build complete'"
+    "build": "mkdir -p dist && cp -r *.html *.js *.css characters firebase.json dist/ && echo 'Build complete'",
+    "deploy": "npm run build && npx wrangler deploy"
   },
   "dependencies": {
     "firebase": "^10.8.0"
