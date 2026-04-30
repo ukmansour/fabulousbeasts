@@ -12,7 +12,9 @@ import {
     collection, 
     query, 
     where, 
-    getDocs 
+    getDocs,
+    limit,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const authForm = document.getElementById('auth-form');
@@ -95,17 +97,20 @@ authForm.addEventListener('submit', async (e) => {
             // 3. Firebase Auth 프로필 업데이트
             await updateProfile(user, { displayName: nickname });
 
-            // 4. 첫 번째 가입자인지 확인하여 관리자 권한 부여
-            const userListSnap = await getDocs(collection(db, "users"));
-            const isFirstUser = userListSnap.empty;
+            // 4. 첫 번째 가입자인지 확인
+            let isFirstUser = false;
+            try {
+                const userListSnap = await getDocs(query(collection(db, "users"), limit(1)));
+                isFirstUser = userListSnap.empty;
+            } catch (err) { isFirstUser = false; }
 
-            // 5. Firestore에 유수언 전용 유저 문서 생성
+            // 5. Firestore에 유저 문서 생성
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 nickname: nickname,
                 realEmail: email || null,
-                role: isFirstUser ? 'admin' : 'member', // 첫 가입자만 관리자
-                joinedAt: new Date(),
+                role: isFirstUser ? 'admin' : 'member',
+                joinedAt: serverTimestamp(),
                 contributionCount: 0
             });
 

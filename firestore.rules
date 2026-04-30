@@ -18,13 +18,17 @@ service cloud.firestore {
 
     // [유저 컬렉션]
     match /users/{userId} {
+      // 모든 유저 정보를 읽는 것(목록 포함)은 전체 공개 (검색 및 관리 용도)
       allow read: if true;
-      allow create: if isAuthenticated() && request.auth.uid == userId;
-      // 수정 시: 관리자이거나, 본인이면서 자신의 'role'을 변경하지 않는 경우만 허용
+      
+      // 회원가입: 로그인된 상태에서 자신의 UID로만 생성 가능
+      allow create: if request.auth != null && request.auth.uid == userId;
+      
+      // 수정: 관리자이거나, 본인이면서 역할(role)을 변경하지 않는 경우
       allow update: if isAdmin() || (
-        isAuthenticated() && 
+        request.auth != null && 
         request.auth.uid == userId && 
-        request.resource.data.role == resource.data.role
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']))
       );
     }
 
