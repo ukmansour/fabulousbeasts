@@ -1,5 +1,5 @@
 import { db, auth, storage } from './firebase-config.js';
-import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS, CATEGORIES } from './data.js';
@@ -105,28 +105,42 @@ async function loadInitialData() {
     if (!charId) return;
     initCategorySelect();
     try {
+        console.log("Loading data for Edit:", charId);
         const baseData = CHARACTERS.find(c => c.id === charId) || {};
         const docRef = doc(db, "characters", charId);
-        const snap = await getDoc(docRef);
-        const dbData = snap.exists() ? snap.data() : {};
-        const data = { ...baseData, ...dbData };
-
-        document.getElementById('edit-page-title').textContent = `${data.name || charId} 문서 편집`;
-        document.getElementById('edit-name').value = data.name || charId;
-        if (categorySelect && data.category) categorySelect.value = data.category;
         
-        editor.value = data.details || '';
-        document.getElementById('info-species').value = data.species || '';
-        document.getElementById('info-nation').value = data.nation || '';
-        document.getElementById('info-alias').value = data.alias || '';
-        document.getElementById('info-birthday').value = data.birthday || '';
-        document.getElementById('image-url').value = data.image || '';
+        // 실시간 업데이트 감시 (더 정확한 데이터 반영을 위해)
+        onSnapshot(docRef, (snap) => {
+            if (snap.exists()) {
+                const dbData = snap.data();
+                console.log("Edit data received from Firestore:", dbData);
+                const data = { ...baseData, ...dbData };
 
-        if (data.image) {
-            previewImg.src = data.image;
-            previewImg.style.display = 'block';
-        }
-    } catch (err) { console.error(err); }
+                document.getElementById('edit-page-title').textContent = `${data.name || charId} 문서 편집`;
+                document.getElementById('edit-name').value = data.name || charId;
+                if (categorySelect && data.category) categorySelect.value = data.category;
+                
+                editor.value = data.details || '';
+                document.getElementById('info-species').value = data.species || '';
+                document.getElementById('info-nation').value = data.nation || '';
+                document.getElementById('info-alias').value = data.alias || '';
+                document.getElementById('info-birthday').value = data.birthday || '';
+                document.getElementById('image-url').value = data.image || '';
+
+                if (data.image) {
+                    previewImg.src = data.image;
+                    previewImg.style.display = 'block';
+                    uploadMsg.style.display = 'none';
+                }
+            } else {
+                console.log("No Firestore document found for edit:", charId);
+                document.getElementById('edit-page-title').textContent = `${baseData.name || charId} 문서 편집`;
+                document.getElementById('edit-name').value = baseData.name || charId;
+            }
+        }, (error) => {
+            console.error("Edit load snapshot error:", error);
+        });
+    } catch (err) { console.error("LoadInitialData error:", err); }
 }
 
 dropZone.onclick = () => {
