@@ -15,6 +15,12 @@ onAuthStateChanged(auth, async (user) => {
     status.innerHTML = `<p>현재 로그인: <strong>${user.displayName}</strong> (${user.uid})</p>`;
     
     actionBtn.onclick = async () => {
+        const password = prompt("초기 관리자 설정을 위해 비밀번호를 입력하세요:");
+        if (password !== "5555") {
+            alert("비밀번호가 올바르지 않습니다.");
+            return;
+        }
+
         actionBtn.disabled = true;
         status.innerHTML += '<p>권한 업데이트 중...</p>';
         

@@ -16,10 +16,6 @@ service cloud.firestore {
       return isAuthenticated() && getUserData().role == 'admin';
     }
 
-    function isEditor() {
-      return isAuthenticated() && (getUserData().role in ['editor', 'admin']);
-    }
-
     // [유저 컬렉션]
     match /users/{userId} {
       allow read: if true;
@@ -35,14 +31,14 @@ service cloud.firestore {
     // [캐릭터 문서]
     match /characters/{charId} {
       allow read: if true;
-      // 지정된 관리인(admin, editor)만 쓰기 가능
-      allow write: if isEditor();
+      // 관리자만 쓰기 가능
+      allow write: if isAdmin();
     }
     
     // [카테고리]
     match /categories/{catId} {
       allow read: if true;
-      allow write: if isEditor();
+      allow write: if isAdmin();
     }
   }
 }

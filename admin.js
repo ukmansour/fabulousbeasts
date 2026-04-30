@@ -87,14 +87,12 @@ function renderUserTable(users) {
 window.toggleUserRole = async (uid, currentRole) => {
     const newRole = currentRole === 'admin' ? 'member' : 'admin';
     
-    if (newRole === 'admin') {
-        const password = prompt("관리자 승격을 위한 비밀번호를 입력하세요:");
-        if (password !== "5555") {
-            alert("비밀번호가 일치하지 않습니다. 승격이 취소되었습니다.");
-            return;
-        }
-    } else {
-        if (!confirm(`정말로 일반 멤버로 강등하시겠습니까?`)) return;
+    const actionText = newRole === 'admin' ? '승격' : '강등';
+    const password = prompt(`관리자 권한을 ${actionText}하시겠습니까? 비밀번호를 입력하세요:`);
+    
+    if (password !== "5555") {
+        alert("비밀번호가 일치하지 않거나 취소되었습니다.");
+        return;
     }
     
     try {

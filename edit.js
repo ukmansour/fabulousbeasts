@@ -41,18 +41,28 @@ function checkPermission() {
     const canEdit = userRole === 'admin';
     if (!canEdit) {
         if (currentUser) {
-            uploadMsg.textContent = "🔒 관리자 전용 문서입니다. 관리자 계정으로 로그인해주세요.";
+            uploadMsg.textContent = "🔒 관리자 전용 문서입니다. 편집 권한이 없습니다.";
             uploadMsg.style.display = 'block';
             uploadMsg.style.color = "red";
             saveBtn.disabled = true;
             saveBtn.title = "권한이 없습니다.";
             // 모든 입력 필드 비활성화
-            form.querySelectorAll('input, textarea, button, select').forEach(el => el.disabled = true);
+            form.querySelectorAll('input, textarea, button, select').forEach(el => {
+                if (el.id !== 'global-search') el.disabled = true;
+            });
         } else {
             uploadMsg.textContent = "🔒 편집을 위해 로그인이 필요합니다.";
             uploadMsg.style.display = 'block';
             saveBtn.disabled = true;
         }
+    } else {
+        // 관리자인 경우: UI 활성화 및 메시지 숨김
+        uploadMsg.style.display = 'none';
+        saveBtn.disabled = false;
+        saveBtn.title = "";
+        form.querySelectorAll('input, textarea, button, select').forEach(el => {
+            el.disabled = false;
+        });
     }
 }
 
@@ -126,22 +136,34 @@ dropZone.onclick = () => {
 
 imageInput.onchange = async (e) => {
     const file = e.target.files[0];
-    if (!file || saveBtn.disabled) return;
+    if (!file) return;
+    
+    // 권한 확인 및 상태 체크
+    if (userRole !== 'admin') {
+        alert("이미지를 업로드할 권한이 없습니다.");
+        return;
+    }
+    
     if (file.size > MAX_SIZE_MB * 1024 * 1024) {
         alert(`파일 용량이 너무 큽니다. ${MAX_SIZE_MB}MB 이하만 가능합니다.`);
         return;
     }
+    
     if (!charId) { alert("캐릭터 ID가 유효하지 않습니다."); return; }
     if (!currentUser) { alert("로그인이 필요합니다."); location.href = 'auth.html'; return; }
 
     try {
         uploadStatus.style.display = 'block';
-        uploadStatus.textContent = '이미지 준비 중...';
+        uploadStatus.textContent = '이미지 압축 중...';
         saveBtn.disabled = true;
+        saveBtn.textContent = '업로드 중...';
 
         const compressedFile = await compressImage(file);
-        const safeFileName = file.name.replace(/[^a-z0-9.]/gi, '_');
+        const fileName = file.name || 'image.jpg';
+        const safeFileName = fileName.replace(/[^a-z0-9.]/gi, '_') || `img_${Date.now()}.jpg`;
         const storageRef = ref(storage, `characters/${charId}/${Date.now()}_${safeFileName}`);
+        
+        uploadStatus.textContent = '업로드 시작...';
         const uploadTask = uploadBytesResumable(storageRef, compressedFile);
 
         uploadTask.on('state_changed', 
@@ -150,21 +172,44 @@ imageInput.onchange = async (e) => {
                 uploadStatus.textContent = `업로드 중... (${Math.round(progress)}%)`;
             }, 
             (error) => {
+                console.error("Upload error:", error);
                 alert("업로드 실패: " + error.message);
                 uploadStatus.textContent = '업로드 실패';
-                checkPermission(); // 권한에 따라 버튼 상태 복구
+                uploadStatus.style.color = 'red';
+                saveBtn.disabled = false;
+                saveBtn.textContent = '저장하기';
+                checkPermission();
             }, 
             async () => {
-                const url = await getDownloadURL(uploadTask.snapshot.ref);
-                document.getElementById('image-url').value = url;
-                previewImg.src = url;
-                previewImg.style.display = 'block';
-                uploadStatus.textContent = '업로드 완료!';
-                checkPermission(); // 권한에 따라 버튼 상태 복구
+                try {
+                    const url = await getDownloadURL(uploadTask.snapshot.ref);
+                    document.getElementById('image-url').value = url;
+                    previewImg.src = url;
+                    previewImg.style.display = 'block';
+                    uploadStatus.textContent = '업로드 완료!';
+                    uploadStatus.style.color = 'green';
+                    
+                    // 3초 후 상태 메시지 숨김
+                    setTimeout(() => {
+                        uploadStatus.style.display = 'none';
+                        uploadStatus.style.color = 'var(--primary-color)';
+                    }, 3000);
+                    
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '저장하기';
+                    checkPermission();
+                } catch (urlErr) {
+                    alert("URL 가져오기 실패: " + urlErr.message);
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '저장하기';
+                }
             }
         );
     } catch (err) {
+        console.error("Compression/General error:", err);
         alert("에러 발생: " + err.message);
+        saveBtn.disabled = false;
+        saveBtn.textContent = '저장하기';
         checkPermission();
     }
 };
