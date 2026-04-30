@@ -3,7 +3,7 @@ import { doc, getDoc, collection, getDocs, query, orderBy, limit } from "https:/
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
 
-const charId = location.hash.substring(1);
+const charId = decodeURIComponent(location.hash.substring(1));
 const contentArea = document.getElementById('wiki-content');
 const infoboxArea = document.getElementById('infobox-wrap');
 const tocArea = document.getElementById('toc-content');

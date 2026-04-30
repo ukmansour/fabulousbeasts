@@ -1,8 +1,7 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
 import { db, auth } from './firebase-config.js';
-import { collection, getDocs, orderBy, query, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs, orderBy, query, limit, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { resetDatabase } from './reset-db.js';
 
 let mergedCharacters = [...CHARACTERS];
 
