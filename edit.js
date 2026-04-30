@@ -109,38 +109,57 @@ async function loadInitialData() {
         const baseData = CHARACTERS.find(c => c.id === charId) || {};
         const docRef = doc(db, "characters", charId);
         
-        // 실시간 업데이트 감시 (더 정확한 데이터 반영을 위해)
         onSnapshot(docRef, (snap) => {
             if (snap.exists()) {
                 const dbData = snap.data();
                 console.log("Edit data received from Firestore:", dbData);
                 const data = { ...baseData, ...dbData };
-
-                document.getElementById('edit-page-title').textContent = `${data.name || charId} 문서 편집`;
-                document.getElementById('edit-name').value = data.name || charId;
-                if (categorySelect && data.category) categorySelect.value = data.category;
-                
-                editor.value = data.details || '';
-                document.getElementById('info-species').value = data.species || '';
-                document.getElementById('info-nation').value = data.nation || '';
-                document.getElementById('info-alias').value = data.alias || '';
-                document.getElementById('info-birthday').value = data.birthday || '';
-                document.getElementById('image-url').value = data.image || '';
-
-                if (data.image) {
-                    previewImg.src = data.image;
-                    previewImg.style.display = 'block';
-                    uploadMsg.style.display = 'none';
-                }
+                fillForm(data);
             } else {
-                console.log("No Firestore document found for edit:", charId);
-                document.getElementById('edit-page-title').textContent = `${baseData.name || charId} 문서 편집`;
-                document.getElementById('edit-name').value = baseData.name || charId;
+                // [폴백] 인코딩된 ID로도 시도
+                const rawId = location.hash.substring(1);
+                if (rawId !== charId) {
+                    console.log("Trying Edit fallback with raw ID:", rawId);
+                    getDoc(doc(db, "characters", rawId)).then(fallbackSnap => {
+                        if (fallbackSnap.exists()) {
+                            fillForm({ ...baseData, ...fallbackSnap.data() });
+                        } else {
+                            console.log("No document found for Edit (Decoded & Raw)");
+                            fillForm(baseData);
+                        }
+                    });
+                } else {
+                    console.log("No document found for Edit:", charId);
+                    fillForm(baseData);
+                }
             }
         }, (error) => {
             console.error("Edit load snapshot error:", error);
+            alert("편집 데이터를 불러오는데 실패했습니다: " + error.message);
         });
-    } catch (err) { console.error("LoadInitialData error:", err); }
+    } catch (err) { 
+        console.error("LoadInitialData error:", err); 
+        alert("편집기 초기화 실패: " + err.message);
+    }
+}
+
+function fillForm(data) {
+    document.getElementById('edit-page-title').textContent = `${data.name || charId} 문서 편집`;
+    document.getElementById('edit-name').value = data.name || charId;
+    if (categorySelect && data.category) categorySelect.value = data.category;
+    
+    editor.value = data.details || '';
+    document.getElementById('info-species').value = data.species || '';
+    document.getElementById('info-nation').value = data.nation || '';
+    document.getElementById('info-alias').value = data.alias || '';
+    document.getElementById('info-birthday').value = data.birthday || '';
+    document.getElementById('image-url').value = data.image || '';
+
+    if (data.image) {
+        previewImg.src = data.image;
+        previewImg.style.display = 'block';
+        uploadMsg.style.display = 'none';
+    }
 }
 
 dropZone.onclick = () => {

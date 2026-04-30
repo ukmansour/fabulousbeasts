@@ -93,7 +93,6 @@ async function loadDetail() {
         console.log("Fetching Firestore data for:", charId);
         const docRef = doc(db, "characters", charId);
         
-        // 실시간 업데이트 감시 (더 정확한 데이터 반영을 위해)
         onSnapshot(docRef, (snap) => {
             if (snap.exists()) {
                 const dbData = snap.data();
@@ -110,15 +109,35 @@ async function loadDetail() {
                 renderInfobox(data);
                 renderContent(data.details || '본문 내용이 없습니다.');
             } else {
-                console.log("No Firestore document found for:", charId);
-                document.getElementById('display-name').textContent = baseData.name;
-                renderContent(baseData.details || '본문 내용이 없습니다.');
+                // [폴백] 인코딩된 ID로도 시도 (이전 버전 호환성)
+                const rawId = location.hash.substring(1);
+                if (rawId !== charId) {
+                    console.log("Trying fallback with raw ID:", rawId);
+                    getDoc(doc(db, "characters", rawId)).then(fallbackSnap => {
+                        if (fallbackSnap.exists()) {
+                            const data = { ...baseData, ...fallbackSnap.data() };
+                            renderInfobox(data);
+                            renderContent(data.details || '본문 내용이 없습니다.');
+                        } else {
+                            console.log("No Firestore document found for both decoded and raw ID.");
+                            document.getElementById('display-name').textContent = baseData.name;
+                            renderContent(baseData.details || '본문 내용이 없습니다.');
+                        }
+                    });
+                } else {
+                    console.log("No Firestore document found for:", charId);
+                    document.getElementById('display-name').textContent = baseData.name;
+                    renderContent(baseData.details || '본문 내용이 없습니다.');
+                }
             }
         }, (error) => {
             console.error("Snapshot error:", error);
-            // 에러 발생 시 기존 데이터 유지 또는 안내
+            alert("데이터를 불러오는 중 오류가 발생했습니다: " + error.message);
         });
-    } catch (e) { console.error("LoadDetail error:", e); }
+    } catch (e) { 
+        console.error("LoadDetail error:", e); 
+        alert("상세 페이지 로딩 실패: " + e.message);
+    }
 
     renderRecentChanges();
 }
