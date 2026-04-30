@@ -51,3 +51,36 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
     *   Verified the merge logic that combines static data (`data.js`) with dynamic Firestore data.
     *   Ensured that the Home page re-renders immediately after cloud data is fetched, updating character cards and search results with the latest names and categories.
 
+## Administrator Management (2026.04.30)
+
+**Objective:** Provide a secure interface for existing administrators to manage user roles and promote/demote members.
+
+**Changes:**
+1.  **Admin Management Page (`admin.html`, `admin.js`)**:
+    *   Created a dedicated interface to list all registered users.
+    *   Implemented role-toggling functionality (Admin <-> Member).
+    *   Added security checks to ensure only existing administrators can access this page.
+2.  **Navigation Integration**:
+    *   Added a "관리자 설정" (Admin Settings) link to the site header, visible only to authorized administrators.
+    *   Synchronized user role fetching across `main.js` and `detail.js` for consistent UI feedback.
+
+## Visual Layout Improvements (2026.04.30)
+
+**Objective:** Enhance the visual presentation of document content by optimizing image display sizes and alignment.
+
+**Changes:**
+1.  **Image Rendering Optimization (`detail.js`)**:
+    *   Set a maximum height (`max-height: 600px`) for all images in the document body to prevent them from overwhelming the layout.
+    *   Applied `object-fit: contain` to ensure images maintain their aspect ratio within the constraints.
+    *   Added automatic centering (`margin: 20px auto`) and consistent border-radius for a more professional look.
+
+## Functionality Cleanup (2026.04.30)
+
+**Objective:** Remove redundant or risky features to ensure system stability and a cleaner user experience.
+
+**Changes:**
+1.  **Removal of Database Reset Feature**:
+    *   Deleted the "데이터 초기화" (Database Reset) button from the home page navigation.
+    *   Removed the `reset-db.js` utility file and all associated logic.
+    *   This prevents accidental data loss and streamlines the administrative interface.
+

@@ -95,25 +95,17 @@ authForm.addEventListener('submit', async (e) => {
             // 3. Firebase Auth 프로필 업데이트
             await updateProfile(user, { displayName: nickname });
 
-            // 4. 첫 번째 가입자인지 확인하여 관리자 권한 부여
-            const userListSnap = await getDocs(collection(db, "users"));
-            const isFirstUser = userListSnap.empty;
-
-            // 5. Firestore에 유수언 전용 유저 문서 생성
+            // 4. Firestore에 유수언 전용 유저 문서 생성
             await setDoc(doc(db, "users", user.uid), {
                 uid: user.uid,
                 nickname: nickname,
                 realEmail: email || null,
-                role: isFirstUser ? 'admin' : 'member', // 첫 가입자만 관리자
+                role: 'member', // 기본 역할
                 joinedAt: new Date(),
                 contributionCount: 0
             });
 
-            if (isFirstUser) {
-                alert(`${nickname}님, 첫 번째 멤버로서 관리자 권한이 부여되었습니다!`);
-            } else {
-                alert(`${nickname}님, 유수언의 멤버가 되신 것을 환영합니다!`);
-            }
+            alert(`${nickname}님, 유수언의 멤버가 되신 것을 환영합니다!`);
             window.location.href = 'index.html';
         }
     } catch (error) {

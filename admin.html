@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 설정 - 유수언</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        .admin-container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
+        .user-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; background: white; border: 1px solid var(--border-color); }
+        .user-table th, .user-table td { padding: 1rem; border: 1px solid var(--border-color); text-align: left; }
+        .user-table th { background: #f8f9fa; font-weight: 800; }
+        .role-badge { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
+        .role-admin { background: #fee2e2; color: #dc2626; }
+        .role-member { background: #f3f4f6; color: #4b5563; }
+        .toggle-btn { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 0.85rem; }
+        .toggle-btn:hover { background: #f8f9fa; }
+        .loading { text-align: center; padding: 3rem; color: #666; }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
+                <span>유수언</span>
+            </a>
+            <nav class="top-nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <span id="user-info"></span>
+            </nav>
+        </div>
+    </header>
+
+    <main class="admin-container">
+        <h1>관리자 설정</h1>
+        <p style="color:#666; margin-bottom:2rem;">회원의 권한을 관리합니다. 신중하게 변경해 주세요.</p>
+        
+        <div id="admin-content">
+            <div class="loading">사용자 목록을 불러오는 중...</div>
+        </div>
+    </main>
+
+    <script type="module" src="admin.js"></script>
+</body>
+</html>

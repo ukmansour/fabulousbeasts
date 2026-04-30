@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>캐릭터 정보 - 유수언</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
+                <span>유수언</span>
+            </a>
+            <div class="search-container">
+                <input type="text" class="search-input" id="global-search" placeholder="문서 검색...">
+                <div class="search-results" id="search-results"></div>
+            </div>
+            <nav class="top-nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="watch.html" class="nav-link">애니 보기</a>
+                <span id="user-info"></span>
+            </nav>
+        </div>
+    </header>
+
+    <div class="wiki-outer-container">
+        <main class="wiki-article">
+            <!-- 나무위키 스타일 상단 탭 -->
+            <div class="wiki-tabs-wrapper">
+                <div class="wiki-tabs">
+                    <div class="wiki-tab active">문서</div>
+                </div>
+                <div class="wiki-tabs" id="edit-btn-wrap">
+                    <!-- JS: 편집 버튼 삽입 위치 -->
+                    <a href="#" id="go-edit" class="wiki-tab">편집</a>
+                </div>
+            </div>
+
+            <div id="character-detail">
+                <h1 class="wiki-title" id="display-name">불러오는 중...</h1>
+                <div class="wiki-subtitle">
+                    <span>최근 수정 시각: <span id="last-edit">-</span></span>
+                    <span>수정자: <span id="last-editor">-</span></span>
+                </div>
+
+                <!-- 자동 생성 목차 -->
+                <div id="wiki-toc" class="wiki-toc" style="display:none;">
+                    <div class="wiki-toc-title">목차</div>
+                    <div id="toc-content"></div>
+                </div>
+
+                <div class="wiki-content-wrap" style="position: relative;">
+                    <!-- 인포박스 (우측) -->
+                    <div id="infobox-wrap"></div>
+                    
+                    <!-- 본문 내용 (좌측) -->
+                    <div id="wiki-content" class="wiki-content">
+                        본문을 불러오는 중입니다...
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <aside class="wiki-sidebar">
+            <div class="sidebar-box">
+                <div class="sidebar-title">🕒 최근 변경 내역</div>
+                <div id="home-recent-list"></div>
+            </div>
+        </aside>
+    </div>
+
+    <script type="module" src="detail.js"></script>
+</body>
+</html>

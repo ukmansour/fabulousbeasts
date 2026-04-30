@@ -6,31 +6,23 @@ import { resetDatabase } from './reset-db.js';
 
 let mergedCharacters = [...CHARACTERS];
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, (user) => {
     const info = document.getElementById('user-info');
     if (!info) return;
     if (user) {
-        let isAdmin = false;
-        try {
-            const userSnap = await getDoc(doc(db, "users", user.uid));
-            if (userSnap.exists()) {
-                isAdmin = userSnap.data().role === 'admin';
-            }
-        } catch (e) { console.error("Error fetching role:", e); }
-
-        info.innerHTML = `
-            ${isAdmin ? `<a href="admin.html" class="nav-link" style="color:var(--primary-color); font-weight:bold; margin-right:1rem;">관리자 설정</a>` : ''}
-            <span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName || '유저'}님</span>
-            <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
-        `;
+        info.innerHTML = `<a href="#" class="nav-link" id="db-reset-btn" style="color:#ff6b6b; margin-right:1rem; font-weight:bold;">데이터 초기화</a>
+                          <span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName || '유저'}님</span>
+                          <a href="#" class="nav-link" id="logout-btn">로그아웃</a>`;
         
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.onclick = (e) => {
-                e.preventDefault();
-                if (confirm("로그아웃하시겠습니까?")) signOut(auth).then(() => location.reload());
-            };
-        }
+        document.getElementById('db-reset-btn').onclick = (e) => {
+            e.preventDefault();
+            resetDatabase();
+        };
+
+        document.getElementById('logout-btn').onclick = (e) => {
+            e.preventDefault();
+            if (confirm("로그아웃하시겠습니까?")) signOut(auth).then(() => location.reload());
+        };
     } else {
         info.innerHTML = `<a href="auth.html" class="nav-link">로그인</a>`;
     }

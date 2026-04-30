@@ -17,53 +17,33 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     const info = document.getElementById('user-info');
     if (user && info) {
-        let isAdmin = false;
+        info.innerHTML = `<span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName}님</span>`;
         try {
             const userSnap = await getDoc(doc(db, "users", user.uid));
             if (userSnap.exists()) {
                 userRole = userSnap.data().role || 'member';
-                isAdmin = userRole === 'admin';
             }
         } catch (e) { console.error("Error fetching user role:", e); }
-
-        info.innerHTML = `
-            ${isAdmin ? `<a href="admin.html" class="nav-link" style="color:var(--primary-color); font-weight:bold; margin-right:1rem;">관리자 설정</a>` : ''}
-            <span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName}님</span>
-        `;
     }
     updateEditVisibility();
 });
 
 function updateEditVisibility() {
-    const isAdmin = userRole === 'admin';
-    const isLoggedIn = currentUser !== null;
-
-    if (editBtn) {
-        if (!isLoggedIn) {
-            editBtn.textContent = "로그인 후 편집";
-            editBtn.style.opacity = '1';
-            editBtn.style.color = 'var(--primary-color)';
-            editBtn.title = "편집하려면 로그인이 필요합니다.";
-        } else if (!isAdmin) {
-            editBtn.textContent = "편집 (권한 제한)";
+    const canEdit = userRole === 'admin';
+    if (!canEdit) {
+        // 본문의 섹션 편집 링크 숨기기
+        document.querySelectorAll('.section-edit-link').forEach(el => el.style.display = 'none');
+        if (editBtn) {
             editBtn.style.opacity = '0.5';
             editBtn.title = "관리자만 편집 가능합니다.";
-        } else {
-            editBtn.textContent = "편집";
+        }
+    } else {
+        document.querySelectorAll('.section-edit-link').forEach(el => el.style.display = 'inline-block');
+        if (editBtn) {
             editBtn.style.opacity = '1';
-            editBtn.style.color = '';
             editBtn.title = "문서 편집";
         }
     }
-
-    // 본문의 섹션 편집 링크 숨기기
-    document.querySelectorAll('.section-edit-link').forEach(el => {
-        if (!isAdmin) {
-            el.style.display = 'none';
-        } else {
-            el.style.display = 'inline-block';
-        }
-    });
 }
 
 // 편집 버튼 클릭 시
@@ -132,8 +112,8 @@ function renderInfobox(data) {
 function renderContent(details) {
     let html = details
         // 1. 이미지: ![설명](주소) 또는 단순 URL (http...jpg/png/webp)
-        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; max-height:600px; object-fit:contain; border-radius:8px; margin: 20px auto; display:block;">')
-        .replace(/(?<!["'])(https?:\/\/[^\s<]+?\.(?:jpg|jpeg|gif|png|webp|svg))(?![^<]*>|[^<>]*<\/a>)/gi, '<img src="$1" style="max-width:100%; max-height:600px; object-fit:contain; border-radius:8px; margin: 20px auto; display:block;">')
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:8px; margin: 10px 0; display:block;">')
+        .replace(/(?<!["'])(https?:\/\/[^\s<]+?\.(?:jpg|jpeg|gif|png|webp|svg))(?![^<]*>|[^<>]*<\/a>)/gi, '<img src="$1" style="max-width:100%; border-radius:8px; margin: 10px 0; display:block;">')
         
         // 2. 링크: [텍스트](주소)
         .replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
