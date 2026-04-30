@@ -33,12 +33,18 @@ onAuthStateChanged(auth, async (user) => {
 
 async function loadUserList() {
     try {
-        const q = query(collection(db, "users"), orderBy("nickname", "asc"));
-        const snap = await getDocs(q);
-        const users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log("Fetching all users...");
+        const snap = await getDocs(collection(db, "users"));
+        console.log("Total users found in Firestore:", snap.size);
+        
+        let users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // Firestore 쿼리 필터링으로 인한 누락 방지를 위해 자바스크립트에서 정렬
+        users.sort((a, b) => (a.nickname || "").localeCompare(b.nickname || ""));
         
         renderUserTable(users);
     } catch (e) {
+        console.error("User list fetch error:", e);
         contentArea.innerHTML = `<p style="color:red;">목록을 불러오지 못했습니다: ${e.message}</p>`;
     }
 }
@@ -50,6 +56,7 @@ function renderUserTable(users) {
     }
 
     let html = `
+        <p style="font-size:0.9rem; color:#666; margin-bottom:1rem;">총 가입 멤버: <strong>${users.length}</strong>명</p>
         <table class="user-table">
             <thead>
                 <tr>
