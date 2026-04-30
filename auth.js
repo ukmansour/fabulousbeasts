@@ -97,28 +97,27 @@ authForm.addEventListener('submit', async (e) => {
             // 3. Firebase Auth 프로필 업데이트
             await updateProfile(user, { displayName: nickname });
 
-            // 4. 첫 번째 가입자인지 확인
-            let isFirstUser = false;
-            try {
-                const userListSnap = await getDocs(query(collection(db, "users"), limit(1)));
-                isFirstUser = userListSnap.empty;
-            } catch (err) { isFirstUser = false; }
-
-            // 5. Firestore에 유저 문서 생성
-            await setDoc(doc(db, "users", user.uid), {
+            // 4. Firestore에 유저 문서 생성 (모두 일반 멤버로 시작)
+            const userData = {
                 uid: user.uid,
                 nickname: nickname,
                 realEmail: email || null,
-                role: isFirstUser ? 'admin' : 'member',
+                role: 'member', // 초기값은 멤버
                 joinedAt: serverTimestamp(),
                 contributionCount: 0
-            });
+            };
 
-            if (isFirstUser) {
-                alert(`${nickname}님, 첫 번째 멤버로서 관리자 권한이 부여되었습니다!`);
-            } else {
-                alert(`${nickname}님, 유수언의 멤버가 되신 것을 환영합니다!`);
+            console.log("Saving user to Firestore...", user.uid);
+            try {
+                await setDoc(doc(db, "users", user.uid), userData);
+                console.log("Firestore document created!");
+                alert(`${nickname}님, 가입이 완료되었습니다! (DB 등록 성공)`);
+            } catch (fsError) {
+                console.error("Firestore Save Error:", fsError);
+                alert("Auth 계정은 생성되었으나 DB 등록에 실패했습니다: " + fsError.message);
+                throw fsError;
             }
+
             window.location.href = 'index.html';
         }
     } catch (error) {
