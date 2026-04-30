@@ -1,6 +1,6 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
 import { db, auth } from './firebase-config.js';
-import { collection, getDocs, orderBy, query, limit, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs, orderBy, query, limit, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 let mergedCharacters = [...CHARACTERS];
@@ -11,11 +11,25 @@ onAuthStateChanged(auth, async (user) => {
     if (user) {
         let isAdmin = false;
         try {
-            const userSnap = await getDoc(doc(db, "users", user.uid));
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            
             if (userSnap.exists()) {
                 isAdmin = userSnap.data().role === 'admin';
+            } else {
+                // [자동 초기화] Auth에는 있지만 Firestore에 문서가 없는 경우 생성
+                console.log("Initializing Firestore document for existing Auth user:", user.uid);
+                const newUserData = {
+                    uid: user.uid,
+                    nickname: user.displayName || "가입한 유저",
+                    role: 'member',
+                    joinedAt: serverTimestamp(),
+                    contributionCount: 0
+                };
+                await setDoc(userRef, newUserData);
+                isAdmin = false;
             }
-        } catch (e) { console.error("Error fetching role:", e); }
+        } catch (e) { console.error("Error fetching/initializing role:", e); }
 
         info.innerHTML = `
             ${isAdmin ? `<a href="admin.html" class="nav-link" style="color:white; font-weight:bold; margin-right:1rem; border:1px solid rgba(255,255,255,0.3); padding:0.2rem 0.5rem; border-radius:3px;">관리자 설정</a>` : ''}
