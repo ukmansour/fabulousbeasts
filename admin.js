@@ -85,9 +85,18 @@ function renderUserTable(users) {
 }
 
 window.toggleUserRole = async (uid, currentRole) => {
-    if (!confirm(`권한을 변경하시겠습니까?`)) return;
-    
     const newRole = currentRole === 'admin' ? 'member' : 'admin';
+    
+    if (newRole === 'admin') {
+        const password = prompt("관리자 승격을 위한 비밀번호를 입력하세요:");
+        if (password !== "5555") {
+            alert("비밀번호가 일치하지 않습니다. 승격이 취소되었습니다.");
+            return;
+        }
+    } else {
+        if (!confirm(`정말로 일반 멤버로 강등하시겠습니까?`)) return;
+    }
+    
     try {
         await updateDoc(doc(db, "users", uid), { role: newRole });
         alert("권한이 변경되었습니다.");
