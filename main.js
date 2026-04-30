@@ -2,6 +2,7 @@ import { CHARACTERS, CATEGORIES } from './data.js';
 import { db, auth } from './firebase-config.js';
 import { collection, getDocs, orderBy, query, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { resetDatabase } from './reset-db.js';
 
 let mergedCharacters = [...CHARACTERS];
 
@@ -9,8 +10,15 @@ onAuthStateChanged(auth, (user) => {
     const info = document.getElementById('user-info');
     if (!info) return;
     if (user) {
-        info.innerHTML = `<span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName || '유저'}님</span>
+        info.innerHTML = `<a href="#" class="nav-link" id="db-reset-btn" style="color:#ff6b6b; margin-right:1rem; font-weight:bold;">데이터 초기화</a>
+                          <span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName || '유저'}님</span>
                           <a href="#" class="nav-link" id="logout-btn">로그아웃</a>`;
+        
+        document.getElementById('db-reset-btn').onclick = (e) => {
+            e.preventDefault();
+            resetDatabase();
+        };
+
         document.getElementById('logout-btn').onclick = (e) => {
             e.preventDefault();
             if (confirm("로그아웃하시겠습니까?")) signOut(auth).then(() => location.reload());

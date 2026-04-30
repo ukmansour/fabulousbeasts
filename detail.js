@@ -29,17 +29,20 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function updateEditVisibility() {
-    const canEdit = userRole === 'admin' || userRole === 'editor';
+    const canEdit = userRole === 'admin';
     if (!canEdit) {
         // 본문의 섹션 편집 링크 숨기기
         document.querySelectorAll('.section-edit-link').forEach(el => el.style.display = 'none');
-        // 상단 편집 버튼 스타일 변경 (선택 사항)
         if (editBtn) {
-            editBtn.title = "편집 권한이 없습니다.";
-            // 완전히 숨기거나 비활성 시각 효과를 줄 수 있음
+            editBtn.style.opacity = '0.5';
+            editBtn.title = "관리자만 편집 가능합니다.";
         }
     } else {
         document.querySelectorAll('.section-edit-link').forEach(el => el.style.display = 'inline-block');
+        if (editBtn) {
+            editBtn.style.opacity = '1';
+            editBtn.title = "문서 편집";
+        }
     }
 }
 
@@ -50,8 +53,8 @@ if (editBtn) {
         if (!currentUser) {
             alert("편집을 위해 로그인이 필요합니다.");
             location.href = 'auth.html';
-        } else if (userRole !== 'admin' && userRole !== 'editor') {
-            alert("🔒 이 문서는 잠겨 있습니다. 허가된 편집자만 수정할 수 있습니다.");
+        } else if (userRole !== 'admin') {
+            alert("🔒 관리자 전용 문서입니다. 관리자 계정으로 로그인해주세요.");
         } else {
             location.href = `edit.html#${charId}`;
         }
@@ -108,25 +111,25 @@ function renderInfobox(data) {
 
 function renderContent(details) {
     let html = details
-        // 1. 이미지: ![설명](주소) -> <img src="주소" alt="설명" style="max-width:100%">
-        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:8px; margin: 10px 0;">')
+        // 1. 이미지: ![설명](주소) 또는 단순 URL (http...jpg/png/webp)
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:8px; margin: 10px 0; display:block;">')
+        .replace(/(?<!["'])(https?:\/\/[^\s<]+?\.(?:jpg|jpeg|gif|png|webp|svg))(?![^<]*>|[^<>]*<\/a>)/gi, '<img src="$1" style="max-width:100%; border-radius:8px; margin: 10px 0; display:block;">')
         
-        // 2. 링크: [텍스트](주소) -> <a href="주소" target="_blank">텍스트</a>
+        // 2. 링크: [텍스트](주소)
         .replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
-            // 내부 문서 링크 처리 (예: [[천록]] 또는 [[tianlu]])
-            if (url.startsWith('#') || url.includes('.html')) {
-                return `<a href="${url}">${text}</a>`;
-            }
+            if (url.startsWith('#') || url.includes('.html')) return `<a href="${url}">${text}</a>`;
             return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
         })
 
-        // 3. 굵게: **텍스트** -> <strong>텍스트</strong>
+        // 3. 굵게: **텍스트** 또는 __텍스트__
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/__(.*?)__/g, '<strong>$1</strong>')
 
-        // 4. 기울임: *텍스트* -> <em>$1</em>
+        // 4. 기울임: *텍스트* 또는 _텍스트_
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/_(.*?)_/g, '<em>$1</em>')
 
-        // 5. 제목 (H2, H3) - 편집 링크 포함
+        // 5. 제목 (H2, H3)
         .replace(/^## (.*$)/gim, (match, p1) => {
             const cleanTitle = p1.trim();
             return `<h2><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h2>`;
@@ -136,16 +139,16 @@ function renderContent(details) {
             return `<h3><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h3>`;
         })
 
-        // 6. 구분선: --- -> <hr>
+        // 6. 구분선: ---
         .replace(/^---$/gim, '<hr>')
 
-        // 7. 리스트: * 항목 -> <li>항목</li>
-        .replace(/^\* (.*$)/gim, '<li>$1</li>')
+        // 7. 리스트: * 항목 또는 - 항목
+        .replace(/^[\*\-] (.*$)/gim, '<li>$1</li>')
 
         // 8. 줄바꿈 처리
         .replace(/\n/g, '<br>');
 
-    // <li> 태그들을 <ul>로 감싸기 (간단한 처리)
+    // <li> 태그들을 <ul>로 감싸기
     html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
 
     contentArea.innerHTML = html;

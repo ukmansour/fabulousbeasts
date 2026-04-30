@@ -2,7 +2,7 @@ import { db, auth, storage } from './firebase-config.js';
 import { doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-import { CHARACTERS } from './data.js';
+import { CHARACTERS, CATEGORIES } from './data.js';
 
 const charId = location.hash.substring(1);
 const form = document.getElementById('edit-form');
@@ -13,6 +13,7 @@ const previewImg = document.getElementById('preview-img');
 const uploadStatus = document.getElementById('upload-status');
 const uploadMsg = document.getElementById('upload-msg');
 const editor = document.getElementById('edit-content');
+const categorySelect = document.getElementById('edit-category');
 
 let currentUser = null;
 let userRole = 'member';
@@ -31,17 +32,22 @@ onAuthStateChanged(auth, async (user) => {
     checkPermission();
 });
 
+function initCategorySelect() {
+    if (!categorySelect) return;
+    categorySelect.innerHTML = CATEGORIES.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+}
+
 function checkPermission() {
-    const canEdit = userRole === 'admin' || userRole === 'editor';
+    const canEdit = userRole === 'admin';
     if (!canEdit) {
         if (currentUser) {
-            uploadMsg.textContent = "🔒 이 문서는 잠겨 있습니다. 허가된 편집자만 수정할 수 있습니다.";
+            uploadMsg.textContent = "🔒 관리자 전용 문서입니다. 관리자 계정으로 로그인해주세요.";
             uploadMsg.style.display = 'block';
             uploadMsg.style.color = "red";
             saveBtn.disabled = true;
             saveBtn.title = "권한이 없습니다.";
             // 모든 입력 필드 비활성화
-            form.querySelectorAll('input, textarea').forEach(el => el.disabled = true);
+            form.querySelectorAll('input, textarea, button, select').forEach(el => el.disabled = true);
         } else {
             uploadMsg.textContent = "🔒 편집을 위해 로그인이 필요합니다.";
             uploadMsg.style.display = 'block';
@@ -87,6 +93,7 @@ function initToolbar() {
 
 async function loadInitialData() {
     if (!charId) return;
+    initCategorySelect();
     try {
         const baseData = CHARACTERS.find(c => c.id === charId) || {};
         const docRef = doc(db, "characters", charId);
@@ -96,6 +103,8 @@ async function loadInitialData() {
 
         document.getElementById('edit-page-title').textContent = `${data.name || charId} 문서 편집`;
         document.getElementById('edit-name').value = data.name || charId;
+        if (categorySelect && data.category) categorySelect.value = data.category;
+        
         editor.value = data.details || '';
         document.getElementById('info-species').value = data.species || '';
         document.getElementById('info-nation').value = data.nation || '';
@@ -191,6 +200,7 @@ form.onsubmit = async (e) => {
     saveBtn.textContent = '저장 중...';
     const updatedData = {
         name: document.getElementById('edit-name').value,
+        category: categorySelect ? categorySelect.value : '기타',
         details: editor.value,
         species: document.getElementById('info-species').value,
         nation: document.getElementById('info-nation').value,
