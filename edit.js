@@ -130,7 +130,17 @@ async function loadInitialData() {
 }
 
 dropZone.onclick = () => {
-    if (saveBtn.disabled) return;
+    if (saveBtn.disabled) {
+        if (!currentUser) {
+            alert("로그인이 필요합니다.");
+            location.href = 'auth.html';
+        } else if (userRole !== 'admin') {
+            alert("편집 권한(관리자)이 없습니다.");
+        } else {
+            alert("페이지를 불러오는 중입니다. 잠시만 기다려주세요.");
+        }
+        return;
+    }
     imageInput.click();
 };
 
@@ -159,9 +169,14 @@ imageInput.onchange = async (e) => {
         saveBtn.textContent = '업로드 중...';
 
         const compressedFile = await compressImage(file);
+        console.log("File prepared for upload:", compressedFile.name, compressedFile.size);
+
         const fileName = file.name || 'image.jpg';
         const safeFileName = fileName.replace(/[^a-z0-9.]/gi, '_') || `img_${Date.now()}.jpg`;
-        const storageRef = ref(storage, `characters/${charId}/${Date.now()}_${safeFileName}`);
+        const uploadPath = `characters/${charId}/${Date.now()}_${safeFileName}`;
+        console.log("Uploading to path:", uploadPath);
+        
+        const storageRef = ref(storage, uploadPath);
         
         uploadStatus.textContent = '업로드 시작...';
         const uploadTask = uploadBytesResumable(storageRef, compressedFile);
@@ -215,25 +230,42 @@ imageInput.onchange = async (e) => {
 };
 
 async function compressImage(file) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+        console.log("Starting image compression...");
         const img = new Image();
         img.src = URL.createObjectURL(file);
         img.onload = () => {
-            const canvas = document.createElement('canvas');
-            let width = img.width;
-            let height = img.height;
-            const MAX = 1200;
-            if (width > height) { if (width > MAX) { height *= MAX/width; width = MAX; } }
-            else { if (height > MAX) { width *= MAX/height; height = MAX; } }
-            canvas.width = width; canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            canvas.toBlob((blob) => {
+            try {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const MAX = 1200;
+                if (width > height) { if (width > MAX) { height *= MAX/width; width = MAX; } }
+                else { if (height > MAX) { width *= MAX/height; height = MAX; } }
+                canvas.width = width; canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    URL.revokeObjectURL(img.src);
+                    if (blob) {
+                        console.log("Compression successful");
+                        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+                    } else {
+                        console.warn("Canvas toBlob returned null, using original file");
+                        resolve(file);
+                    }
+                }, 'image/jpeg', 0.8);
+            } catch (e) {
+                console.error("Compression error:", e);
                 URL.revokeObjectURL(img.src);
-                resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-            }, 'image/jpeg', 0.8);
+                resolve(file);
+            }
         };
-        img.onerror = (e) => { URL.revokeObjectURL(img.src); reject(e); };
+        img.onerror = (e) => { 
+            console.error("Image load error for compression:", e);
+            URL.revokeObjectURL(img.src); 
+            resolve(file); 
+        };
     });
 }
 
