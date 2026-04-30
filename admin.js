@@ -37,6 +37,17 @@ function loadUserList() {
     
     // 실시간 리스너로 변경하여 즉각적인 가입 확인 가능하게 함
     onSnapshot(userCol, (snap) => {
+        if (snap.empty) {
+            contentArea.innerHTML = `
+                <div style="text-align:center; padding:3rem; background:#fffbe6; border:1px solid #ffe58f; border-radius:8px;">
+                    <p>현재 명단이 비어있습니다.</p>
+                    <p style="font-size:0.8rem; color:#666;">사용자들이 사이트에 한 번씩 접속하면 자동으로 명단에 추가됩니다.</p>
+                    <button onclick="location.reload()" style="margin-top:1rem; padding:0.5rem 1rem; cursor:pointer;">새로고침하여 확인</button>
+                </div>
+            `;
+            return;
+        }
+
         console.log("User data snapshot received. Count:", snap.size);
         let users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
@@ -44,7 +55,7 @@ function loadUserList() {
         users.sort((a, b) => {
             const dateA = a.joinedAt?.seconds ? a.joinedAt.seconds * 1000 : new Date(a.joinedAt).getTime();
             const dateB = b.joinedAt?.seconds ? b.joinedAt.seconds * 1000 : new Date(b.joinedAt).getTime();
-            return dateB - dateA;
+            return (dateB || 0) - (dateA || 0);
         });
         
         renderUserTable(users);

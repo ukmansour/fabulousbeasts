@@ -15,21 +15,27 @@ onAuthStateChanged(auth, async (user) => {
             const userSnap = await getDoc(userRef);
             
             if (userSnap.exists()) {
-                isAdmin = userSnap.data().role === 'admin';
+                const userData = userSnap.data();
+                isAdmin = userData.role === 'admin';
             } else {
-                // [자동 초기화] Auth에는 있지만 Firestore에 문서가 없는 경우 생성
-                console.log("Initializing Firestore document for existing Auth user:", user.uid);
+                // [강력한 자동 복구] 문서가 없으면 즉시 생성
+                console.log("Auto-repairing user document for:", user.uid);
+                const isSupremeAdmin = user.email === "ukmansour@youshouyan.wiki" || user.displayName === "ukmansour"; // 특정 관리자 이메일/닉네임 보호
+                
                 const newUserData = {
                     uid: user.uid,
                     nickname: user.displayName || "가입한 유저",
-                    role: 'member',
+                    role: isSupremeAdmin ? 'admin' : 'member',
                     joinedAt: serverTimestamp(),
                     contributionCount: 0
                 };
                 await setDoc(userRef, newUserData);
-                isAdmin = false;
+                isAdmin = isSupremeAdmin;
+                console.log("User document repaired. Admin status:", isAdmin);
             }
-        } catch (e) { console.error("Error fetching/initializing role:", e); }
+        } catch (e) { 
+            console.error("Critical: User sync failed:", e); 
+        }
 
         info.innerHTML = `
             ${isAdmin ? `<a href="admin.html" class="nav-link" style="color:white; font-weight:bold; margin-right:1rem; border:1px solid rgba(255,255,255,0.3); padding:0.2rem 0.5rem; border-radius:3px;">관리자 설정</a>` : ''}
