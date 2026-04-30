@@ -90,7 +90,7 @@ body {
 .wiki-content h2 { 
     border-bottom: 1px solid var(--border-color); 
     padding-bottom: 0.2rem; 
-    margin: 2.5rem 0 1rem 0; 
+    margin: 2.5rem 0 0.4rem 0; /* 제목 아래 간격을 1rem -> 0.4rem으로 대폭 줄임 */
     font-size: 1.6rem; 
     color: #000; 
     display: flex;
@@ -98,7 +98,7 @@ body {
     align-items: center;
 }
 .wiki-content h3 {
-    margin: 2rem 0 0.8rem 0;
+    margin: 2rem 0 0.3rem 0; /* 소제목 아래 간격도 0.8rem -> 0.3rem으로 줄임 */
     font-size: 1.3rem;
     display: flex;
     justify-content: space-between;
@@ -145,3 +145,16 @@ body {
     .wiki-outer-container { grid-template-columns: 1fr; }
     .wiki-sidebar { display: none; }
 }
+
+/* 모바일 화면 최적화 */
+@media (max-width: 768px) {
+    .infobox {
+        float: none; /* 모바일에서는 사진 상자가 우측에 떠있지 않게 해제 */
+        width: 100%; /* 화면 꽉 차게 변경 */
+        margin: 1rem 0 1.5rem 0; /* 여백 조정 */
+    }
+    .wiki-article {
+        padding: 1.5rem 1rem; /* 모바일에서 본문 좌우 여백을 줄임 */
+    }
+}
+
