@@ -165,7 +165,7 @@ export function getFlattenedCharacters() {
         for (const key in obj) {
             if (obj[key].id) {
                 const char = { ...obj[key] };
-                char.details = '본문 내용이 비어있습니다. 관리자 계정으로 로그인하여 내용을 채워주세요.';
+                char.details = '본문 내용이 비어있습니다.';
                 flattened.push(char);
             } else {
                 traverse(obj[key]);
