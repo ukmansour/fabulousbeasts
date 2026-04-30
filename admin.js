@@ -1,5 +1,5 @@
 import { db, auth } from './firebase-config.js';
-import { collection, getDocs, doc, getDoc, updateDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs, doc, getDoc, updateDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const contentArea = document.getElementById('admin-content');
@@ -31,22 +31,27 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-async function loadUserList() {
-    try {
-        console.log("Fetching all users...");
-        const snap = await getDocs(collection(db, "users"));
-        console.log("Total users found in Firestore:", snap.size);
-        
+function loadUserList() {
+    console.log("Starting real-time user list listener...");
+    const userCol = collection(db, "users");
+    
+    // 실시간 리스너로 변경하여 즉각적인 가입 확인 가능하게 함
+    onSnapshot(userCol, (snap) => {
+        console.log("User data snapshot received. Count:", snap.size);
         let users = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // Firestore 쿼리 필터링으로 인한 누락 방지를 위해 자바스크립트에서 정렬
-        users.sort((a, b) => (a.nickname || "").localeCompare(b.nickname || ""));
+        // 가입일 순으로 정렬 (최신 가입자가 위로)
+        users.sort((a, b) => {
+            const dateA = a.joinedAt?.seconds ? a.joinedAt.seconds * 1000 : new Date(a.joinedAt).getTime();
+            const dateB = b.joinedAt?.seconds ? b.joinedAt.seconds * 1000 : new Date(b.joinedAt).getTime();
+            return dateB - dateA;
+        });
         
         renderUserTable(users);
-    } catch (e) {
-        console.error("User list fetch error:", e);
-        contentArea.innerHTML = `<p style="color:red;">목록을 불러오지 못했습니다: ${e.message}</p>`;
-    }
+    }, (e) => {
+        console.error("User list real-time error:", e);
+        contentArea.innerHTML = `<p style="color:red;">목록을 실시간으로 불러오지 못했습니다: ${e.message}</p>`;
+    });
 }
 
 function renderUserTable(users) {
