@@ -50,9 +50,9 @@ function renderUserTable(users) {
                 <tr>
                     <th>닉네임</th>
                     <th>이메일</th>
-                    <th>권한</th>
+                    <th>현재 권한</th>
                     <th>가입일</th>
-                    <th>작업</th>
+                    <th>관리 작업 (비밀번호: 5555)</th>
                 </tr>
             </thead>
             <tbody>
@@ -62,7 +62,10 @@ function renderUserTable(users) {
         const date = user.joinedAt?.seconds ? new Date(user.joinedAt.seconds * 1000) : new Date(user.joinedAt);
         const roleClass = user.role === 'admin' ? 'role-admin' : 'role-member';
         const roleLabel = user.role === 'admin' ? '관리자' : '일반 멤버';
-        const toggleLabel = user.role === 'admin' ? '멤버로 강등' : '관리자로 승격';
+        
+        // 버튼 텍스트 변경: 등록/취소
+        const toggleLabel = user.role === 'admin' ? '관리자 등록 취소' : '관리자로 임명';
+        const btnStyle = user.role === 'admin' ? 'border-color: #dc2626; color: #dc2626;' : 'border-color: #00a0e9; color: #00a0e9;';
 
         return `
             <tr>
@@ -72,8 +75,8 @@ function renderUserTable(users) {
                 <td style="color:#666; font-size:0.85rem;">${isNaN(date) ? '-' : date.toLocaleDateString()}</td>
                 <td>
                     ${user.uid === currentUser.uid ? 
-                        '<span style="font-size:0.8rem; color:#999;">본인</span>' : 
-                        `<button class="toggle-btn" onclick="window.toggleUserRole('${user.id}', '${user.role}')">${toggleLabel}</button>`
+                        '<span style="font-size:0.8rem; color:#999;">나 (최고 관리자)</span>' : 
+                        `<button class="toggle-btn" style="${btnStyle}" onclick="window.toggleUserRole('${user.id}', '${user.role}')">${toggleLabel}</button>`
                     }
                 </td>
             </tr>
@@ -85,21 +88,25 @@ function renderUserTable(users) {
 }
 
 window.toggleUserRole = async (uid, currentRole) => {
-    const newRole = currentRole === 'admin' ? 'member' : 'admin';
+    const isDemote = currentRole === 'admin';
+    const actionText = isDemote ? '관리자 권한을 취소' : '관리자로 임명';
     
-    const actionText = newRole === 'admin' ? '승격' : '강등';
-    const password = prompt(`관리자 권한을 ${actionText}하시겠습니까? 비밀번호를 입력하세요:`);
+    const password = prompt(`${actionText}하시겠습니까?\n계속하려면 관리자 비밀번호(5555)를 입력하세요:`);
+    
+    if (password === null) return; // 취소 버튼 클릭 시
     
     if (password !== "5555") {
-        alert("비밀번호가 일치하지 않거나 취소되었습니다.");
+        alert("비밀번호가 올비르지 않습니다. 권한 변경이 중단되었습니다.");
         return;
     }
     
+    const newRole = isDemote ? 'member' : 'admin';
+    
     try {
         await updateDoc(doc(db, "users", uid), { role: newRole });
-        alert("권한이 변경되었습니다.");
+        alert(`${actionText} 처리가 완료되었습니다.`);
         loadUserList();
     } catch (e) {
-        alert("변경 실패: " + e.message);
+        alert("처리 중 오류 발생: " + e.message);
     }
 };
