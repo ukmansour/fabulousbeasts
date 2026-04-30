@@ -4,7 +4,7 @@ import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.c
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS, CATEGORIES } from './data.js';
 
-const charId = location.hash.substring(1);
+const charId = decodeURIComponent(location.hash.substring(1));
 const form = document.getElementById('edit-form');
 const saveBtn = document.getElementById('save-btn');
 const dropZone = document.getElementById('drop-zone');
