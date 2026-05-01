@@ -1,5 +1,5 @@
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc, collection, getDocs, query, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
 
@@ -332,40 +332,42 @@ function generateTOC() {
     tocArea.appendChild(ul);
 }
 
-function renderRecentChanges() {
+async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     
-    const charCol = collection(db, "characters");
-    const q = query(charCol, orderBy("updatedAt", "desc"), limit(8));
-    
-    onSnapshot(q, async (snap) => {
-        let docs = snap.docs;
+    try {
+        const snap = await getDocs(collection(db, "characters"));
+        
         if (snap.empty) {
-            try {
-                const fallbackSnap = await getDocs(query(charCol, limit(8)));
-                docs = fallbackSnap.docs;
-            } catch (err) { console.error("Fallback query failed:", err); }
-        }
-
-        if (docs.length === 0) {
             list.innerHTML = '';
             return;
         }
-        list.innerHTML = docs.map(doc => {
-            const d = doc.data();
+        
+        const sorted = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => (b.updatedAt?.seconds ?? 0) - (a.updatedAt?.seconds ?? 0))
+            .slice(0, 8);
+        
+        list.innerHTML = sorted.map(d => {
+            let dateStr = '';
+            if (d.updatedAt?.seconds) {
+                dateStr = new Date(d.updatedAt.seconds * 1000).toLocaleDateString('ko-KR');
+            }
             return `
                 <div class="recent-item">
-                    <a href="detail.html#${doc.id}" class="recent-link">${d.name || doc.id}</a>
+                    <a href="detail.html#${d.id}" class="recent-link">${d.name || d.id}</a>
                     <div class="recent-meta">
                         <span>${d.updatedBy || '익명'}</span>
+                        ${dateStr ? `<span>${dateStr}</span>` : ''}
                     </div>
                 </div>`;
         }).join('');
-    }, (e) => {
-        console.error("Recent changes sidebar error:", e);
-        list.innerHTML = '';
-    });
+    } catch (e) {
+        console.error("Recent changes error:", e);
+    }
+    
+    setTimeout(renderRecentChanges, 30000);
 }
 
 window.onhashchange = () => location.reload();

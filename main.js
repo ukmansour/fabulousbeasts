@@ -1,6 +1,6 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
 import { db, auth } from './firebase-config.js';
-import { collection, getDocs, orderBy, query, limit, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 let mergedCharacters = [...CHARACTERS];
@@ -101,52 +101,49 @@ function renderFeatured() {
         </a>`).join('');
 }
 
-function renderRecentChanges() {
+async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     
-    const charCol = collection(db, "characters");
-    const q = query(charCol, orderBy("updatedAt", "desc"), limit(12));
-    
-    onSnapshot(q, async (snap) => {
-        let docs = snap.docs;
+    try {
+        // 인덱스 없이 전체 가져온 뒤 클라이언트에서 정렬
+        const snap = await getDocs(collection(db, "characters"));
         
-        // [폴백] 수정 시간이 있는 문서가 없으면 전체 목록에서 가져옴
         if (snap.empty) {
-            try {
-                const fallbackSnap = await getDocs(query(charCol, limit(12)));
-                docs = fallbackSnap.docs;
-            } catch (err) { console.error("Fallback query failed:", err); }
-        }
-
-        if (docs.length === 0) {
             list.innerHTML = '<p style="font-size:0.8rem; color:#999;">문서가 아직 없습니다.</p>';
             return;
         }
         
-        list.innerHTML = docs.map(doc => {
-            const d = doc.data();
-            let dateStr = '방금 전';
-            if (d.updatedAt) {
-                const date = d.updatedAt.seconds ? new Date(d.updatedAt.seconds * 1000) : new Date(d.updatedAt);
-                dateStr = isNaN(date) ? '방금 전' : date.toLocaleDateString();
-            } else {
-                dateStr = '기록 없음';
+        const sorted = snap.docs
+            .map(d => ({ id: d.id, ...d.data() }))
+            .sort((a, b) => {
+                const ta = a.updatedAt?.seconds ?? 0;
+                const tb = b.updatedAt?.seconds ?? 0;
+                return tb - ta;
+            })
+            .slice(0, 12);
+        
+        list.innerHTML = sorted.map(d => {
+            let dateStr = '기록 없음';
+            if (d.updatedAt?.seconds) {
+                dateStr = new Date(d.updatedAt.seconds * 1000).toLocaleDateString('ko-KR');
             }
-            
             return `
                 <div class="recent-item">
-                    <a href="detail.html#${doc.id}" class="recent-link">${d.name || doc.id}</a>
+                    <a href="detail.html#${d.id}" class="recent-link">${d.name || d.id}</a>
                     <div class="recent-meta">
                         <span>${d.updatedBy || '익명'}</span>
                         <span>${dateStr}</span>
                     </div>
                 </div>`;
         }).join('');
-    }, (e) => {
-        console.error("Recent changes listener error:", e);
-        list.innerHTML = '<p style="font-size:0.8rem; color:#999;">변경 내역을 불러올 수 없습니다.</p>';
-    });
+    } catch (e) {
+        console.error("Recent changes error:", e);
+        list.innerHTML = '<p style="font-size:0.8rem; color:#999;">불러오기 실패</p>';
+    }
+    
+    // 30초마다 자동 갱신
+    setTimeout(renderRecentChanges, 30000);
 }
 
 function renderCategoryGrid() {
