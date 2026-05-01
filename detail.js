@@ -148,13 +148,35 @@ async function loadDetail() {
 }
 
 function renderInfobox(data) {
+    const gallery = data.gallery && Array.isArray(data.gallery) && data.gallery.length > 0 ? data.gallery : null;
+    
+    if (gallery) {
+        currentGallery = gallery;
+    }
+
+    const galleryHTML = gallery ? `
+        <div class="wiki-gallery-wrap" style="border-bottom: 1px solid #eee; padding-bottom: 0.8rem; margin-bottom: 0.5rem;">
+            <div class="gallery-title-row">
+                <h3>갤러리</h3>
+                <a href="#" class="gallery-view-btn" onclick="window.openGallery(0); return false;">갤러리 보기 (${gallery.length}장)</a>
+            </div>
+            <div class="gallery-grid">
+                ${gallery.slice(0, 3).map((url, idx) => `
+                    <div class="gallery-item" onclick="window.openGallery(${idx})">
+                        <img src="${url}" alt="갤러리 ${idx + 1}" loading="lazy">
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    ` : '';
+
     infoboxArea.innerHTML = `
         <div class="infobox">
             <div class="infobox-title">${data.name}</div>
             <div class="infobox-image">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="${data.name}">
             </div>
-            <div id="gallery-placeholder"></div>
+            ${galleryHTML}
             <table class="infobox-table">
                 ${data.alias ? `<tr><th>별명</th><td>${data.alias}</td></tr>` : ''}
                 ${data.species ? `<tr><th>종족</th><td>${data.species}</td></tr>` : ''}
@@ -163,36 +185,17 @@ function renderInfobox(data) {
             </table>
         </div>
     `;
+
+    // 갤러리가 있으면 모달 초기화
+    if (gallery) {
+        initGalleryModal();
+    }
 }
 
 function renderGallery(gallery) {
-    if (!gallery || !Array.isArray(gallery) || gallery.length === 0) return;
-    currentGallery = gallery;
-    
-    const placeholder = document.getElementById('gallery-placeholder');
-    if (!placeholder) return;
-
-    // 최대 3개 미리보기
-    const previewImages = gallery.slice(0, 3);
-    
-    placeholder.innerHTML = `
-        <div class="wiki-gallery-wrap">
-            <div class="gallery-title-row">
-                <h3>갤러리</h3>
-                <a href="#" class="gallery-view-btn" onclick="window.openGallery(0); return false;">갤러리 보기</a>
-            </div>
-            <div class="gallery-grid">
-                ${previewImages.map((url, idx) => `
-                    <div class="gallery-item" onclick="window.openGallery(${idx})">
-                        <img src="${url}" alt="Gallery ${idx}">
-                    </div>
-                `).join('')}
-            </div>
-        </div>
-    `;
-
-    initGalleryModal();
+    // 이제 renderInfobox 내에서 처리하므로 이 함수는 비워둠 (하위 호환용)
 }
+
 
 function initGalleryModal() {
     if (document.getElementById('gallery-modal')) return;
