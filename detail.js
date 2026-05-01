@@ -81,7 +81,6 @@ async function loadDetail() {
     if (!charId) return;
     const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
     
-    // 초기 렌더링
     renderInfobox(baseData);
     renderContent(baseData.details || '불러오는 중...');
 
@@ -89,21 +88,29 @@ async function loadDetail() {
         const docRef = doc(db, "characters", charId);
         onSnapshot(docRef, (snap) => {
             if (snap.exists()) {
-                const data = { ...baseData, ...snap.data() };
-                if (displayNameArea) displayNameArea.textContent = data.name;
-                document.title = data.name + " - 유수언 위키";
-                
-                // Firestore 데이터로 재렌더링
-                renderInfobox(data);
-                renderContent(data.details || '본문 내용이 없습니다.');
+                applyData(baseData, snap.data());
+            } else {
+                // [폴백] 한글/특수문자 ID 대응을 위해 원본 해시로 시도
+                const rawId = location.hash.substring(1);
+                if (rawId && rawId !== charId) {
+                    getDoc(doc(db, "characters", rawId)).then(s => {
+                        if (s.exists()) applyData(baseData, s.data());
+                    });
+                }
             }
-        }, (err) => {
-            console.error("Snapshot error:", err);
         });
     } catch (e) {
         console.error("Load error:", e);
     }
     renderRecentChanges();
+}
+
+function applyData(base, dbData) {
+    const data = { ...base, ...dbData };
+    if (displayNameArea) displayNameArea.textContent = data.name || charId;
+    document.title = (data.name || charId) + " - 유수언 위키";
+    renderInfobox(data);
+    renderContent(data.details || '본문 내용이 없습니다.');
 }
 
 function renderInfobox(data) {
@@ -129,7 +136,7 @@ function renderInfobox(data) {
 
     infoboxArea.innerHTML = `
         <div class="infobox">
-            <div class="infobox-title">${data.name}</div>
+            <div class="infobox-title">${data.name || charId}</div>
             <div class="infobox-image" onclick="window.openGallery(-1)" style="cursor:zoom-in;">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}">
             </div>
@@ -145,7 +152,7 @@ function renderInfobox(data) {
 
     if (gallery.length > 0) {
         initGalleryModal();
-        updateFullGridModal(data.name, gallery);
+        updateFullGridModal(data.name || charId, gallery);
     }
 }
 
@@ -157,38 +164,20 @@ function updateFullGridModal(charName, gallery) {
         modal.className = 'full-grid-modal';
         document.body.appendChild(modal);
     }
-    
     modal.innerHTML = `
         <div class="full-grid-header">
             <div class="full-grid-title">${charName} 갤러리</div>
             <div class="full-grid-close" onclick="window.closeFullGrid()">×</div>
         </div>
         <div class="full-grid-container">
-            ${gallery.map((url, idx) => `
-                <div class="grid-thumb" onclick="window.openFromGrid(${idx})">
-                    <img src="${url}" loading="lazy">
-                </div>
-            `).join('')}
+            ${gallery.map((url, idx) => `<div class="grid-thumb" onclick="window.openFromGrid(${idx})"><img src="${url}"></div>`).join('')}
         </div>
     `;
 }
 
-window.openFullGrid = () => {
-    const m = document.getElementById('full-grid-modal');
-    if (m) m.classList.add('active');
-    document.body.style.overflow = 'hidden';
-};
-
-window.closeFullGrid = () => {
-    const m = document.getElementById('full-grid-modal');
-    if (m) m.classList.remove('active');
-    document.body.style.overflow = 'auto';
-};
-
-window.openFromGrid = (idx) => {
-    window.closeFullGrid();
-    window.openGallery(idx);
-};
+window.openFullGrid = () => { document.getElementById('full-grid-modal')?.classList.add('active'); document.body.style.overflow = 'hidden'; };
+window.closeFullGrid = () => { document.getElementById('full-grid-modal')?.classList.remove('active'); document.body.style.overflow = 'auto'; };
+window.openFromGrid = (idx) => { window.closeFullGrid(); window.openGallery(idx); };
 
 function initGalleryModal() {
     if (document.getElementById('gallery-modal')) return;
@@ -216,7 +205,6 @@ window.openGallery = (idx) => {
     modalGallery = [];
     if (mainImg) modalGallery.push(mainImg);
     if (currentGallery) modalGallery = [...modalGallery, ...currentGallery];
-    
     currentIdx = idx === -1 ? 0 : (mainImg ? idx + 1 : idx);
     const img = document.getElementById('modal-img');
     if (img && modalElement) {
@@ -226,11 +214,7 @@ window.openGallery = (idx) => {
     }
 };
 
-window.closeGallery = () => {
-    if (modalElement) modalElement.classList.remove('active');
-    document.body.style.overflow = 'auto';
-};
-
+window.closeGallery = () => { if (modalElement) modalElement.classList.remove('active'); document.body.style.overflow = 'auto'; };
 window.changeGallery = (dir) => {
     if (!modalGallery.length) return;
     currentIdx = (currentIdx + dir + modalGallery.length) % modalGallery.length;
@@ -240,11 +224,9 @@ window.changeGallery = (dir) => {
 
 function renderContent(details) {
     if (!contentArea) return;
-    if (!details) { contentArea.innerHTML = '내용이 없습니다.'; return; }
-
+    if (!details) { contentArea.innerHTML = '본문 내용이 없습니다.'; return; }
     try {
         let html = details
-            // 호환성 높은 정규식으로 교체
             .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; display:block; margin:20px auto; border-radius:8px;">')
             .replace(/\[(.*?)\]\((.*?)\)/g, (m, t, u) => `<a href="${u}" ${u.indexOf('http') === 0 ? 'target="_blank"' : ''}>${t}</a>`)
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
@@ -259,7 +241,6 @@ function renderContent(details) {
         contentArea.innerHTML = html;
         generateTOC();
     } catch (e) {
-        console.error("Render error:", e);
         contentArea.innerHTML = details;
     }
 }
