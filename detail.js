@@ -120,48 +120,55 @@ if (editBtn) {
 async function loadDetail() {
     if (!charId) return;
 
-    // 1. 기본 데이터 (로딩 중 표시)
+    // 1. 기본 데이터
     const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
     renderInfobox(baseData);
-    contentArea.innerHTML = '<div class="loading-pulse">위키 데이터를 불러오는 중입니다...</div>';
+    renderContent(baseData.details || '불러오는 중...');
 
     try {
         console.log("Fetching Firestore data for:", charId);
         const docRef = doc(db, "characters", charId);
         
         onSnapshot(docRef, (snap) => {
-            console.log("OnSnapshot triggered. Exists:", snap.exists());
             if (snap.exists()) {
                 const dbData = snap.data();
-                console.log("DB Data:", dbData);
+                console.log("Firestore data received:", dbData);
                 const data = { ...baseData, ...dbData };
                 
-                document.title = `${data.name || charId} - 유수언 위키`;
-                displayNameArea.textContent = data.name || charId;
+                document.title = `${data.name || charId} - 유수언`;
+                document.getElementById('display-name').textContent = data.name || charId;
                 
                 const date = data.updatedAt?.seconds ? new Date(data.updatedAt.seconds * 1000) : new Date(data.updatedAt);
-                const lastEdit = document.getElementById('last-edit');
-                const lastEditor = document.getElementById('last-editor');
-                if (lastEdit) lastEdit.textContent = isNaN(date) ? '-' : date.toLocaleString();
-                if (lastEditor) lastEditor.textContent = data.updatedBy || '시스템';
+                document.getElementById('last-edit').textContent = isNaN(date) ? '-' : date.toLocaleString();
+                document.getElementById('last-editor').textContent = data.updatedBy || '시스템';
 
                 renderInfobox(data);
-                
-                const finalDetails = dbData.details || baseData.details || '본문 내용이 등록되지 않은 문서입니다.';
-                console.log("Rendering details length:", finalDetails.length);
-                renderContent(finalDetails);
+                renderContent(data.details || '본문 내용이 없습니다.');
             } else {
-                console.warn("Document does not exist in Firestore. Using baseData.");
-                renderInfobox(baseData);
-                renderContent(baseData.details || 'DB에 등록되지 않은 문서입니다. 기본 정보를 표시합니다.');
+                // [폴백] 인코딩된 ID로도 시도 (이전 버전 호환성)
+                const rawId = location.hash.substring(1);
+                if (rawId !== charId) {
+                    console.log("Trying fallback with raw ID:", rawId);
+                    getDoc(doc(db, "characters", rawId)).then(fallbackSnap => {
+                        if (fallbackSnap.exists()) {
+                            const data = { ...baseData, ...fallbackSnap.data() };
+                            renderInfobox(data);
+                            renderContent(data.details || '본문 내용이 없습니다.');
+                        } else {
+                            console.log("No Firestore document found for both decoded and raw ID.");
+                            document.getElementById('display-name').textContent = baseData.name;
+                            renderContent(baseData.details || '본문 내용이 없습니다.');
+                        }
+                    });
+                } else {
+                    console.log("No Firestore document found for:", charId);
+                    document.getElementById('display-name').textContent = baseData.name;
+                    renderContent(baseData.details || '본문 내용이 없습니다.');
+                }
             }
         }, (error) => {
-            console.error("Snapshot error detail:", error);
-            contentArea.innerHTML = `<p style="color:red; padding:1rem; border:1px solid red; border-radius:8px;">
-                데이터를 불러오는 중 오류가 발생했습니다.<br>
-                <b>원인:</b> ${error.code} (${error.message})<br>
-                관리자에게 문의해주세요.
-            </p>`;
+            console.error("Snapshot error:", error);
+            alert("데이터를 불러오는 중 오류가 발생했습니다: " + error.message);
         });
     } catch (e) { 
         console.error("LoadDetail error:", e); 

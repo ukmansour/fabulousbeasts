@@ -8,18 +8,21 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // 사용자의 현재 정보를 가져옴
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
     // 차단 여부 확인
     function isBanned() {
-      return isAuthenticated() && 
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'banned';
+      return isAuthenticated() && getUserData().role == 'banned';
     }
 
     function isAdmin() {
-      return isAuthenticated() && (
+      // 마스터 이메일이거나, DB 상의 role이 admin인 경우 허용 (차단되지 않았어야 함)
+      return isAuthenticated() && !isBanned() && (
         request.auth.token.email == "hodu@youshouyan.wiki" ||
-        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+        getUserData().role == 'admin'
       );
     }
 
