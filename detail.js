@@ -199,7 +199,7 @@ function renderInfobox(data) {
 
     const themeColor = data.color || 'var(--primary-color)';
 
-    // [갤러리 미리보기: 3칸 정사각형 + 하단 가로 버튼]
+    // [갤러리 미리보기: 가로 3분할 정사각형]
     let galleryHtml = '';
     if (data.gallery && data.gallery.length > 0) {
         currentGallery = data.gallery;
