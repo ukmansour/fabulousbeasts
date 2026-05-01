@@ -226,9 +226,49 @@ function renderInfobox(data) {
 }
 
 function renderGallery(gallery) {
-    // 이제 renderInfobox 내에서 처리하므로 이 함수는 비워둠 (하위 호환용)
+    // 하위 호환용
 }
 
+function initFullGridModal(charName, gallery) {
+    if (document.getElementById('full-grid-modal')) {
+        document.getElementById('full-grid-modal').remove();
+    }
+    
+    const modal = document.createElement('div');
+    modal.id = 'full-grid-modal';
+    modal.className = 'full-grid-modal';
+    modal.innerHTML = `
+        <div class="full-grid-header">
+            <div class="full-grid-title">${charName} 갤러리</div>
+            <div class="full-grid-close" onclick="window.closeFullGrid()">×</div>
+        </div>
+        <div class="full-grid-container">
+            ${gallery.map((url, idx) => `
+                <div class="grid-thumb" onclick="window.openFromGrid(${idx})">
+                    <img src="${url}" loading="lazy">
+                </div>
+            `).join('')}
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+window.openFullGrid = () => {
+    const modal = document.getElementById('full-grid-modal');
+    if (modal) modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+};
+
+window.closeFullGrid = () => {
+    const modal = document.getElementById('full-grid-modal');
+    if (modal) modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+};
+
+window.openFromGrid = (idx) => {
+    window.closeFullGrid();
+    window.openGallery(idx);
+};
 
 function initGalleryModal() {
     if (document.getElementById('gallery-modal')) return;
