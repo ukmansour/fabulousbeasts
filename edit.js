@@ -330,6 +330,16 @@ if (galleryInput) {
     };
 }
 
+const clearAllBtn = document.getElementById('gallery-clear-all');
+if (clearAllBtn) {
+    clearAllBtn.onclick = () => {
+        if (confirm("갤러리의 모든 사진을 삭제하시겠습니까?")) {
+            currentGallery = [];
+            renderGalleryPreview();
+        }
+    };
+}
+
 async function compressImage(file) {
     return new Promise((resolve) => {
         console.log("Starting image compression...");
