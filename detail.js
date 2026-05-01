@@ -143,6 +143,7 @@ async function loadDetail() {
                 document.getElementById('last-editor').textContent = data.updatedBy || '시스템';
 
                 renderInfobox(data);
+                renderGallery(data.gallery);
                 renderContent(data.details || '본문 내용이 없습니다.');
             } else {
                 // [폴백] 인코딩된 ID로도 시도 (이전 버전 호환성)
@@ -179,133 +180,100 @@ async function loadDetail() {
 }
 
 function renderInfobox(data) {
-    if (!infoboxArea) return;
+    const gallery = data.gallery && Array.isArray(data.gallery) && data.gallery.length > 0 ? data.gallery : null;
+    
+    if (gallery) {
+        currentGallery = gallery;
+    }
 
-    let rows = '';
-    const fields = [
-        { label: '별명', key: 'alias' },
-        { label: '종족', key: 'species' },
-        { label: '국적', key: 'nation' },
-        { label: '생일', key: 'birthday' },
-        { label: '직업', key: 'job' },
-        { label: '성향', key: 'personality' }
-    ];
-
-    fields.forEach(f => {
-        if (data[f.key]) {
-            rows += `<tr><th>${f.label}</th><td>${data[f.key]}</td></tr>`;
-        }
-    });
-
-    const themeColor = data.color || 'var(--primary-color)';
-
-    // [갤러리 3x3 격자 렌더링: 최종]
-    let galleryHtml = '';
-    if (data.gallery && data.gallery.length > 0) {
-        currentGallery = data.gallery; // 전역 변수 업데이트
-        const displayLimit = 9;
-        const displayImages = data.gallery.slice(0, displayLimit);
-        
-        galleryHtml = `
-            <div class="gallery-grid-3x3">
-                ${displayImages.map((img, idx) => `
-                    <div class="gallery-item-sq" onclick="window.openGallery(${idx})">
-                        <img src="${img}" alt="갤러리 사진 ${idx + 1}" loading="lazy">
-                        ${(idx === displayLimit - 1 && data.gallery.length > displayLimit) ? `
-                            <div class="gallery-more-overlay">
-                                <span>+ ${data.gallery.length - displayLimit}</span>
-                                <span style="font-size:0.6rem;">더보기</span>
-                            </div>
-                        ` : ''}
+    const galleryHTML = gallery ? `
+        <div class="wiki-gallery-wrap" style="border-bottom: 1px solid #eee; padding-bottom: 0.8rem; margin-bottom: 0.5rem;">
+            <div class="gallery-title-row">
+                <h3>갤러리</h3>
+                <a href="#" class="gallery-view-btn" onclick="window.openGallery(0); return false;">갤러리 보기 (${gallery.length}장)</a>
+            </div>
+            <div class="gallery-grid">
+                ${gallery.slice(0, 3).map((url, idx) => `
+                    <div class="gallery-item" onclick="window.openGallery(${idx})">
+                        <img src="${url}" alt="갤러리 ${idx + 1}" loading="lazy">
                     </div>
                 `).join('')}
             </div>
-        `;
-    }
+        </div>
+    ` : '';
 
     infoboxArea.innerHTML = `
-        <table class="infobox">
-            <caption class="infobox-title" style="background:${themeColor}">${data.name || charId}</caption>
-            <tbody>
-                <tr>
-                    <td colspan="2" class="infobox-image" style="padding: 10px;">
-                        <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="대표사진" style="margin-bottom:0; border-radius:6px;">
-                        ${galleryHtml}
-                    </td>
-                </tr>
-                ${rows}
-            </tbody>
-        </table>
+        <div class="infobox">
+            <div class="infobox-title">${data.name}</div>
+            <div class="infobox-image" onclick="window.openGallery(-1)" style="cursor: zoom-in;" title="사진 크게 보기">
+                <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="${data.name}">
+            </div>
+            ${galleryHTML}
+            <table class="infobox-table">
+                ${data.alias ? `<tr><th>별명</th><td>${data.alias}</td></tr>` : ''}
+                ${data.species ? `<tr><th>종족</th><td>${data.species}</td></tr>` : ''}
+                ${data.nation ? `<tr><th>국적</th><td>${data.nation}</td></tr>` : ''}
+                ${data.birthday ? `<tr><th>생일</th><td>${data.birthday}</td></tr>` : ''}
+            </table>
+        </div>
     `;
+
+    // 갤러리가 있으면 모달 초기화
+    if (gallery) {
+        initGalleryModal();
+    }
+}
+
+function renderGallery(gallery) {
+    // 이제 renderInfobox 내에서 처리하므로 이 함수는 비워둠 (하위 호환용)
 }
 
 
+function initGalleryModal() {
+    if (document.getElementById('gallery-modal')) return;
+    
+    const modal = document.createElement('div');
+    modal.id = 'gallery-modal';
+    modal.className = 'gallery-modal';
+    modal.innerHTML = `
+        <span class="modal-close" onclick="window.closeGallery()">×</span>
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <img id="modal-img" src="">
+        </div>
+        <div class="modal-nav" onclick="event.stopPropagation()">
+            <button class="modal-nav-btn" onclick="window.changeGallery(-1)">이전</button>
+            <button class="modal-nav-btn" onclick="window.changeGallery(1)">다음</button>
+        </div>
+    `;
+    modal.onclick = window.closeGallery;
+    document.body.appendChild(modal);
+    modalElement = modal;
+}
 
 let currentIdx = 0;
-window.openGallery = (index) => {
-    currentIdx = index;
-    if (!modalElement) {
-        modalElement = document.createElement('div');
-        modalElement.className = 'modal-overlay';
-        modalElement.innerHTML = `
-            <span class="modal-close" onclick="window.closeGallery()">&times;</span>
-            <div class="modal-main-view">
-                <button class="modal-nav modal-prev" onclick="window.moveSlide(-1)">&lsaquo;</button>
-                <img id="modal-img" src="" alt="확대 이미지">
-                <button class="modal-nav modal-next" onclick="window.moveSlide(1)">&rsaquo;</button>
-            </div>
-            <div class="modal-thumbnails" id="modal-thumbs">
-                <!-- 썸네일들이 여기에 생성됨 -->
-            </div>
-        `;
-        document.body.appendChild(modalElement);
-        
-        modalElement.onclick = (e) => { if (e.target === modalElement || e.target.className === 'modal-main-view') window.closeGallery(); };
-        
-        // [스와이프 기능 추가]
-        let touchStartX = 0;
-        let touchEndX = 0;
+let modalGallery = [];
 
-        modalElement.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        modalElement.addEventListener('touchend', e => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, { passive: true });
-
-        function handleSwipe() {
-            const swipeDistance = touchEndX - touchStartX;
-            if (swipeDistance > 50) window.moveSlide(-1); // 오른쪽으로 밀면 이전
-            else if (swipeDistance < -50) window.moveSlide(1); // 왼쪽으로 밀면 다음
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (!modalElement.classList.contains('active')) return;
-            if (e.key === 'ArrowLeft') window.moveSlide(-1);
-            if (e.key === 'ArrowRight') window.moveSlide(1);
-            if (e.key === 'Escape') window.closeGallery();
-        });
+window.openGallery = (idx) => {
+    const mainImg = document.querySelector('.infobox-image img')?.src;
+    
+    // 메인 사진 + 갤러리 사진 통합 리스트 생성
+    modalGallery = [];
+    if (mainImg) modalGallery.push(mainImg);
+    if (currentGallery && currentGallery.length > 0) {
+        modalGallery = [...modalGallery, ...currentGallery];
     }
 
-    renderModalThumbs();
-    updateModal();
-    modalElement.classList.add('active');
-    document.body.style.overflow = 'hidden';
-};
+    if (modalGallery.length === 0) return;
 
-function renderModalThumbs() {
-    const thumbContainer = document.getElementById('modal-thumbs');
-    thumbContainer.innerHTML = currentGallery.map((img, idx) => `
-        <img src="${img}" class="modal-thumb ${idx === currentIdx ? 'active' : ''}" 
-             onclick="window.goToSlide(${idx})" alt="내비 썸네일 ${idx+1}">
-    `).join('');
-}
-
-window.goToSlide = (idx) => {
-    currentIdx = idx;
-    updateModal();
+    // 인덱스 조정: -1(메인 사진)이면 0번, 그 외 갤러리 사진은 +1 (메인 사진이 앞에 추가되었으므로)
+    currentIdx = idx === -1 ? 0 : (mainImg ? idx + 1 : idx);
+    
+    const img = document.getElementById('modal-img');
+    if (img) {
+        img.src = modalGallery[currentIdx];
+        modalElement.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
 };
 
 window.closeGallery = () => {
@@ -313,31 +281,11 @@ window.closeGallery = () => {
     document.body.style.overflow = 'auto';
 };
 
-window.moveSlide = (step) => {
-    if (!currentGallery.length) return;
-    currentIdx = (currentIdx + step + currentGallery.length) % currentGallery.length;
-    updateModal();
+window.changeGallery = (dir) => {
+    if (!modalGallery || modalGallery.length === 0) return;
+    currentIdx = (currentIdx + dir + modalGallery.length) % modalGallery.length;
+    document.getElementById('modal-img').src = modalGallery[currentIdx];
 };
-
-function updateModal() {
-    const img = modalElement.querySelector('#modal-img');
-    const thumbs = modalElement.querySelectorAll('.modal-thumb');
-    if (!img) return;
-    
-    img.style.opacity = '0.5';
-    img.src = currentGallery[currentIdx];
-    img.onload = () => { img.style.opacity = '1'; };
-    
-    // 썸네일 활성화 상태 변경
-    thumbs.forEach((t, idx) => {
-        if (idx === currentIdx) {
-            t.classList.add('active');
-            t.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        } else {
-            t.classList.remove('active');
-        }
-    });
-}
 
 function renderContent(details) {
     if (!details) return;
