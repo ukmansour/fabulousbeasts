@@ -228,11 +228,22 @@ body {
 }
 .gallery-wide-btn:hover { background: #e2e8f0; color: #1e293b; }
 
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@media (max-width: 768px) {
-    .modal-prev { left: 10px; }
-    .modal-next { right: 10px; }
-}
+/* Phone-like Album Modal */
+.album-overlay { position: fixed; inset: 0; background: white; z-index: 2500; display: none; flex-direction: column; }
+.album-overlay.active { display: flex; animation: slideUp 0.3s ease-out; }
+.album-header { padding: 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eee; position: sticky; top: 0; background: white; z-index: 10; }
+.album-header h2 { font-size: 1.1rem; margin: 0; }
+.album-close { font-size: 1.5rem; cursor: pointer; padding: 5px 10px; }
+
+.album-grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 2px; align-content: start; }
+.album-item { aspect-ratio: 1/1; cursor: pointer; overflow: hidden; }
+.album-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.2s; }
+.album-item:hover img { opacity: 0.8; }
+
+@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+/* Lightbox adjustment */
+.modal-overlay { z-index: 3500; } /* 사진첩보다 위에 뜨도록 */
 
 /* Edit Gallery UI */
 .edit-gallery-list {
