@@ -158,19 +158,18 @@ async function renderRecentChanges() {
                 const tb = b.updatedAt?.seconds ?? 0;
                 return tb - ta;
             })
-            .slice(0, 12);
+            .slice(0, 8);
         
         list.innerHTML = sorted.map(d => {
-            let dateStr = '기록 없음';
+            let dateStr = '-';
             if (d.updatedAt?.seconds) {
                 dateStr = new Date(d.updatedAt.seconds * 1000).toLocaleDateString('ko-KR');
             }
             return `
-                <div class="recent-item">
-                    <a href="detail.html#${d.id}" class="recent-link">${d.name || d.id}</a>
-                    <div class="recent-meta">
-                        <span>${d.updatedBy || '익명'}</span>
-                        <span>${dateStr}</span>
+                <div class="recent-item" style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">
+                    <a href="detail.html#${d.id}" class="recent-link" style="font-weight:700; color:var(--text-link); text-decoration:none; font-size:14px;">${d.name || d.id}</a>
+                    <div class="recent-meta" style="font-size:11px; color:#999; margin-top:2px;">
+                        <span>${d.updatedBy || '익명'}</span> | <span>${dateStr}</span>
                     </div>
                 </div>`;
         }).join('');

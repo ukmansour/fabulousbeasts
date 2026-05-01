@@ -113,6 +113,16 @@ async function loadDetail() {
 }
 
 function renderPage(data) {
+    // 최근 수정 정보 반영
+    const lastEditEl = document.getElementById('last-edit');
+    const lastEditorEl = document.getElementById('last-editor');
+    
+    if (data.updatedAt) {
+        const date = new Date(data.updatedAt.seconds * 1000);
+        if (lastEditEl) lastEditEl.textContent = date.toLocaleString('ko-KR');
+    }
+    if (lastEditorEl) lastEditorEl.textContent = data.updatedBy || '익명';
+
     if (isGalleryPage) {
         renderGalleryOnlyPage(data);
     } else {
@@ -251,8 +261,18 @@ async function renderRecentChanges() {
     if (!list) return;
     try {
         const snap = await getDocs(collection(db, "characters"));
-        const data = snap.docs.map(d => d.data()).sort((a,b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)).slice(0, 5);
-        list.innerHTML = data.map(d => `<div style="margin-bottom:10px;"><a href="detail.html#${d.id}" style="font-size:13px; color:var(--text-link); text-decoration:none; font-weight:700;">${d.name || d.id}</a></div>`).join('');
+        const data = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)).slice(0, 8);
+        list.innerHTML = data.map(d => {
+            const date = d.updatedAt ? new Date(d.updatedAt.seconds * 1000).toLocaleDateString('ko-KR') : '-';
+            return `
+                <div style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">
+                    <a href="detail.html#${d.id}" style="font-size:13px; color:var(--text-link); text-decoration:none; font-weight:700;">${d.name || d.id}</a>
+                    <div style="font-size:11px; color:#999; margin-top:2px;">
+                        <span>${d.updatedBy || '익명'}</span> | <span>${date}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
     } catch(e) {}
 }
 
