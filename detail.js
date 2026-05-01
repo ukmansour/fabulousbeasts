@@ -255,6 +255,25 @@ window.openGallery = (index) => {
         
         modalElement.onclick = (e) => { if (e.target === modalElement || e.target.className === 'modal-main-view') window.closeGallery(); };
         
+        // [스와이프 기능 추가]
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        modalElement.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        modalElement.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const swipeDistance = touchEndX - touchStartX;
+            if (swipeDistance > 50) window.moveSlide(-1); // 오른쪽으로 밀면 이전
+            else if (swipeDistance < -50) window.moveSlide(1); // 왼쪽으로 밀면 다음
+        }
+
         document.addEventListener('keydown', (e) => {
             if (!modalElement.classList.contains('active')) return;
             if (e.key === 'ArrowLeft') window.moveSlide(-1);
