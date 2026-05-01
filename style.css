@@ -69,11 +69,98 @@ body {
     padding: 0.4rem 1rem; background: #eee; border: 1px solid var(--border-color); border-bottom: none;
     font-size: 0.8rem; color: #666; text-decoration: none; margin-right: 1px; cursor: pointer;
 }
-.wiki-tab.active { background: white; margin-bottom: -1px; font-weight: 700; color: var(--primary-color); border-top: 2px solid var(--primary-color); }
+/* Premium Wiki UI */
+.wiki-article { 
+    background: rgba(255, 255, 255, 0.9); 
+    backdrop-filter: blur(10px); 
+    border-radius: 12px; 
+    box-shadow: 0 8px 32px rgba(0,0,0,0.05); 
+    padding: 2rem; 
+    margin-bottom: 2rem;
+    animation: slideUp 0.6s ease-out;
+}
 
-/* Content Headers */
-.wiki-title { font-size: 2.4rem; font-weight: 800; margin-bottom: 0.2rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
-.wiki-subtitle { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; justify-content: space-between; }
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.wiki-header h1 { 
+    font-size: 2.2rem; 
+    font-weight: 800; 
+    letter-spacing: -1px; 
+    color: #1a1a1a;
+    margin-bottom: 1.5rem;
+}
+
+/* Content Table Styles */
+#wiki-content table { 
+    width: 100%; 
+    border-collapse: collapse; 
+    margin: 1.5rem 0; 
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+#wiki-content th, #wiki-content td { 
+    border: 1px solid #e2e8f0; 
+    padding: 12px 15px; 
+    text-align: left; 
+}
+#wiki-content th { 
+    background: #f8fafc; 
+    font-weight: 700; 
+    color: #1e293b;
+}
+#wiki-content tr:nth-child(even) { background: #fbfcfd; }
+
+#wiki-content h2 { 
+    border-bottom: 2px solid #eee; 
+    padding-bottom: 0.5rem; 
+    margin: 2.5rem 0 1.2rem; 
+    font-size: 1.6rem;
+    position: relative;
+    padding-left: 1rem;
+}
+#wiki-content h2::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0.5rem;
+    width: 5px;
+    background: var(--primary-color);
+    border-radius: 2px;
+}
+
+#wiki-content h3 { 
+    font-size: 1.3rem; 
+    margin: 1.8rem 0 1rem; 
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#wiki-content h3::before {
+    content: '◈';
+    color: var(--primary-color);
+    font-size: 0.9rem;
+}
+
+#wiki-content p { 
+    line-height: 1.8; 
+    margin-bottom: 1.2rem; 
+    color: #374151;
+    font-size: 1.05rem;
+}
+
+/* TOC Glass Style */
+#wiki-toc {
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+    padding: 1.2rem;
+    margin-bottom: 2rem;
+}
 
 /* Infobox */
 .infobox {

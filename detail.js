@@ -120,10 +120,10 @@ if (editBtn) {
 async function loadDetail() {
     if (!charId) return;
 
-    // 1. 기본 데이터
+    // 1. 기본 데이터 (로딩 중 표시)
     const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
     renderInfobox(baseData);
-    renderContent(baseData.details || '불러오는 중...');
+    contentArea.innerHTML = '<div class="loading-pulse">위키 데이터를 불러오는 중입니다...</div>';
 
     try {
         console.log("Fetching Firestore data for:", charId);
@@ -132,19 +132,21 @@ async function loadDetail() {
         onSnapshot(docRef, (snap) => {
             if (snap.exists()) {
                 const dbData = snap.data();
-                console.log("Firestore data received:", dbData);
                 const data = { ...baseData, ...dbData };
                 
-                document.title = `${data.name || charId} - 유수언`;
-                document.getElementById('display-name').textContent = data.name || charId;
+                document.title = `${data.name || charId} - 유수언 위키`;
+                displayNameArea.textContent = data.name || charId;
                 
                 const date = data.updatedAt?.seconds ? new Date(data.updatedAt.seconds * 1000) : new Date(data.updatedAt);
-                document.getElementById('last-edit').textContent = isNaN(date) ? '-' : date.toLocaleString();
-                document.getElementById('last-editor').textContent = data.updatedBy || '시스템';
+                const lastEdit = document.getElementById('last-edit');
+                const lastEditor = document.getElementById('last-editor');
+                if (lastEdit) lastEdit.textContent = isNaN(date) ? '-' : date.toLocaleString();
+                if (lastEditor) lastEditor.textContent = data.updatedBy || '시스템';
 
                 renderInfobox(data);
-                renderGallery(data.gallery);
-                renderContent(data.details || '본문 내용이 없습니다.');
+                // 본문 렌더링 (데이터가 없을 경우 baseData 사용)
+                const finalDetails = dbData.details || baseData.details || '본문 내용이 없습니다.';
+                renderContent(finalDetails);
             } else {
                 // [폴백] 인코딩된 ID로도 시도 (이전 버전 호환성)
                 const rawId = location.hash.substring(1);
