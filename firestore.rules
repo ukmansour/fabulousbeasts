@@ -13,10 +13,13 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isAuthenticated() && (
-        request.auth.token.email == "hodu@youshouyan.wiki" ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
-      );
+      // 1. 이메일 기반 마스터 권한 (가장 강력함)
+      if (request.auth.token.email == "hodu@youshouyan.wiki") {
+        return true;
+      }
+      // 2. DB 역할 기반 권한
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
     // [유저 컬렉션]
