@@ -35,16 +35,41 @@ function loadUserList() {
     console.log("Starting real-time user list listener...");
     const userCol = collection(db, "users");
     
-    // 실시간 리스너로 변경하여 즉각적인 가입 확인 가능하게 함
     onSnapshot(userCol, (snap) => {
         if (snap.empty) {
             contentArea.innerHTML = `
                 <div style="text-align:center; padding:3rem; background:#fffbe6; border:1px solid #ffe58f; border-radius:8px;">
-                    <p>현재 명단이 비어있습니다.</p>
-                    <p style="font-size:0.8rem; color:#666;">사용자들이 사이트에 한 번씩 접속하면 자동으로 명단에 추가됩니다.</p>
-                    <button onclick="location.reload()" style="margin-top:1rem; padding:0.5rem 1rem; cursor:pointer;">새로고침하여 확인</button>
+                    <h2 style="color:#856404; margin-bottom:1rem;">⚠️ 명단이 비어있습니다</h2>
+                    <p>데이터베이스에 등록된 사용자가 없습니다.</p>
+                    <p style="font-size:0.9rem; color:#666; margin-top:0.5rem;">현재 접속 중인 계정을 관리자로 즉시 등록하시겠습니까?</p>
+                    <button id="force-init-btn" style="margin-top:1.5rem; padding:0.8rem 1.5rem; background:#00a0e9; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer;">내 계정을 관리자로 강제 등록</button>
                 </div>
             `;
+            
+            const btn = document.getElementById('force-init-btn');
+            if (btn) {
+                btn.onclick = async () => {
+                    const pw = prompt("관리자 등록을 위해 보안 코드(5555)를 입력하세요:");
+                    if (pw !== "5555") return alert("코드가 틀렸습니다.");
+                    
+                    try {
+                        const user = auth.currentUser;
+                        if (!user) return alert("로그인 정보가 없습니다.");
+                        
+                        await setDoc(doc(db, "users", user.uid), {
+                            uid: user.uid,
+                            nickname: user.displayName || "관리자",
+                            role: 'admin',
+                            joinedAt: serverTimestamp(),
+                            contributionCount: 0
+                        });
+                        alert("관리자 등록 성공! 페이지를 새로고침합니다.");
+                        location.reload();
+                    } catch (e) {
+                        alert("등록 실패: " + e.message);
+                    }
+                };
+            }
             return;
         }
 
