@@ -332,20 +332,30 @@ function generateTOC() {
     tocArea.appendChild(ul);
 }
 
-async function renderRecentChanges() {
+function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
-    try {
-        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(8));
-        const snap = await getDocs(q);
+    
+    const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(8));
+    onSnapshot(q, (snap) => {
+        if (snap.empty) {
+            list.innerHTML = '<p style="font-size:0.8rem; color:#999;">변경 내역이 없습니다.</p>';
+            return;
+        }
         list.innerHTML = snap.docs.map(doc => {
             const d = doc.data();
-            return `<div class="recent-item">
-                <a href="detail.html#${doc.id}" class="recent-link">${d.name || doc.id}</a>
-                <div class="recent-meta"><span>${d.updatedBy || '익명'}</span></div>
-            </div>`;
+            return `
+                <div class="recent-item">
+                    <a href="detail.html#${doc.id}" class="recent-link">${d.name || doc.id}</a>
+                    <div class="recent-meta">
+                        <span>${d.updatedBy || '익명'}</span>
+                    </div>
+                </div>`;
         }).join('');
-    } catch (e) { list.innerHTML = ''; }
+    }, (e) => {
+        console.error("Recent changes sidebar error:", e);
+        list.innerHTML = '';
+    });
 }
 
 window.onhashchange = () => location.reload();

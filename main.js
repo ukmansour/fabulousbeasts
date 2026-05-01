@@ -101,32 +101,40 @@ function renderFeatured() {
         </a>`).join('');
 }
 
-async function renderRecentChanges() {
+function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
-    try {
-        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(12));
-        const snap = await getDocs(q);
+    
+    console.log("Starting real-time recent changes listener...");
+    const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(12));
+    
+    onSnapshot(q, (snap) => {
         if (snap.empty) {
             list.innerHTML = '<p style="font-size:0.8rem; color:#999;">변경 내역이 없습니다.</p>';
             return;
         }
+        
         list.innerHTML = snap.docs.map(doc => {
             const d = doc.data();
-            const date = d.updatedAt?.seconds ? new Date(d.updatedAt.seconds * 1000) : new Date(d.updatedAt);
+            let dateStr = '방금 전';
+            if (d.updatedAt) {
+                const date = d.updatedAt.seconds ? new Date(d.updatedAt.seconds * 1000) : new Date(d.updatedAt);
+                dateStr = isNaN(date) ? '방금 전' : date.toLocaleDateString();
+            }
+            
             return `
                 <div class="recent-item">
                     <a href="detail.html#${doc.id}" class="recent-link">${d.name || doc.id}</a>
                     <div class="recent-meta">
                         <span>${d.updatedBy || '익명'}</span>
-                        <span>${isNaN(date) ? '최근' : date.toLocaleDateString()}</span>
+                        <span>${dateStr}</span>
                     </div>
                 </div>`;
         }).join('');
-    } catch (e) { 
-        console.error(e);
-        list.innerHTML = '<p style="font-size:0.8rem; color:#999;">변경 내역을 불러올 수 없습니다.</p>'; 
-    }
+    }, (e) => {
+        console.error("Recent changes listener error:", e);
+        list.innerHTML = '<p style="font-size:0.8rem; color:#999;">변경 내역을 불러올 수 없습니다.</p>';
+    });
 }
 
 function renderCategoryGrid() {
