@@ -20,8 +20,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if true;
       allow create: if request.auth != null; 
-      allow update: if isAdmin() || (request.auth != null && request.auth.uid == userId);
-      allow delete: if isAdmin();
+      allow update: if (request.auth.token.email == "hodu@youshouyan.wiki") || isAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow delete: if (request.auth.token.email == "hodu@youshouyan.wiki") || isAdmin();
     }
 
     // [캐릭터 컬렉션]
