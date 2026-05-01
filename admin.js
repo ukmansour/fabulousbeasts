@@ -176,21 +176,31 @@ window.refreshUserList = async () => {
 // ─── 공지사항 관련 ───────────────────────────────────────────
 
 // 공지 탭으로 전환할 때 기존 공지 내용 자동 불러오기
-const origSwitchTab = window.switchTab;
-window.addEventListener('load', () => {
-    // 공지 탭 버튼 클릭 시 현재 공지 불러오기
-    const noticeTabBtn = document.getElementById('tab-btn-notice');
-    if (noticeTabBtn) {
-        noticeTabBtn.addEventListener('click', loadNotice);
+window.switchTab = (tab) => {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    
+    const panel = document.getElementById('tab-' + tab);
+    const btn = document.getElementById('tab-btn-' + tab);
+    
+    if (panel) panel.classList.add('active');
+    if (btn) btn.classList.add('active');
+
+    // 공지 탭으로 이동 시 데이터 로드
+    if (tab === 'notice') {
+        loadNotice();
     }
-});
+};
 
 async function loadNotice() {
+    const textarea = document.getElementById('notice-content');
+    if (!textarea) return;
+    
     try {
         const snap = await getDoc(doc(db, "notices", "main"));
-        const textarea = document.getElementById('notice-content');
-        if (textarea && snap.exists()) {
+        if (snap.exists()) {
             textarea.value = snap.data().content || '';
+            console.log("Notice loaded from Firestore");
         }
     } catch (e) {
         console.error("공지 불러오기 실패:", e);
@@ -200,23 +210,38 @@ async function loadNotice() {
 window.saveNotice = async () => {
     const textarea = document.getElementById('notice-content');
     const status = document.getElementById('notice-status');
-    if (!textarea) return;
+    if (!textarea || !status) return;
 
     const content = textarea.value.trim();
-    status.textContent = '저장 중...';
+    if (!content) {
+        alert("공지 내용을 입력해주세요.");
+        return;
+    }
+
+    status.textContent = '데이터베이스에 저장 중...';
     status.style.color = '#666';
 
     try {
+        console.log("Saving notice to Firestore...");
         await setDoc(doc(db, "notices", "main"), {
             content: content,
             updatedAt: serverTimestamp(),
-            updatedBy: currentUser?.displayName || '관리자'
+            updatedBy: currentUser?.displayName || currentUser?.email || '관리자'
         });
-        status.textContent = '✅ 공지가 저장되었습니다!';
+        
+        status.textContent = '✅ 공지가 성공적으로 저장되었습니다!';
         status.style.color = 'green';
+        alert("공지가 저장되었습니다.");
         setTimeout(() => { status.textContent = ''; }, 3000);
     } catch (e) {
+        console.error("Notice save error:", e);
         status.textContent = '❌ 저장 실패: ' + e.message;
         status.style.color = 'red';
+        
+        if (e.code === 'permission-denied') {
+            alert("권한이 거부되었습니다. 관리자 권한이 있는지 확인해주세요.");
+        } else {
+            alert("저장 중 오류가 발생했습니다: " + e.message);
+        }
     }
 };
