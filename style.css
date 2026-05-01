@@ -194,13 +194,13 @@ body {
 }
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 100px);
+    grid-template-columns: repeat(auto-fill, 80px);
     gap: 0.5rem;
     justify-content: flex-start;
 }
 .gallery-item {
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
     border: 1px solid #eee;
     overflow: hidden;
     cursor: pointer;
@@ -216,6 +216,40 @@ body {
 .gallery-item:hover img {
     transform: scale(1.05);
 }
+
+/* Full Grid Modal */
+.full-grid-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: white;
+    z-index: 6000;
+    display: none;
+    flex-direction: column;
+    padding: 2rem;
+    overflow-y: auto;
+}
+.full-grid-modal.active { display: flex; }
+.full-grid-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem;
+}
+.full-grid-title { font-size: 1.5rem; font-weight: 800; color: #333; }
+.full-grid-close { font-size: 2rem; cursor: pointer; color: #333; }
+.full-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+}
+.grid-thumb {
+    aspect-ratio: 1/1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    transition: 0.2s;
+}
+.grid-thumb:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+.grid-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
 /* Modal for Gallery */
 .gallery-modal {

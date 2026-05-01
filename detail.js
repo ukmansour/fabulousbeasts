@@ -190,10 +190,10 @@ function renderInfobox(data) {
         <div class="wiki-gallery-wrap" style="border-bottom: 1px solid #eee; padding-bottom: 0.8rem; margin-bottom: 0.5rem;">
             <div class="gallery-title-row">
                 <h3>갤러리</h3>
-                <a href="#" class="gallery-view-btn" onclick="window.openGallery(0); return false;">갤러리 보기 (${gallery.length}장)</a>
+                <a href="#" class="gallery-view-btn" onclick="window.openFullGrid(); return false;">갤러리 보기 (${gallery.length}장)</a>
             </div>
             <div class="gallery-grid">
-                ${gallery.slice(0, 3).map((url, idx) => `
+                ${gallery.slice(0, 4).map((url, idx) => `
                     <div class="gallery-item" onclick="window.openGallery(${idx})">
                         <img src="${url}" alt="갤러리 ${idx + 1}" loading="lazy">
                     </div>
@@ -221,6 +221,7 @@ function renderInfobox(data) {
     // 갤러리가 있으면 모달 초기화
     if (gallery) {
         initGalleryModal();
+        initFullGridModal(data.name, gallery);
     }
 }
 
