@@ -200,11 +200,11 @@ function renderInfobox(data) {
 
     const themeColor = data.color || 'var(--primary-color)';
 
-    // [갤러리 미리보기: 썸네일 3개 방식 복원]
+    // [갤러리 미리보기: 가로 3분할 방식]
     let galleryHtml = '';
     if (data.gallery && data.gallery.length > 0) {
         currentGallery = data.gallery;
-        const previewImages = data.gallery.slice(0, 2); // 2개만 추출 (나머지 하나는 더보기용)
+        const previewImages = data.gallery.slice(0, 2); 
         
         galleryHtml = `
             <div class="gallery-preview-simple">
@@ -212,8 +212,8 @@ function renderInfobox(data) {
                     <img src="${img}" class="gallery-thumb-simple" onclick="window.openGallery(${idx})" alt="썸네일 ${idx+1}">
                 `).join('')}
                 <div class="gallery-more-btn" onclick="window.openGallery(0)">
-                    <span style="font-size:1.2rem;">+</span>
-                    <span>더 보기 (${data.gallery.length})</span>
+                    <span style="font-size:1.1rem; line-height:1;">+</span>
+                    <span style="font-size:0.6rem;">더 보기 (${data.gallery.length})</span>
                 </div>
             </div>
         `;
@@ -223,10 +223,12 @@ function renderInfobox(data) {
         <table class="infobox">
             <caption class="infobox-title" style="background:${themeColor}">${data.name || charId}</caption>
             <tbody>
-                <tr><td colspan="2" class="infobox-image">
-                    <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="대표사진">
-                    ${galleryHtml}
-                </td></tr>
+                <tr>
+                    <td colspan="2" class="infobox-image" style="padding: 8px;">
+                        <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="대표사진" style="margin-bottom:0;">
+                        ${galleryHtml}
+                    </td>
+                </tr>
                 ${rows}
             </tbody>
         </table>

@@ -214,9 +214,10 @@ body {
 .modal-thumb.active { opacity: 1; border-color: #00a0e9; transform: scale(1.1); }
 .modal-thumb:hover { opacity: 0.8; }
 
-.gallery-preview-simple { display: flex; gap: 6px; margin-top: 10px; border-top: 1px solid #eee; padding-top: 10px; }
-.gallery-thumb-simple { width: calc(33.33% - 4px); aspect-ratio: 1; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ddd; }
-.gallery-more-btn { width: calc(33.33% - 4px); aspect-ratio: 1; background: #f8f9fa; border: 1px dashed #ccc; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 0.7rem; font-weight: bold; color: #666; }
+.gallery-preview-simple { display: flex; gap: 4px; margin-top: 8px; width: 100%; }
+.gallery-thumb-simple { flex: 1; aspect-ratio: 1; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #eee; width: 0; /* flex-basis 0 대용 */ }
+.gallery-more-btn { flex: 1; aspect-ratio: 1; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 0.65rem; font-weight: bold; color: #475569; width: 0; }
+.gallery-more-btn:hover { background: #e2e8f0; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @media (max-width: 768px) {
