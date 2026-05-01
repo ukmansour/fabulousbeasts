@@ -3,16 +3,18 @@ import { doc, getDoc, collection, getDocs, setDoc, serverTimestamp, onSnapshot }
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
 
-const charId = decodeURIComponent(location.hash.substring(1));
+// URL 처리: #이름 또는 #이름/갤러리
+const fullHash = decodeURIComponent(location.hash.substring(1));
+const isGalleryPage = fullHash.endsWith('/갤러리');
+const charId = isGalleryPage ? fullHash.replace('/갤러리', '') : fullHash;
+
 const contentArea = document.getElementById('wiki-content');
 const infoboxArea = document.getElementById('infobox-wrap');
-const tocArea = document.getElementById('toc-content');
 const tocWrapper = document.getElementById('wiki-toc');
 const editBtn = document.getElementById('go-edit');
 const displayNameArea = document.getElementById('display-name');
 
 let currentGallery = [];
-let modalElement = null;
 let currentUser = null;
 let userRole = 'member';
 let isUserAdmin = false;
@@ -22,112 +24,105 @@ onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
     if (user && info) {
         try {
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
+            const userSnap = await getDoc(doc(db, "users", user.uid));
             if (userSnap.exists()) {
                 userRole = userSnap.data().role || 'member';
-                if (userRole === 'banned') {
-                    alert("계정이 차단되었습니다.");
-                    document.body.innerHTML = '<div style="padding:50px; text-align:center;"><h1>접근 제한됨</h1></div>';
-                    return;
-                }
                 isUserAdmin = userRole === 'admin';
-            } else {
-                const isSupremeAdmin = user.email === "hodu@youshouyan.wiki";
-                const newUserData = {
-                    uid: user.uid,
-                    nickname: user.email ? user.email.split('@')[0] : "회원",
-                    email: user.email || "",
-                    role: isSupremeAdmin ? 'admin' : 'member',
-                    joinedAt: serverTimestamp(),
-                    contributionCount: 0
-                };
-                await setDoc(userRef, newUserData);
-                userRole = newUserData.role;
-                isUserAdmin = isSupremeAdmin;
             }
-        } catch (e) {
-            if (user.email === "hodu@youshouyan.wiki") isUserAdmin = true;
-        }
-        if (info) {
-            info.innerHTML = `
-                ${isUserAdmin ? `<a href="admin.html" class="nav-link" style="border:1px solid white; padding:2px 5px; border-radius:3px; margin-right:10px;">관리자</a>` : ''}
-                <span style="color:white; font-size:12px;">${user.displayName || user.email.split('@')[0]}님</span>
-            `;
-        }
+        } catch (e) { if (user.email === "hodu@youshouyan.wiki") isUserAdmin = true; }
+        info.innerHTML = `
+            ${isUserAdmin ? `<a href="admin.html" class="nav-link" style="border:1px solid white; padding:2px 5px; border-radius:3px; margin-right:10px;">관리자</a>` : ''}
+            <span style="color:white; font-size:12px;">${user.displayName || user.email.split('@')[0]}님</span>
+        `;
     }
-    updateEditVisibility();
+    if (editBtn) editBtn.style.display = isUserAdmin ? 'inline-block' : 'none';
 });
-
-function updateEditVisibility() {
-    if (editBtn) {
-        const isAdmin = isUserAdmin;
-        editBtn.style.opacity = (currentUser && isAdmin) ? '1' : '0.6';
-        editBtn.textContent = isAdmin ? "편집" : "편집 (제한됨)";
-        document.querySelectorAll('.section-edit-link').forEach(el => el.style.display = isAdmin ? 'inline-block' : 'none');
-    }
-}
-
-if (editBtn) {
-    editBtn.onclick = (e) => {
-        e.preventDefault();
-        if (!currentUser) { alert("로그인이 필요합니다."); location.href = 'auth.html'; }
-        else if (userRole !== 'admin') { alert("관리자만 편집 가능합니다."); }
-        else { location.href = `edit.html#${charId}`; }
-    };
-}
 
 async function loadDetail() {
     if (!charId) return;
+
+    // 초기 타이틀 설정
+    const pageTitle = isGalleryPage ? `${charId} (갤러리)` : charId;
+    if (displayNameArea) displayNameArea.textContent = pageTitle;
+    document.title = `${pageTitle} - 유수언 위키`;
+
+    // 1. 기본 데이터 로드 (data.js)
     const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
     
-    renderInfobox(baseData);
-    renderContent(baseData.details || '불러오는 중...');
+    // 2. 실시간 데이터 감시 (Firestore)
+    const docRef = doc(db, "characters", charId);
+    onSnapshot(docRef, (snap) => {
+        let data = baseData;
+        if (snap.exists()) {
+            data = { ...baseData, ...snap.data() };
+        }
+        renderPage(data);
+    }, (err) => {
+        console.error("Firestore error:", err);
+        renderPage(baseData);
+    });
 
-    try {
-        const docRef = doc(db, "characters", charId);
-        onSnapshot(docRef, (snap) => {
-            if (snap.exists()) {
-                applyData(baseData, snap.data());
-            } else {
-                // [폴백] 한글/특수문자 ID 대응을 위해 원본 해시로 시도
-                const rawId = location.hash.substring(1);
-                if (rawId && rawId !== charId) {
-                    getDoc(doc(db, "characters", rawId)).then(s => {
-                        if (s.exists()) applyData(baseData, s.data());
-                    });
-                }
-            }
-        });
-    } catch (e) {
-        console.error("Load error:", e);
-    }
     renderRecentChanges();
 }
 
-function applyData(base, dbData) {
-    const data = { ...base, ...dbData };
-    if (displayNameArea) displayNameArea.textContent = data.name || charId;
-    document.title = (data.name || charId) + " - 유수언 위키";
+function renderPage(data) {
+    if (isGalleryPage) {
+        renderGalleryOnlyPage(data);
+    } else {
+        renderNormalDetailPage(data);
+    }
+}
+
+// [1] 일반 상세 페이지 렌더링
+function renderNormalDetailPage(data) {
     renderInfobox(data);
-    renderContent(data.details || '본문 내용이 없습니다.');
+    renderContent(data.details || '내용이 없습니다.');
+}
+
+// [2] 갤러리 전용 페이지 렌더링
+function renderGalleryOnlyPage(data) {
+    if (infoboxArea) infoboxArea.innerHTML = ''; // 갤러리 페이지에선 인포박스 제거
+    if (tocWrapper) tocWrapper.style.display = 'none';
+    
+    const gallery = data.gallery || [];
+    let html = `
+        <div style="margin-bottom:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
+            <a href="#${charId}" style="color:var(--primary-color); font-weight:bold; text-decoration:none;">← ${charId} 문서로 돌아가기</a>
+        </div>
+        <p style="margin-bottom:20px; color:#666;">${charId} 문서의 모든 사진들을 보여줍니다. (총 ${gallery.length}장)</p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px;">
+    `;
+    
+    if (gallery.length > 0) {
+        gallery.forEach((url, idx) => {
+            html += `
+                <div style="aspect-ratio:1/1; border:1px solid #ddd; border-radius:8px; overflow:hidden; cursor:pointer;" onclick="window.showLarge('${url}')">
+                    <img src="${url}" style="width:100%; height:100%; object-fit:cover;">
+                </div>
+            `;
+        });
+    } else {
+        html += `<p style="grid-column:1/-1; padding:50px; text-align:center; color:#999;">등록된 사진이 없습니다.</p>`;
+    }
+    
+    html += `</div>`;
+    if (contentArea) contentArea.innerHTML = html;
 }
 
 function renderInfobox(data) {
-    if (!infoboxArea) return;
+    if (!infoboxArea || isGalleryPage) return;
     const gallery = data.gallery || [];
-    currentGallery = gallery;
-
+    
     const galleryHTML = gallery.length > 0 ? `
-        <div class="wiki-gallery-wrap">
-            <div class="gallery-title-row">
-                <h3>갤러리</h3>
-                <a href="#" class="gallery-view-btn" onclick="window.openFullGrid(); return false;">전체보기</a>
+        <div class="wiki-gallery-wrap" style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <strong style="font-size:12px;">갤러리</strong>
+                <a href="#${charId}/갤러리" style="font-size:11px; color:var(--primary-color); text-decoration:none;">전체보기</a>
             </div>
-            <div class="gallery-grid">
-                ${gallery.slice(0, 4).map((url, idx) => `
-                    <div class="gallery-item" onclick="window.openGallery(${idx})">
-                        <img src="${url}" loading="lazy">
+            <div style="display:grid; grid-template-columns:repeat(auto-fill, 70px); gap:5px;">
+                ${gallery.slice(0, 4).map(url => `
+                    <div style="width:70px; height:70px; border-radius:4px; overflow:hidden; cursor:pointer;" onclick="window.showLarge('${url}')">
+                        <img src="${url}" style="width:100%; height:100%; object-fit:cover;">
                     </div>
                 `).join('')}
             </div>
@@ -135,150 +130,87 @@ function renderInfobox(data) {
     ` : '';
 
     infoboxArea.innerHTML = `
-        <div class="infobox">
-            <div class="infobox-title">${data.name || charId}</div>
-            <div class="infobox-image" onclick="window.openGallery(-1)" style="cursor:zoom-in;">
-                <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}">
+        <div class="infobox" style="float:right; width:280px; border:1px solid var(--primary-color); margin-left:20px; background:white;">
+            <div style="background:var(--primary-color); color:white; padding:8px; text-align:center; font-weight:bold;">${data.name || charId}</div>
+            <div style="padding:10px; text-align:center; border-bottom:1px solid #eee;" onclick="window.showLarge('${data.image}')">
+                <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" style="max-width:100%; cursor:zoom-in;">
             </div>
-            ${galleryHTML}
-            <table class="infobox-table">
-                ${data.alias ? `<tr><th>별명</th><td>${data.alias}</td></tr>` : ''}
-                ${data.species ? `<tr><th>종족</th><td>${data.species}</td></tr>` : ''}
-                ${data.nation ? `<tr><th>국적</th><td>${data.nation}</td></tr>` : ''}
-                ${data.birthday ? `<tr><th>생일</th><td>${data.birthday}</td></tr>` : ''}
-            </table>
-        </div>
-    `;
-
-    if (gallery.length > 0) {
-        initGalleryModal();
-        updateFullGridModal(data.name || charId, gallery);
-    }
-}
-
-function updateFullGridModal(charName, gallery) {
-    let modal = document.getElementById('full-grid-modal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'full-grid-modal';
-        modal.className = 'full-grid-modal';
-        document.body.appendChild(modal);
-    }
-    modal.innerHTML = `
-        <div class="full-grid-header">
-            <div class="full-grid-title">${charName} 갤러리</div>
-            <div class="full-grid-close" onclick="window.closeFullGrid()">×</div>
-        </div>
-        <div class="full-grid-container">
-            ${gallery.map((url, idx) => `<div class="grid-thumb" onclick="window.openFromGrid(${idx})"><img src="${url}"></div>`).join('')}
+            <div style="padding:10px;">
+                <table style="width:100%; font-size:13px; border-collapse:collapse;">
+                    ${data.alias ? `<tr><th style="background:#f4f4f4; width:35%; padding:5px; border:1px solid #eee; text-align:left;">별명</th><td style="padding:5px; border:1px solid #eee;">${data.alias}</td></tr>` : ''}
+                    ${data.species ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">종족</th><td style="padding:5px; border:1px solid #eee;">${data.species}</td></tr>` : ''}
+                    ${data.nation ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">국적</th><td style="padding:5px; border:1px solid #eee;">${data.nation}</td></tr>` : ''}
+                </table>
+                ${galleryHTML}
+            </div>
         </div>
     `;
 }
-
-window.openFullGrid = () => { document.getElementById('full-grid-modal')?.classList.add('active'); document.body.style.overflow = 'hidden'; };
-window.closeFullGrid = () => { document.getElementById('full-grid-modal')?.classList.remove('active'); document.body.style.overflow = 'auto'; };
-window.openFromGrid = (idx) => { window.closeFullGrid(); window.openGallery(idx); };
-
-function initGalleryModal() {
-    if (document.getElementById('gallery-modal')) return;
-    const modal = document.createElement('div');
-    modal.id = 'gallery-modal';
-    modal.className = 'gallery-modal';
-    modal.innerHTML = `
-        <span class="modal-close" onclick="window.closeGallery()">×</span>
-        <div class="modal-content" onclick="event.stopPropagation()"><img id="modal-img"></div>
-        <div class="modal-nav" onclick="event.stopPropagation()">
-            <button onclick="window.changeGallery(-1)">이전</button>
-            <button onclick="window.changeGallery(1)">다음</button>
-        </div>
-    `;
-    modal.onclick = window.closeGallery;
-    document.body.appendChild(modal);
-    modalElement = modal;
-}
-
-let currentIdx = 0;
-let modalGallery = [];
-
-window.openGallery = (idx) => {
-    const mainImg = document.querySelector('.infobox-image img')?.src;
-    modalGallery = [];
-    if (mainImg) modalGallery.push(mainImg);
-    if (currentGallery) modalGallery = [...modalGallery, ...currentGallery];
-    currentIdx = idx === -1 ? 0 : (mainImg ? idx + 1 : idx);
-    const img = document.getElementById('modal-img');
-    if (img && modalElement) {
-        img.src = modalGallery[currentIdx];
-        modalElement.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-};
-
-window.closeGallery = () => { if (modalElement) modalElement.classList.remove('active'); document.body.style.overflow = 'auto'; };
-window.changeGallery = (dir) => {
-    if (!modalGallery.length) return;
-    currentIdx = (currentIdx + dir + modalGallery.length) % modalGallery.length;
-    const img = document.getElementById('modal-img');
-    if (img) img.src = modalGallery[currentIdx];
-};
 
 function renderContent(details) {
-    if (!contentArea) return;
-    if (!details) { contentArea.innerHTML = '본문 내용이 없습니다.'; return; }
-    try {
-        let html = details
-            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; display:block; margin:20px auto; border-radius:8px;">')
-            .replace(/\[(.*?)\]\((.*?)\)/g, (m, t, u) => `<a href="${u}" ${u.indexOf('http') === 0 ? 'target="_blank"' : ''}>${t}</a>`)
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/^## (.*$)/gim, `<h2><span class="header-text">$1</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h2>`)
-            .replace(/^### (.*$)/gim, `<h3><span class="header-text">$1</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h3>`)
-            .replace(/^---$/gim, '<hr>')
-            .replace(/^[\*\-] (.*$)/gim, '<li>$1</li>')
-            .replace(/\n/g, '<br>');
+    if (!contentArea || isGalleryPage) return;
+    
+    // 복잡한 정규식 대신 안전한 변환 로직 사용
+    let html = details
+        .split('\n').map(line => {
+            if (line.startsWith('## ')) return `<h2>${line.replace('## ', '')}</h2>`;
+            if (line.startsWith('### ')) return `<h3>${line.replace('### ', '')}</h3>`;
+            if (line === '---') return '<hr>';
+            if (line.startsWith('* ')) return `<li>${line.replace('* ', '')}</li>`;
+            return `<p>${line}</p>`;
+        }).join('');
 
-        html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
-        contentArea.innerHTML = html;
-        generateTOC();
-    } catch (e) {
-        contentArea.innerHTML = details;
-    }
+    // 간단한 마크다운 처리
+    html = html
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" style="max-width:100%; border-radius:8px; display:block; margin:20px auto;">')
+        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+
+    contentArea.innerHTML = html;
+    generateTOC();
 }
 
 function generateTOC() {
-    if (!contentArea || !tocArea || !tocWrapper) return;
+    if (!contentArea || !tocWrapper) return;
     const headers = contentArea.querySelectorAll('h2, h3');
-    if (!headers.length) { tocWrapper.style.display = 'none'; return; }
+    if (headers.length === 0) { tocWrapper.style.display = 'none'; return; }
     tocWrapper.style.display = 'block';
-    tocArea.innerHTML = '';
-    const ul = document.createElement('ul');
-    headers.forEach((h, i) => {
-        const id = 'section-' + i;
-        h.id = id;
-        const li = document.createElement('li');
-        if (h.tagName === 'H3') li.style.marginLeft = '15px';
-        const a = document.createElement('a');
-        a.href = '#' + id;
-        a.textContent = h.querySelector('.header-text')?.textContent || h.textContent;
-        a.onclick = (e) => {
-            e.preventDefault();
-            const target = document.getElementById(id);
-            if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - 70, behavior: 'smooth' });
-        };
-        li.appendChild(a);
-        ul.appendChild(li);
-    });
-    tocArea.appendChild(ul);
+    const tocList = document.getElementById('toc-content');
+    if (tocList) {
+        tocList.innerHTML = '';
+        headers.forEach((h, i) => {
+            const id = `sec-${i}`;
+            h.id = id;
+            const li = document.createElement('div');
+            li.style.paddingLeft = h.tagName === 'H3' ? '20px' : '0';
+            li.innerHTML = `<a href="#${id}" style="text-decoration:none; color:var(--text-link); font-size:14px;">${h.textContent}</a>`;
+            li.onclick = (e) => {
+                e.preventDefault();
+                window.scrollTo({ top: h.getBoundingClientRect().top + window.pageYOffset - 70, behavior: 'smooth' });
+            };
+            tocList.appendChild(li);
+        });
+    }
 }
+
+// 사진 크게 보기 (모달 없이 새창 또는 단순 오버레이)
+window.showLarge = (url) => {
+    if (!url) return;
+    const overlay = document.createElement('div');
+    overlay.style = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; cursor:zoom-out;';
+    overlay.innerHTML = `<img src="${url}" style="max-width:95%; max-height:95%; object-fit:contain; border:2px solid white;">`;
+    overlay.onclick = () => overlay.remove();
+    document.body.appendChild(overlay);
+};
 
 async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     try {
         const snap = await getDocs(collection(db, "characters"));
-        const data = snap.docs.map(d => d.data()).sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)).slice(0, 8);
-        list.innerHTML = data.map(d => `<div class="recent-item"><a href="detail.html#${d.id}">${d.name || d.id}</a></div>`).join('');
-    } catch (e) {}
+        const data = snap.docs.map(d => d.data()).sort((a,b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)).slice(0, 5);
+        list.innerHTML = data.map(d => `<div style="margin-bottom:8px;"><a href="detail.html#${d.id}" style="font-size:13px; color:var(--text-link); text-decoration:none;">${d.name || d.id}</a></div>`).join('');
+    } catch(e) {}
 }
 
 window.onhashchange = () => location.reload();
