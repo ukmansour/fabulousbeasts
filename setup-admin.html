@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>최초 관리자 설정 - 유수언</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .setup-box { max-width: 500px; margin: 100px auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; }
+        .btn-admin { background: #dc2626; color: white; border: none; padding: 1rem 2rem; font-weight: 800; cursor: pointer; border-radius: 4px; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+    <div class="setup-box">
+        <h1>최초 관리자 설정</h1>
+        <p>현재 로그인된 계정을 **관리자(admin)**로 즉시 승격시킵니다.</p>
+        <div id="status" style="margin: 2rem 0;">데이터 확인 중...</div>
+        <button id="action-btn" class="btn-admin">관리자로 승격하기</button>
+    </div>
+    <script type="module" src="setup-admin.js"></script>
+</body>
+</html>
