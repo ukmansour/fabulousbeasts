@@ -217,7 +217,7 @@ function renderContent(details) {
 
     html = html
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" style="max-width:100%; border-radius:8px; display:block; margin:20px auto;">')
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" style="max-width:500px; border-radius:8px; display:block; margin:20px auto;">')
         .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
 
     html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
