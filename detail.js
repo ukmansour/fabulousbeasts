@@ -199,21 +199,27 @@ function renderInfobox(data) {
 
     const themeColor = data.color || 'var(--primary-color)';
 
-    // [갤러리 미리보기: 가로 3분할 정사각형]
+    // [갤러리 3x3 격자 렌더링]
     let galleryHtml = '';
     if (data.gallery && data.gallery.length > 0) {
         currentGallery = data.gallery;
-        const previewImages = data.gallery.slice(0, 3);
+        const displayLimit = 9;
+        const displayImages = data.gallery.slice(0, displayLimit);
         
         galleryHtml = `
-            <div class="gallery-row-3">
-                ${previewImages.map((img, idx) => `
-                    <img src="${img}" class="gallery-thumb-sq" onclick="window.openGallery(${idx})" alt="썸네일 ${idx+1}">
+            <div class="gallery-grid-3x3">
+                ${displayImages.map((img, idx) => `
+                    <div class="gallery-item-sq" onclick="window.openGallery(${idx})">
+                        <img src="${img}" alt="사진 ${idx + 1}">
+                        ${idx === displayLimit - 1 && data.gallery.length > displayLimit ? `
+                            <div class="gallery-more-overlay">
+                                <span>+ ${data.gallery.length - displayLimit + 1}</span>
+                                <span style="font-size:0.6rem;">더보기</span>
+                            </div>
+                        ` : ''}
+                    </div>
                 `).join('')}
             </div>
-            <button class="gallery-wide-btn" onclick="window.openAlbum()">
-                🖼️ 갤러리 더보기 (${data.gallery.length})
-            </button>
         `;
     }
 
