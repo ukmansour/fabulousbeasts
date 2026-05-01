@@ -1,6 +1,7 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
 import { db, auth } from './firebase-config.js';
 import { collection, getDocs, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 let mergedCharacters = [...CHARACTERS];
@@ -68,6 +69,7 @@ async function initHome() {
     renderFeatured();
     renderCategoryGrid();
     renderRecentChanges();
+    loadNotice();
 }
 
 async function fetchFirestoreData() {
@@ -86,6 +88,20 @@ async function fetchFirestoreData() {
         console.log("Firestore data merged successfully");
     } catch (e) { 
         console.error("Cloud data load failed:", e); 
+    }
+}
+
+async function loadNotice() {
+    const el = document.getElementById('notice-display');
+    if (!el) return;
+    try {
+        const snap = await getDoc(doc(db, "notices", "main"));
+        if (snap.exists() && snap.data().content) {
+            el.textContent = snap.data().content;
+            el.style.color = '#333';
+        }
+    } catch (e) {
+        console.error("Notice load error:", e);
     }
 }
 

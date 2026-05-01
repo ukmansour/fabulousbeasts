@@ -172,3 +172,51 @@ window.refreshUserList = async () => {
     contentArea.innerHTML = `<p style="color:#999; text-align:center; padding:2rem;">새로고침 중...</p>`;
     await loadAndRenderUsers();
 };
+
+// ─── 공지사항 관련 ───────────────────────────────────────────
+
+// 공지 탭으로 전환할 때 기존 공지 내용 자동 불러오기
+const origSwitchTab = window.switchTab;
+window.addEventListener('load', () => {
+    // 공지 탭 버튼 클릭 시 현재 공지 불러오기
+    const noticeTabBtn = document.getElementById('tab-btn-notice');
+    if (noticeTabBtn) {
+        noticeTabBtn.addEventListener('click', loadNotice);
+    }
+});
+
+async function loadNotice() {
+    try {
+        const snap = await getDoc(doc(db, "notices", "main"));
+        const textarea = document.getElementById('notice-content');
+        if (textarea && snap.exists()) {
+            textarea.value = snap.data().content || '';
+        }
+    } catch (e) {
+        console.error("공지 불러오기 실패:", e);
+    }
+}
+
+window.saveNotice = async () => {
+    const textarea = document.getElementById('notice-content');
+    const status = document.getElementById('notice-status');
+    if (!textarea) return;
+
+    const content = textarea.value.trim();
+    status.textContent = '저장 중...';
+    status.style.color = '#666';
+
+    try {
+        await setDoc(doc(db, "notices", "main"), {
+            content: content,
+            updatedAt: serverTimestamp(),
+            updatedBy: currentUser?.displayName || '관리자'
+        });
+        status.textContent = '✅ 공지가 저장되었습니다!';
+        status.style.color = 'green';
+        setTimeout(() => { status.textContent = ''; }, 3000);
+    } catch (e) {
+        status.textContent = '❌ 저장 실패: ' + e.message;
+        status.style.color = 'red';
+    }
+};
