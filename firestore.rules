@@ -1,43 +1,35 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // [헬퍼 함수]
+    // [공통 함수]
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    function getUserData() {
-      // 본인 문서를 가져와서 역할을 확인
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
-    }
-
     function isAdmin() {
-      // 1. 이메일 기반 마스터 권한 (가장 강력함)
-      if (request.auth.token.email == "hodu@youshouyan.wiki") {
-        return true;
-      }
-      // 2. DB 역할 기반 권한
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      // 마스터 이메일이거나, DB 상의 role이 admin인 경우 허용
+      return isAuthenticated() && (
+        request.auth.token.email == "hodu@youshouyan.wiki" ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+      );
     }
 
     // [유저 컬렉션]
     match /users/{userId} {
       allow read: if true;
-      // 생성은 로그인만 되어있으면 허용 (자신의 UID로)
       allow create: if request.auth != null; 
       allow update: if isAdmin() || (request.auth != null && request.auth.uid == userId);
       allow delete: if isAdmin();
     }
 
-    // [캐릭터 문서]
+    // [캐릭터 컬렉션]
     match /characters/{charId} {
       allow read: if true;
-      // 관리자만 쓰기 가능
       allow write: if isAdmin();
     }
-    
+
     // [카테고리]
     match /categories/{catId} {
       allow read: if true;
