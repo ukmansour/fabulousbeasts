@@ -199,10 +199,10 @@ function renderInfobox(data) {
 
     const themeColor = data.color || 'var(--primary-color)';
 
-    // [갤러리 3x3 격자 렌더링]
+    // [갤러리 3x3 격자 렌더링: 최종]
     let galleryHtml = '';
     if (data.gallery && data.gallery.length > 0) {
-        currentGallery = data.gallery;
+        currentGallery = data.gallery; // 전역 변수 업데이트
         const displayLimit = 9;
         const displayImages = data.gallery.slice(0, displayLimit);
         
@@ -210,10 +210,10 @@ function renderInfobox(data) {
             <div class="gallery-grid-3x3">
                 ${displayImages.map((img, idx) => `
                     <div class="gallery-item-sq" onclick="window.openGallery(${idx})">
-                        <img src="${img}" alt="사진 ${idx + 1}">
-                        ${idx === displayLimit - 1 && data.gallery.length > displayLimit ? `
+                        <img src="${img}" alt="갤러리 사진 ${idx + 1}" loading="lazy">
+                        ${(idx === displayLimit - 1 && data.gallery.length > displayLimit) ? `
                             <div class="gallery-more-overlay">
-                                <span>+ ${data.gallery.length - displayLimit + 1}</span>
+                                <span>+ ${data.gallery.length - displayLimit}</span>
                                 <span style="font-size:0.6rem;">더보기</span>
                             </div>
                         ` : ''}
@@ -239,37 +239,7 @@ function renderInfobox(data) {
     `;
 }
 
-let albumElement = null;
-window.openAlbum = () => {
-    if (!albumElement) {
-        albumElement = document.createElement('div');
-        albumElement.className = 'album-overlay';
-        document.body.appendChild(albumElement);
-    }
 
-    albumElement.innerHTML = `
-        <div class="album-header">
-            <h2>사진첩 (${currentGallery.length})</h2>
-            <span class="album-close" onclick="window.closeAlbum()">&times;</span>
-        </div>
-        <div class="album-grid">
-            ${currentGallery.map((img, idx) => `
-                <div class="album-item" onclick="window.openGallery(${idx})">
-                    <img src="${img}" alt="사진 ${idx+1}" loading="lazy">
-                </div>
-            `).join('')}
-        </div>
-    `;
-    albumElement.classList.add('active');
-    document.body.style.overflow = 'hidden';
-};
-
-window.closeAlbum = () => {
-    if (albumElement) albumElement.classList.remove('active');
-    if (!modalElement || !modalElement.classList.contains('active')) {
-        document.body.style.overflow = 'auto';
-    }
-};
 
 let currentIdx = 0;
 window.openGallery = (index) => {
