@@ -26,7 +26,7 @@ onAuthStateChanged(auth, async (user) => {
 function showRecoveryUI() {
     contentArea.innerHTML = `
         <div style="text-align:center; padding:3rem; background:#fffbe6; border:2px solid #ffe58f; border-radius:8px; max-width:500px; margin:2rem auto;">
-            <h2 style="color:#856404;">⚠️ 관리자 권한 복구</h2>
+            <h2 style="color:#856404;">관리자 권한 복구</h2>
             <p style="margin-top:1rem; color:#555;">데이터베이스에 관리자 정보가 없습니다.<br>보안 코드로 현재 계정을 관리자로 등록할 수 있습니다.</p>
             <input type="password" id="recovery-code" placeholder="보안 코드 입력" 
                 style="margin-top:1.5rem; padding:0.6rem 1rem; border:1px solid #ccc; border-radius:4px; font-size:1rem; width:200px; display:block; margin-left:auto; margin-right:auto;">
@@ -92,7 +92,7 @@ async function loadAndRenderUsers() {
         let html = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                 <p style="font-size:0.9rem; color:#555;">총 <strong>${users.length}</strong>명의 사용자가 등록되어 있습니다.</p>
-                <button onclick="window.refreshUserList()" style="padding:0.4rem 1rem; border:1px solid #ccc; border-radius:4px; cursor:pointer; font-size:0.85rem;">🔄 새로고침</button>
+                <button onclick="window.refreshUserList()" style="padding:0.4rem 1rem; border:1px solid #ccc; border-radius:4px; cursor:pointer; font-size:0.85rem;">새로고침</button>
             </div>
             <table class="user-table" style="width:100%; border-collapse:collapse;">
                 <thead>
@@ -117,8 +117,8 @@ async function loadAndRenderUsers() {
                 : '기록 없음';
 
             let roleBadge = '';
-            if (isAdmin) roleBadge = `<span style="background:#fef3c7; color:#92400e; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">👑 관리자</span>`;
-            else if (isBanned) roleBadge = `<span style="background:#fee2e2; color:#dc2626; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">🚫 차단됨</span>`;
+            if (isAdmin) roleBadge = `<span style="background:#fef3c7; color:#92400e; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">관리자</span>`;
+            else if (isBanned) roleBadge = `<span style="background:#fee2e2; color:#dc2626; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">차단됨</span>`;
             else roleBadge = `<span style="background:#f0f9ff; color:#0369a1; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">일반 멤버</span>`;
 
             let actionBtns = '';
@@ -128,8 +128,8 @@ async function loadAndRenderUsers() {
                 // 일반 멤버라면 -> 관리자 승격 / 차단 버튼
                 if (role === 'member') {
                     actionBtns = `
-                        <button onclick="window.changeRole('${user.id}', 'admin')" style="padding:0.3rem 0.6rem; background:#00a0e9; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem; margin-right:4px;">▲ 관리자</button>
-                        <button onclick="window.changeRole('${user.id}', 'banned')" style="padding:0.3rem 0.6rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem;">🚫 차단</button>
+                        <button onclick="window.changeRole('${user.id}', 'admin')" style="padding:0.3rem 0.6rem; background:#00a0e9; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem; margin-right:4px;">관리자 승격</button>
+                        <button onclick="window.changeRole('${user.id}', 'banned')" style="padding:0.3rem 0.6rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem;">차단</button>
                     `;
                 } 
                 // 관리자라면 -> 멤버 강등
@@ -141,7 +141,7 @@ async function loadAndRenderUsers() {
                 // 차단 상태라면 -> 차단 해제(멤버로)
                 else if (role === 'banned') {
                     actionBtns = `
-                        <button onclick="window.changeRole('${user.id}', 'member')" style="padding:0.3rem 0.6rem; background:#10b981; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem;">✅ 차단 해제</button>
+                        <button onclick="window.changeRole('${user.id}', 'member')" style="padding:0.3rem 0.6rem; background:#10b981; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem;">차단 해제</button>
                     `;
                 }
             }
@@ -178,7 +178,7 @@ window.changeRole = async (uid, newRole) => {
 
     try {
         await updateDoc(doc(db, "users", uid), { role: newRole });
-        alert(`✅ ${actionText} 완료!`);
+        alert(`${actionText} 완료!`);
         await loadAndRenderUsers(); // 즉시 갱신
     } catch (e) {
         alert("오류 발생: " + e.message);
@@ -246,13 +246,13 @@ window.saveNotice = async () => {
             updatedBy: currentUser?.displayName || currentUser?.email || '관리자'
         });
         
-        status.textContent = '✅ 공지가 성공적으로 저장되었습니다!';
+        status.textContent = '공지가 성공적으로 저장되었습니다!';
         status.style.color = 'green';
         alert("공지가 저장되었습니다.");
         setTimeout(() => { status.textContent = ''; }, 3000);
     } catch (e) {
         console.error("Notice save error:", e);
-        status.textContent = '❌ 저장 실패: ' + e.message;
+        status.textContent = '저장 실패: ' + e.message;
         status.style.color = 'red';
         
         if (e.code === 'permission-denied') {
