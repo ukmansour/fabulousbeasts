@@ -41,9 +41,13 @@ onAuthStateChanged(auth, async (user) => {
             } else {
                 // [가입 즉시 등록 로직]
                 const isSupremeAdmin = user.email === "hodu@youshouyan.wiki";
+                
+                // 이메일 앞부분을 닉네임으로 추출
+                const autoNickname = user.email ? user.email.split('@')[0] : (user.displayName || "회원");
+
                 const newUserData = {
                     uid: user.uid,
-                    nickname: user.displayName || "새 회원",
+                    nickname: autoNickname,
                     email: user.email || "",
                     role: isSupremeAdmin ? 'admin' : 'member',
                     joinedAt: serverTimestamp(),

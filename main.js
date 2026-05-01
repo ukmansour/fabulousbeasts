@@ -38,9 +38,12 @@ onAuthStateChanged(auth, async (user) => {
                 console.log("Creating missing user document for:", user.uid);
                 const isSupremeAdmin = user.email === "hodu@youshouyan.wiki"; 
                 
+                // 이메일 앞부분을 닉네임으로 추출 (없으면 '회원' 등 기본값)
+                const autoNickname = user.email ? user.email.split('@')[0] : (user.displayName || "회원");
+
                 const newUserData = {
                     uid: user.uid,
-                    nickname: user.displayName || "새 회원",
+                    nickname: autoNickname,
                     email: user.email || "",
                     role: isSupremeAdmin ? 'admin' : 'member',
                     joinedAt: serverTimestamp(),
