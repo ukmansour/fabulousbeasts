@@ -13,9 +13,9 @@ const displayNameArea = document.getElementById('display-name');
 
 let currentGallery = [];
 let modalElement = null;
-
 let currentUser = null;
 let userRole = 'member';
+let isUserAdmin = false; // 전역 변수로 관리
 
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
@@ -25,7 +25,8 @@ onAuthStateChanged(auth, async (user) => {
             const userRef = doc(db, "users", user.uid);
             const userSnap = await getDoc(userRef);
             if (userSnap.exists()) {
-                userRole = userSnap.data().role || 'member';
+                const userData = userSnap.data();
+                userRole = userData.role || 'member';
                 if (userRole === 'banned') {
                     alert("⚠️ 귀하의 계정은 차단되었습니다.");
                     document.body.innerHTML = `
@@ -37,14 +38,10 @@ onAuthStateChanged(auth, async (user) => {
                     `;
                     return;
                 }
-                isAdmin = userRole === 'admin';
+                isUserAdmin = userRole === 'admin';
             } else {
-                // [가입 즉시 등록 로직]
                 const isSupremeAdmin = user.email === "hodu@youshouyan.wiki";
-                
-                // 이메일 앞부분을 닉네임으로 추출
                 const autoNickname = user.email ? user.email.split('@')[0] : (user.displayName || "회원");
-
                 const newUserData = {
                     uid: user.uid,
                     nickname: autoNickname,
@@ -55,23 +52,23 @@ onAuthStateChanged(auth, async (user) => {
                 };
                 await setDoc(userRef, newUserData);
                 userRole = isSupremeAdmin ? 'admin' : 'member';
-                isAdmin = isSupremeAdmin;
+                isUserAdmin = isSupremeAdmin;
             }
         } catch (e) { 
             console.error("Error fetching user role:", e);
-            if (user.email === "hodu@youshouyan.wiki") { userRole = 'admin'; isAdmin = true; }
+            if (user.email === "hodu@youshouyan.wiki") { userRole = 'admin'; isUserAdmin = true; }
         }
 
         info.innerHTML = `
-            ${isAdmin ? `<a href="admin.html" class="nav-link" style="color:white; font-weight:bold; margin-right:1rem; border:1px solid rgba(255,255,255,0.3); padding:0.2rem 0.5rem; border-radius:3px;">관리자 설정</a>` : ''}
-            <span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName}님</span>
+            ${isUserAdmin ? `<a href="admin.html" class="nav-link" style="color:white; font-weight:bold; margin-right:1rem; border:1px solid rgba(255,255,255,0.3); padding:0.2rem 0.5rem; border-radius:3px;">관리자 설정</a>` : ''}
+            <span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName || user.email.split('@')[0]}님</span>
         `;
     }
     updateEditVisibility();
 });
 
 function updateEditVisibility() {
-    const isAdmin = userRole === 'admin';
+    const isAdmin = isUserAdmin;
     const isLoggedIn = currentUser !== null;
 
     if (editBtn) {
@@ -79,30 +76,21 @@ function updateEditVisibility() {
             editBtn.textContent = "로그인 후 편집";
             editBtn.style.opacity = '1';
             editBtn.style.color = 'var(--primary-color)';
-            editBtn.title = "편집하려면 로그인이 필요합니다.";
         } else if (!isAdmin) {
             editBtn.textContent = "편집 (권한 제한)";
             editBtn.style.opacity = '0.5';
-            editBtn.title = "관리자만 편집 가능합니다.";
         } else {
             editBtn.textContent = "편집";
             editBtn.style.opacity = '1';
             editBtn.style.color = '';
-            editBtn.title = "문서 편집";
         }
     }
 
-    // 본문의 섹션 편집 링크 숨기기
     document.querySelectorAll('.section-edit-link').forEach(el => {
-        if (!isAdmin) {
-            el.style.display = 'none';
-        } else {
-            el.style.display = 'inline-block';
-        }
+        el.style.display = isAdmin ? 'inline-block' : 'none';
     });
 }
 
-// 편집 버튼 클릭 시
 if (editBtn) {
     editBtn.onclick = (e) => {
         e.preventDefault();
@@ -110,7 +98,7 @@ if (editBtn) {
             alert("편집을 위해 로그인이 필요합니다.");
             location.href = 'auth.html';
         } else if (userRole !== 'admin') {
-            alert("🔒 관리자 전용 문서입니다. 관리자 계정으로 로그인해주세요.");
+            alert("🔒 관리자 전용 문서입니다.");
         } else {
             location.href = `edit.html#${charId}`;
         }
@@ -120,71 +108,40 @@ if (editBtn) {
 async function loadDetail() {
     if (!charId) return;
 
-    // 1. 기본 데이터
     const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
     renderInfobox(baseData);
     renderContent(baseData.details || '불러오는 중...');
 
     try {
-        console.log("Fetching Firestore data for:", charId);
         const docRef = doc(db, "characters", charId);
-        
         onSnapshot(docRef, (snap) => {
             if (snap.exists()) {
                 const dbData = snap.data();
-                console.log("Firestore data received:", dbData);
                 const data = { ...baseData, ...dbData };
                 
-                document.title = `${data.name || charId} - 유수언`;
-                document.getElementById('display-name').textContent = data.name || charId;
+                document.title = `${data.name || charId} - 유수언 위키`;
+                if (displayNameArea) displayNameArea.textContent = data.name || charId;
                 
-                const date = data.updatedAt?.seconds ? new Date(data.updatedAt.seconds * 1000) : new Date(data.updatedAt);
-                document.getElementById('last-edit').textContent = isNaN(date) ? '-' : date.toLocaleString();
-                document.getElementById('last-editor').textContent = data.updatedBy || '시스템';
+                const date = data.updatedAt?.seconds ? new Date(data.updatedAt.seconds * 1000) : new Date();
+                const lastEdit = document.getElementById('last-edit');
+                const lastEditor = document.getElementById('last-editor');
+                if (lastEdit) lastEdit.textContent = date.toLocaleString();
+                if (lastEditor) lastEditor.textContent = data.updatedBy || '시스템';
 
                 renderInfobox(data);
-                renderGallery(data.gallery);
                 renderContent(data.details || '본문 내용이 없습니다.');
-            } else {
-                // [폴백] 인코딩된 ID로도 시도 (이전 버전 호환성)
-                const rawId = location.hash.substring(1);
-                if (rawId !== charId) {
-                    console.log("Trying fallback with raw ID:", rawId);
-                    getDoc(doc(db, "characters", rawId)).then(fallbackSnap => {
-                        if (fallbackSnap.exists()) {
-                            const data = { ...baseData, ...fallbackSnap.data() };
-                            renderInfobox(data);
-                            renderContent(data.details || '본문 내용이 없습니다.');
-                        } else {
-                            console.log("No Firestore document found for both decoded and raw ID.");
-                            document.getElementById('display-name').textContent = baseData.name;
-                            renderContent(baseData.details || '본문 내용이 없습니다.');
-                        }
-                    });
-                } else {
-                    console.log("No Firestore document found for:", charId);
-                    document.getElementById('display-name').textContent = baseData.name;
-                    renderContent(baseData.details || '본문 내용이 없습니다.');
-                }
             }
-        }, (error) => {
-            console.error("Snapshot error:", error);
-            alert("데이터를 불러오는 중 오류가 발생했습니다: " + error.message);
         });
     } catch (e) { 
         console.error("LoadDetail error:", e); 
-        alert("상세 페이지 로딩 실패: " + e.message);
     }
-
     renderRecentChanges();
 }
 
 function renderInfobox(data) {
+    if (!infoboxArea) return;
     const gallery = data.gallery && Array.isArray(data.gallery) && data.gallery.length > 0 ? data.gallery : null;
-    
-    if (gallery) {
-        currentGallery = gallery;
-    }
+    if (gallery) currentGallery = gallery;
 
     const galleryHTML = gallery ? `
         <div class="wiki-gallery-wrap" style="border-bottom: 1px solid #eee; padding-bottom: 0.8rem; margin-bottom: 0.5rem;">
@@ -195,7 +152,7 @@ function renderInfobox(data) {
             <div class="gallery-grid">
                 ${gallery.slice(0, 4).map((url, idx) => `
                     <div class="gallery-item" onclick="window.openGallery(${idx})">
-                        <img src="${url}" alt="갤러리 ${idx + 1}" loading="lazy">
+                        <img src="${url}" loading="lazy">
                     </div>
                 `).join('')}
             </div>
@@ -205,7 +162,7 @@ function renderInfobox(data) {
     infoboxArea.innerHTML = `
         <div class="infobox">
             <div class="infobox-title">${data.name}</div>
-            <div class="infobox-image" onclick="window.openGallery(-1)" style="cursor: zoom-in;" title="사진 크게 보기">
+            <div class="infobox-image" onclick="window.openGallery(-1)" style="cursor: zoom-in;">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="${data.name}">
             </div>
             ${galleryHTML}
@@ -218,21 +175,17 @@ function renderInfobox(data) {
         </div>
     `;
 
-    // 갤러리가 있으면 모달 초기화
     if (gallery) {
         initGalleryModal();
         initFullGridModal(data.name, gallery);
     }
 }
 
-function renderGallery(gallery) {
-    // 하위 호환용
-}
+function renderGallery(gallery) {} // 하위 호환
 
 function initFullGridModal(charName, gallery) {
-    if (document.getElementById('full-grid-modal')) {
-        document.getElementById('full-grid-modal').remove();
-    }
+    let existing = document.getElementById('full-grid-modal');
+    if (existing) existing.remove();
     
     const modal = document.createElement('div');
     modal.id = 'full-grid-modal';
@@ -272,7 +225,6 @@ window.openFromGrid = (idx) => {
 
 function initGalleryModal() {
     if (document.getElementById('gallery-modal')) return;
-    
     const modal = document.createElement('div');
     modal.id = 'gallery-modal';
     modal.className = 'gallery-modal';
@@ -296,21 +248,13 @@ let modalGallery = [];
 
 window.openGallery = (idx) => {
     const mainImg = document.querySelector('.infobox-image img')?.src;
-    
-    // 메인 사진 + 갤러리 사진 통합 리스트 생성
     modalGallery = [];
     if (mainImg) modalGallery.push(mainImg);
-    if (currentGallery && currentGallery.length > 0) {
-        modalGallery = [...modalGallery, ...currentGallery];
-    }
-
-    if (modalGallery.length === 0) return;
-
-    // 인덱스 조정: -1(메인 사진)이면 0번, 그 외 갤러리 사진은 +1 (메인 사진이 앞에 추가되었으므로)
-    currentIdx = idx === -1 ? 0 : (mainImg ? idx + 1 : idx);
+    if (currentGallery) modalGallery = [...modalGallery, ...currentGallery];
     
+    currentIdx = idx === -1 ? 0 : (mainImg ? idx + 1 : idx);
     const img = document.getElementById('modal-img');
-    if (img) {
+    if (img && modalElement) {
         img.src = modalGallery[currentIdx];
         modalElement.classList.add('active');
         document.body.style.overflow = 'hidden';
@@ -323,102 +267,60 @@ window.closeGallery = () => {
 };
 
 window.changeGallery = (dir) => {
-    if (!modalGallery || modalGallery.length === 0) return;
+    if (!modalGallery.length) return;
     currentIdx = (currentIdx + dir + modalGallery.length) % modalGallery.length;
     document.getElementById('modal-img').src = modalGallery[currentIdx];
 };
 
 function renderContent(details) {
-    if (!details) return;
-    try {
-        let html = details
-            // 1. 이미지: ![설명](주소) 또는 단순 URL (http...jpg/png/webp)
-            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; max-height:600px; object-fit:contain; border-radius:8px; margin: 20px auto; display:block;">')
-            .replace(/(?<!["'])(https?:\/\/[^\s<]+?\.(?:jpg|jpeg|gif|png|webp|svg))(?![^<]*>|[^<>]*<\/a>)/gi, '<img src="$1" style="max-width:100%; max-height:600px; object-fit:contain; border-radius:8px; margin: 20px auto; display:block;">')
-            
-            // 2. 링크: [텍스트](주소)
-            .replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
-                if (url.startsWith('#') || url.includes('.html')) return `<a href="${url}">${text}</a>`;
-                return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
-            })
+    if (!details || !contentArea) return;
+    let html = details
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; max-height:600px; object-fit:contain; border-radius:8px; margin: 20px auto; display:block;">')
+        .replace(/(?<!["'])(https?:\/\/[^\s<]+?\.(?:jpg|jpeg|gif|png|webp|svg))(?![^<]*>|[^<>]*<\/a>)/gi, '<img src="$1" style="max-width:100%; max-height:600px; object-fit:contain; border-radius:8px; margin: 20px auto; display:block;">')
+        .replace(/\[(.*?)\]\((.*?)\)/g, (match, text, url) => {
+            if (url.startsWith('#') || url.includes('.html')) return `<a href="${url}">${text}</a>`;
+            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+        })
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/^## (.*$)/gim, '<h2><span class="header-text">$1</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h2>')
+        .replace(/^### (.*$)/gim, '<h3><span class="header-text">$1</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h3>')
+        .replace(/^---$/gim, '<hr>')
+        .replace(/^[\*\-] (.*$)/gim, '<li>$1</li>')
+        .replace(/\n/g, '<br>');
 
-            // 3. 굵게: **텍스트** 또는 __텍스트__
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/__(.*?)__/g, '<strong>$1</strong>')
-
-            // 4. 기울임: *텍스트* 또는 _텍스트_
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/_(.*?)_/g, '<em>$1</em>')
-
-            // 5. 제목 (H2, H3)
-            .replace(/^## (.*$)/gim, (match, p1) => {
-                const cleanTitle = p1.trim();
-                return `<h2><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h2>`;
-            })
-            .replace(/^### (.*$)/gim, (match, p1) => {
-                const cleanTitle = p1.trim();
-                return `<h3><span class="header-text">${cleanTitle}</span><a href="edit.html#${charId}" class="section-edit-link">편집</a></h3>`;
-            })
-
-            // 6. 구분선: ---
-            .replace(/^---$/gim, '<hr>')
-
-            // 7. 리스트: * 항목 또는 - 항목
-            .replace(/^[\*\-] (.*$)/gim, '<li>$1</li>')
-
-            // 8. 줄바꿈 처리
-            .replace(/\n/g, '<br>');
-
-        // <li> 태그들을 <ul>로 감싸기
-        html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
-
-        contentArea.innerHTML = html;
-        generateTOC();
-    } catch (err) {
-        console.error("Rendering error:", err);
-        contentArea.innerHTML = `<p style="color:red;">문서를 렌더링하는 중 오류가 발생했습니다: ${err.message}</p><pre>${details}</pre>`;
-    }
+    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+    contentArea.innerHTML = html;
+    generateTOC();
 }
 
 function generateTOC() {
+    if (!contentArea || !tocWrapper || !tocArea) return;
     const headers = contentArea.querySelectorAll('h2, h3');
     if (headers.length === 0) {
         tocWrapper.style.display = 'none';
         return;
     }
     tocWrapper.style.display = 'block';
-    tocArea.innerHTML = ''; // 기존 내용 초기화
-    
+    tocArea.innerHTML = '';
     const ul = document.createElement('ul');
     headers.forEach((h, index) => {
         const level = h.tagName === 'H2' ? 1 : 2;
         const headerText = h.querySelector('.header-text').textContent;
         const id = `section-${index}`;
         h.id = id;
-
         const li = document.createElement('li');
         li.style.marginLeft = level === 2 ? '1rem' : '0';
-        
         const a = document.createElement('a');
         a.href = `#${id}`;
         a.textContent = headerText;
-        
-        // 해시 변경으로 인한 페이지 리로드 방지 (중요)
         a.onclick = (e) => {
             e.preventDefault();
             const target = document.getElementById(id);
             if (target) {
-                const headerOffset = 70; // 헤더 높이만큼 보정
-                const elementPosition = target.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: "smooth"
-                });
+                window.scrollTo({ top: target.getBoundingClientRect().top + window.pageYOffset - 70, behavior: "smooth" });
             }
         };
-        
         li.appendChild(a);
         ul.appendChild(li);
     });
@@ -428,39 +330,20 @@ function generateTOC() {
 async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
-    
     try {
         const snap = await getDocs(collection(db, "characters"));
-        
-        if (snap.empty) {
-            list.innerHTML = '';
-            return;
-        }
-        
         const sorted = snap.docs
             .map(d => ({ id: d.id, ...d.data() }))
             .sort((a, b) => (b.updatedAt?.seconds ?? 0) - (a.updatedAt?.seconds ?? 0))
             .slice(0, 8);
-        
-        list.innerHTML = sorted.map(d => {
-            let dateStr = '';
-            if (d.updatedAt?.seconds) {
-                dateStr = new Date(d.updatedAt.seconds * 1000).toLocaleDateString('ko-KR');
-            }
-            return `
-                <div class="recent-item">
-                    <a href="detail.html#${d.id}" class="recent-link">${d.name || d.id}</a>
-                    <div class="recent-meta">
-                        <span>${d.updatedBy || '익명'}</span>
-                        ${dateStr ? `<span>${dateStr}</span>` : ''}
-                    </div>
-                </div>`;
-        }).join('');
-    } catch (e) {
-        console.error("Recent changes error:", e);
-    }
-    
-    setTimeout(renderRecentChanges, 30000);
+        list.innerHTML = sorted.map(d => `
+            <div class="recent-item">
+                <a href="detail.html#${d.id}" class="recent-link">${d.name || d.id}</a>
+                <div class="recent-meta">
+                    <span>${d.updatedBy || '익명'}</span>
+                </div>
+            </div>`).join('');
+    } catch (e) {}
 }
 
 window.onhashchange = () => location.reload();
