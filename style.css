@@ -194,15 +194,18 @@ body {
 }
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fill, 100px);
     gap: 0.5rem;
+    justify-content: flex-start;
 }
 .gallery-item {
-    aspect-ratio: 1 / 1;
+    width: 100px;
+    height: 100px;
     border: 1px solid #eee;
     overflow: hidden;
     cursor: pointer;
-    background: #eee;
+    background: #f8f9fa;
+    border-radius: 4px;
 }
 .gallery-item img {
     width: 100%;
@@ -278,15 +281,15 @@ body {
 }
 .edit-gallery-item img { width: 100%; height: 100%; object-fit: cover; }
 .remove-gallery-img {
-    position: absolute; top: 0; right: 0;
-    background: #ff4d4f; color: white;
-    width: 18px; height: 18px; font-size: 14px;
+    position: absolute; top: 2px; right: 2px;
+    background: rgba(0,0,0,0.5); color: white;
+    width: 20px; height: 20px; font-size: 14px;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer;
     font-weight: bold;
-    border-bottom-left-radius: 3px;
+    border-radius: 50%;
 }
-.remove-gallery-img:hover { background: #cf1322; }
+.remove-gallery-img:hover { background: #dc2626; }
 .gallery-clear-btn {
     font-size: 0.75rem; color: #ff4d4f; border: 1px solid #ff4d4f;
     background: white; padding: 0.2rem 0.5rem; border-radius: 3px;

@@ -177,14 +177,16 @@ function renderGalleryPreview() {
     galleryPreviewList.innerHTML = currentGallery.map((url, idx) => `
         <div class="edit-gallery-item">
             <img src="${url}" alt="Gallery ${idx}">
-            <div class="remove-gallery-img" onclick="window.removeGalleryImg(${idx})">×</div>
+            <div class="remove-gallery-img" onclick="window.removeGalleryImg(${idx})" title="삭제">⋮</div>
         </div>
     `).join('');
 }
 
 window.removeGalleryImg = (idx) => {
-    currentGallery.splice(idx, 1);
-    renderGalleryPreview();
+    if (confirm("정말로 이 사진을 지우시겠습니까?")) {
+        currentGallery.splice(idx, 1);
+        renderGalleryPreview();
+    }
 };
 
 dropZone.onclick = () => {
