@@ -3,7 +3,7 @@ import { doc, getDoc, collection, getDocs, setDoc, serverTimestamp, onSnapshot }
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
 
-// URL 처리: #이름 또는 #이름/갤러리
+// URL 처리
 const fullHash = decodeURIComponent(location.hash.substring(1));
 const isGalleryPage = fullHash.endsWith('/갤러리');
 const charId = isGalleryPage ? fullHash.replace('/갤러리', '') : fullHash;
@@ -19,37 +19,75 @@ let currentUser = null;
 let userRole = 'member';
 let isUserAdmin = false;
 
+// 권한 확인 및 마스터 관리자 예외 처리
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     const info = document.getElementById('user-info');
-    if (user && info) {
+    
+    if (user) {
+        // [중요] 마스터 관리자 계정은 즉시 admin 권한 부여
+        if (user.email === "hodu@youshouyan.wiki") {
+            userRole = 'admin';
+            isUserAdmin = true;
+        }
+
         try {
             const userSnap = await getDoc(doc(db, "users", user.uid));
             if (userSnap.exists()) {
-                userRole = userSnap.data().role || 'member';
-                isUserAdmin = userRole === 'admin';
+                const dbRole = userSnap.data().role || 'member';
+                // DB에 정보가 있으면 갱신 (마스터 계정은 이미 true이므로 유지됨)
+                if (dbRole === 'admin') {
+                    userRole = 'admin';
+                    isUserAdmin = true;
+                } else if (dbRole === 'banned') {
+                    alert("계정이 차단되었습니다.");
+                    document.body.innerHTML = '<div style="padding:50px; text-align:center;"><h1>접근 제한됨</h1></div>';
+                    return;
+                }
             }
-        } catch (e) { if (user.email === "hodu@youshouyan.wiki") isUserAdmin = true; }
-        info.innerHTML = `
-            ${isUserAdmin ? `<a href="admin.html" class="nav-link" style="border:1px solid white; padding:2px 5px; border-radius:3px; margin-right:10px;">관리자</a>` : ''}
-            <span style="color:white; font-size:12px;">${user.displayName || user.email.split('@')[0]}님</span>
-        `;
+        } catch (e) { console.error("Auth role check error:", e); }
+
+        if (info) {
+            info.innerHTML = `
+                ${isUserAdmin ? `<a href="admin.html" class="nav-link" style="border:1px solid white; padding:2px 5px; border-radius:3px; margin-right:10px;">관리자</a>` : ''}
+                <span style="color:white; font-size:12px;">${user.displayName || user.email.split('@')[0]}님</span>
+            `;
+        }
     }
-    if (editBtn) editBtn.style.display = isUserAdmin ? 'inline-block' : 'none';
+    updateEditVisibility();
 });
+
+function updateEditVisibility() {
+    if (editBtn) {
+        // 관리자라면 버튼 표시, 아니면 숨김
+        editBtn.style.display = isUserAdmin ? 'inline-block' : 'none';
+        editBtn.style.opacity = '1';
+    }
+}
+
+if (editBtn) {
+    editBtn.onclick = (e) => {
+        e.preventDefault();
+        if (!currentUser) { 
+            alert("편집을 위해 로그인이 필요합니다."); 
+            location.href = 'auth.html'; 
+        } else if (!isUserAdmin) { 
+            alert("🔒 관리자 권한이 필요합니다."); 
+        } else { 
+            location.href = `edit.html#${charId}`; 
+        }
+    };
+}
 
 async function loadDetail() {
     if (!charId) return;
-
-    // 초기 타이틀 설정
     const pageTitle = isGalleryPage ? `${charId} (갤러리)` : charId;
     if (displayNameArea) displayNameArea.textContent = pageTitle;
     document.title = `${pageTitle} - 유수언 위키`;
 
-    // 1. 기본 데이터 로드 (data.js)
     const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
     
-    // 2. 실시간 데이터 감시 (Firestore)
+    // Firestore 실시간 데이터 로드
     const docRef = doc(db, "characters", charId);
     onSnapshot(docRef, (snap) => {
         let data = baseData;
@@ -58,7 +96,7 @@ async function loadDetail() {
         }
         renderPage(data);
     }, (err) => {
-        console.error("Firestore error:", err);
+        console.error("Firestore loading error:", err);
         renderPage(baseData);
     });
 
@@ -73,28 +111,25 @@ function renderPage(data) {
     }
 }
 
-// [1] 일반 상세 페이지 렌더링
 function renderNormalDetailPage(data) {
     renderInfobox(data);
     renderContent(data.details || '내용이 없습니다.');
 }
 
-// [2] 갤러리 전용 페이지 렌더링
 function renderGalleryOnlyPage(data) {
-    if (infoboxArea) infoboxArea.innerHTML = ''; // 갤러리 페이지에선 인포박스 제거
+    if (infoboxArea) infoboxArea.innerHTML = '';
     if (tocWrapper) tocWrapper.style.display = 'none';
     
     const gallery = data.gallery || [];
     let html = `
-        <div style="margin-bottom:20px; padding:10px; background:#f8f9fa; border-radius:4px;">
-            <a href="#${charId}" style="color:var(--primary-color); font-weight:bold; text-decoration:none;">← ${charId} 문서로 돌아가기</a>
+        <div style="margin-bottom:20px; padding:10px; background:#f8f9fa; border-radius:4px; border:1px solid #eee;">
+            <a href="#${charId}" style="color:var(--primary-color); font-weight:bold; text-decoration:none;">← ${charId} 본문으로 돌아가기</a>
         </div>
-        <p style="margin-bottom:20px; color:#666;">${charId} 문서의 모든 사진들을 보여줍니다. (총 ${gallery.length}장)</p>
-        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px;">
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:15px; margin-top:20px;">
     `;
     
     if (gallery.length > 0) {
-        gallery.forEach((url, idx) => {
+        gallery.forEach((url) => {
             html += `
                 <div style="aspect-ratio:1/1; border:1px solid #ddd; border-radius:8px; overflow:hidden; cursor:pointer;" onclick="window.showLarge('${url}')">
                     <img src="${url}" style="width:100%; height:100%; object-fit:cover;">
@@ -114,14 +149,14 @@ function renderInfobox(data) {
     const gallery = data.gallery || [];
     
     const galleryHTML = gallery.length > 0 ? `
-        <div class="wiki-gallery-wrap" style="margin-top:10px; border-top:1px solid #eee; padding-top:10px;">
+        <div class="wiki-gallery-wrap" style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <strong style="font-size:12px;">갤러리</strong>
-                <a href="#${charId}/갤러리" style="font-size:11px; color:var(--primary-color); text-decoration:none;">전체보기</a>
+                <strong style="font-size:12px; color:#555;">갤러리</strong>
+                <a href="#${charId}/갤러리" style="font-size:11px; color:var(--primary-color); text-decoration:none;">전체보기 ></a>
             </div>
-            <div style="display:grid; grid-template-columns:repeat(auto-fill, 70px); gap:5px;">
+            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:5px;">
                 ${gallery.slice(0, 4).map(url => `
-                    <div style="width:70px; height:70px; border-radius:4px; overflow:hidden; cursor:pointer;" onclick="window.showLarge('${url}')">
+                    <div style="aspect-ratio:1/1; border-radius:4px; overflow:hidden; cursor:pointer;" onclick="window.showLarge('${url}')">
                         <img src="${url}" style="width:100%; height:100%; object-fit:cover;">
                     </div>
                 `).join('')}
@@ -130,8 +165,8 @@ function renderInfobox(data) {
     ` : '';
 
     infoboxArea.innerHTML = `
-        <div class="infobox" style="float:right; width:280px; border:1px solid var(--primary-color); margin-left:20px; background:white;">
-            <div style="background:var(--primary-color); color:white; padding:8px; text-align:center; font-weight:bold;">${data.name || charId}</div>
+        <div class="infobox" style="float:right; width:280px; border:1px solid var(--primary-color); margin-left:20px; background:white; position:relative; z-index:10;">
+            <div style="background:var(--primary-color); color:white; padding:8px; text-align:center; font-weight:800; font-size:1rem;">${data.name || charId}</div>
             <div style="padding:10px; text-align:center; border-bottom:1px solid #eee;" onclick="window.showLarge('${data.image}')">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" style="max-width:100%; cursor:zoom-in;">
             </div>
@@ -150,7 +185,7 @@ function renderInfobox(data) {
 function renderContent(details) {
     if (!contentArea || isGalleryPage) return;
     
-    // 복잡한 정규식 대신 안전한 변환 로직 사용
+    // 마크다운 변환 로직
     let html = details
         .split('\n').map(line => {
             if (line.startsWith('## ')) return `<h2>${line.replace('## ', '')}</h2>`;
@@ -160,12 +195,12 @@ function renderContent(details) {
             return `<p>${line}</p>`;
         }).join('');
 
-    // 간단한 마크다운 처리
     html = html
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" style="max-width:100%; border-radius:8px; display:block; margin:20px auto;">')
         .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
 
+    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
     contentArea.innerHTML = html;
     generateTOC();
 }
@@ -193,12 +228,11 @@ function generateTOC() {
     }
 }
 
-// 사진 크게 보기 (모달 없이 새창 또는 단순 오버레이)
 window.showLarge = (url) => {
-    if (!url) return;
+    if (!url || url.includes('placeholder')) return;
     const overlay = document.createElement('div');
     overlay.style = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; display:flex; align-items:center; justify-content:center; cursor:zoom-out;';
-    overlay.innerHTML = `<img src="${url}" style="max-width:95%; max-height:95%; object-fit:contain; border:2px solid white;">`;
+    overlay.innerHTML = `<img src="${url}" style="max-width:95%; max-height:95%; object-fit:contain; border:2px solid white; box-shadow:0 0 20px rgba(0,0,0,0.5);">`;
     overlay.onclick = () => overlay.remove();
     document.body.appendChild(overlay);
 };
@@ -209,7 +243,7 @@ async function renderRecentChanges() {
     try {
         const snap = await getDocs(collection(db, "characters"));
         const data = snap.docs.map(d => d.data()).sort((a,b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)).slice(0, 5);
-        list.innerHTML = data.map(d => `<div style="margin-bottom:8px;"><a href="detail.html#${d.id}" style="font-size:13px; color:var(--text-link); text-decoration:none;">${d.name || d.id}</a></div>`).join('');
+        list.innerHTML = data.map(d => `<div style="margin-bottom:10px;"><a href="detail.html#${d.id}" style="font-size:13px; color:var(--text-link); text-decoration:none; font-weight:700;">${d.name || d.id}</a></div>`).join('');
     } catch(e) {}
 }
 
