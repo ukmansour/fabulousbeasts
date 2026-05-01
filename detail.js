@@ -1,5 +1,5 @@
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc, collection, getDocs, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
 
@@ -21,14 +21,31 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     const info = document.getElementById('user-info');
     if (user && info) {
-        let isAdmin = false;
         try {
-            const userSnap = await getDoc(doc(db, "users", user.uid));
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
             if (userSnap.exists()) {
                 userRole = userSnap.data().role || 'member';
                 isAdmin = userRole === 'admin';
+            } else {
+                // [가입 즉시 등록 로직]
+                const isSupremeAdmin = user.email === "ukmansour@youshouyan.wiki";
+                const newUserData = {
+                    uid: user.uid,
+                    nickname: user.displayName || "새 회원",
+                    email: user.email || "",
+                    role: isSupremeAdmin ? 'admin' : 'member',
+                    joinedAt: serverTimestamp(),
+                    contributionCount: 0
+                };
+                await setDoc(userRef, newUserData);
+                userRole = isSupremeAdmin ? 'admin' : 'member';
+                isAdmin = isSupremeAdmin;
             }
-        } catch (e) { console.error("Error fetching user role:", e); }
+        } catch (e) { 
+            console.error("Error fetching user role:", e);
+            if (user.email === "ukmansour@youshouyan.wiki") { userRole = 'admin'; isAdmin = true; }
+        }
 
         info.innerHTML = `
             ${isAdmin ? `<a href="admin.html" class="nav-link" style="color:white; font-weight:bold; margin-right:1rem; border:1px solid rgba(255,255,255,0.3); padding:0.2rem 0.5rem; border-radius:3px;">관리자 설정</a>` : ''}

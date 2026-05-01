@@ -1,6 +1,6 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
 import { db, auth } from './firebase-config.js';
-import { collection, getDocs, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -18,24 +18,31 @@ onAuthStateChanged(auth, async (user) => {
             if (userSnap.exists()) {
                 const userData = userSnap.data();
                 isAdmin = userData.role === 'admin';
+                // [이메일 정보 업데이트] 이메일이 기록되지 않은 경우를 대비
+                if (!userData.email && user.email) {
+                    await updateDoc(userRef, { email: user.email });
+                }
             } else {
-                // [강력한 자동 복구] 문서가 없으면 즉시 생성
-                console.log("Auto-repairing user document for:", user.uid);
-                const isSupremeAdmin = user.email === "ukmansour@youshouyan.wiki" || user.displayName === "ukmansour"; // 특정 관리자 이메일/닉네임 보호
+                // [가입 즉시 등록 로직] 문서가 없으면 그 즉시 생성 (0.1초 지연도 허용 안함)
+                console.log("Creating missing user document for:", user.uid);
+                const isSupremeAdmin = user.email === "ukmansour@youshouyan.wiki"; 
                 
                 const newUserData = {
                     uid: user.uid,
-                    nickname: user.displayName || "가입한 유저",
+                    nickname: user.displayName || "새 회원",
+                    email: user.email || "",
                     role: isSupremeAdmin ? 'admin' : 'member',
                     joinedAt: serverTimestamp(),
                     contributionCount: 0
                 };
                 await setDoc(userRef, newUserData);
                 isAdmin = isSupremeAdmin;
-                console.log("User document repaired. Admin status:", isAdmin);
+                console.log("User document created successfully.");
             }
         } catch (e) { 
-            console.error("Critical: User sync failed:", e); 
+            console.error("User sync failed:", e); 
+            // 마스터 계정은 DB 오류 시에도 관리자 권한 허용
+            if (user.email === "ukmansour@youshouyan.wiki") isAdmin = true;
         }
 
         info.innerHTML = `
