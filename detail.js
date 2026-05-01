@@ -150,11 +150,11 @@ async function loadDetail() {
 function renderInfobox(data) {
     infoboxArea.innerHTML = `
         <div class="infobox">
-            <div id="gallery-placeholder"></div>
             <div class="infobox-title">${data.name}</div>
             <div class="infobox-image">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="${data.name}">
             </div>
+            <div id="gallery-placeholder"></div>
             <table class="infobox-table">
                 ${data.alias ? `<tr><th>별명</th><td>${data.alias}</td></tr>` : ''}
                 ${data.species ? `<tr><th>종족</th><td>${data.species}</td></tr>` : ''}
