@@ -29,7 +29,7 @@ onAuthStateChanged(auth, async (user) => {
                 isAdmin = userRole === 'admin';
             } else {
                 // [가입 즉시 등록 로직]
-                const isSupremeAdmin = user.email === "ukmansour@youshouyan.wiki";
+                const isSupremeAdmin = user.email === "hodu@youshouyan.wiki";
                 const newUserData = {
                     uid: user.uid,
                     nickname: user.displayName || "새 회원",
@@ -44,7 +44,7 @@ onAuthStateChanged(auth, async (user) => {
             }
         } catch (e) { 
             console.error("Error fetching user role:", e);
-            if (user.email === "ukmansour@youshouyan.wiki") { userRole = 'admin'; isAdmin = true; }
+            if (user.email === "hodu@youshouyan.wiki") { userRole = 'admin'; isAdmin = true; }
         }
 
         info.innerHTML = `

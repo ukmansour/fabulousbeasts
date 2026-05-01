@@ -25,7 +25,7 @@ onAuthStateChanged(auth, async (user) => {
             } else {
                 // [가입 즉시 등록 로직] 문서가 없으면 그 즉시 생성 (0.1초 지연도 허용 안함)
                 console.log("Creating missing user document for:", user.uid);
-                const isSupremeAdmin = user.email === "ukmansour@youshouyan.wiki"; 
+                const isSupremeAdmin = user.email === "hodu@youshouyan.wiki"; 
                 
                 const newUserData = {
                     uid: user.uid,
@@ -42,7 +42,7 @@ onAuthStateChanged(auth, async (user) => {
         } catch (e) { 
             console.error("User sync failed:", e); 
             // 마스터 계정은 DB 오류 시에도 관리자 권한 허용
-            if (user.email === "ukmansour@youshouyan.wiki") isAdmin = true;
+            if (user.email === "hodu@youshouyan.wiki") isAdmin = true;
         }
 
         info.innerHTML = `
