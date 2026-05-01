@@ -96,6 +96,13 @@ async function loadDetail() {
         if (snap.exists()) {
             data = { ...baseData, ...snap.data() };
         }
+        
+        // 표시 이름 갱신 (ID가 아닌 실제 이름으로)
+        const nameToDisplay = data.name || charId;
+        const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
+        if (displayNameArea) displayNameArea.textContent = finalTitle;
+        document.title = `${finalTitle} - 유수언 위키`;
+
         renderPage(data);
     }, (err) => {
         console.error("Firestore loading error:", err);

@@ -208,7 +208,7 @@ function initSearch() {
         if (val.length < 1) { results.classList.remove('active'); return; }
         const matches = mergedCharacters.filter(c => (c.name||'').toLowerCase().includes(val) || c.id.toLowerCase().includes(val)).slice(0, 10);
         results.innerHTML = matches.length > 0 
-            ? matches.map(m => `<div class="search-item" onclick="location.href='detail.html#${m.id}'"><strong>${m.name||m.id}</strong></div>`).join('')
+            ? matches.map(m => `<div class="search-item" onclick="location.href='detail.html#${m.id}'"><strong>${m.name || m.id}</strong></div>`).join('')
             : `<div class="search-item" onclick="location.href='edit.html#${val}'">"${val}" 문서 만들기</div>`;
         results.classList.add('active');
     };
