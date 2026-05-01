@@ -9,6 +9,10 @@ const infoboxArea = document.getElementById('infobox-wrap');
 const tocArea = document.getElementById('toc-content');
 const tocWrapper = document.getElementById('wiki-toc');
 const editBtn = document.getElementById('go-edit');
+const displayNameArea = document.getElementById('display-name');
+
+let currentGallery = [];
+let modalElement = null;
 
 let currentUser = null;
 let userRole = 'member';
@@ -107,6 +111,7 @@ async function loadDetail() {
                 document.getElementById('last-editor').textContent = data.updatedBy || '시스템';
 
                 renderInfobox(data);
+                renderGallery(data.gallery);
                 renderContent(data.details || '본문 내용이 없습니다.');
             } else {
                 // [폴백] 인코딩된 ID로도 시도 (이전 버전 호환성)
@@ -145,6 +150,7 @@ async function loadDetail() {
 function renderInfobox(data) {
     infoboxArea.innerHTML = `
         <div class="infobox">
+            <div id="gallery-placeholder"></div>
             <div class="infobox-title">${data.name}</div>
             <div class="infobox-image">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="${data.name}">
@@ -158,6 +164,76 @@ function renderInfobox(data) {
         </div>
     `;
 }
+
+function renderGallery(gallery) {
+    if (!gallery || !Array.isArray(gallery) || gallery.length === 0) return;
+    currentGallery = gallery;
+    
+    const placeholder = document.getElementById('gallery-placeholder');
+    if (!placeholder) return;
+
+    // 최대 3개 미리보기
+    const previewImages = gallery.slice(0, 3);
+    
+    placeholder.innerHTML = `
+        <div class="wiki-gallery-wrap">
+            <div class="gallery-title-row">
+                <h3>갤러리</h3>
+                <a href="#" class="gallery-view-btn" onclick="window.openGallery(0); return false;">갤러리 보기</a>
+            </div>
+            <div class="gallery-grid">
+                ${previewImages.map((url, idx) => `
+                    <div class="gallery-item" onclick="window.openGallery(${idx})">
+                        <img src="${url}" alt="Gallery ${idx}">
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+
+    initGalleryModal();
+}
+
+function initGalleryModal() {
+    if (document.getElementById('gallery-modal')) return;
+    
+    const modal = document.createElement('div');
+    modal.id = 'gallery-modal';
+    modal.className = 'gallery-modal';
+    modal.innerHTML = `
+        <span class="modal-close" onclick="window.closeGallery()">×</span>
+        <div class="modal-content">
+            <img id="modal-img" src="">
+        </div>
+        <div class="modal-nav">
+            <button class="modal-nav-btn" onclick="window.changeGallery(-1)">이전</button>
+            <button class="modal-nav-btn" onclick="window.changeGallery(1)">다음</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    modalElement = modal;
+}
+
+let currentIdx = 0;
+window.openGallery = (idx) => {
+    currentIdx = idx;
+    const img = document.getElementById('modal-img');
+    if (img) {
+        img.src = currentGallery[currentIdx];
+        modalElement.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+};
+
+window.closeGallery = () => {
+    modalElement.classList.remove('active');
+    document.body.style.overflow = 'auto';
+};
+
+window.changeGallery = (dir) => {
+    currentIdx = (currentIdx + dir + currentGallery.length) % currentGallery.length;
+    document.getElementById('modal-img').src = currentGallery[currentIdx];
+};
 
 function renderContent(details) {
     if (!details) return;

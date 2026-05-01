@@ -14,6 +14,11 @@ const uploadStatus = document.getElementById('upload-status');
 const uploadMsg = document.getElementById('upload-msg');
 const editor = document.getElementById('edit-content');
 const categorySelect = document.getElementById('edit-category');
+const galleryDropZone = document.getElementById('gallery-drop-zone');
+const galleryInput = document.getElementById('gallery-input');
+const galleryPreviewList = document.getElementById('gallery-preview-list');
+
+let currentGallery = [];
 
 let currentUser = null;
 let userRole = 'member';
@@ -160,7 +165,27 @@ function fillForm(data) {
         previewImg.style.display = 'block';
         uploadMsg.style.display = 'none';
     }
+
+    if (data.gallery && Array.isArray(data.gallery)) {
+        currentGallery = data.gallery;
+        renderGalleryPreview();
+    }
 }
+
+function renderGalleryPreview() {
+    if (!galleryPreviewList) return;
+    galleryPreviewList.innerHTML = currentGallery.map((url, idx) => `
+        <div class="edit-gallery-item">
+            <img src="${url}" alt="Gallery ${idx}">
+            <div class="remove-gallery-img" onclick="window.removeGalleryImg(${idx})">×</div>
+        </div>
+    `).join('');
+}
+
+window.removeGalleryImg = (idx) => {
+    currentGallery.splice(idx, 1);
+    renderGalleryPreview();
+};
 
 dropZone.onclick = () => {
     if (saveBtn.disabled) {
@@ -262,6 +287,49 @@ imageInput.onchange = async (e) => {
     }
 };
 
+// 갤러리 업로드 처리
+if (galleryDropZone) {
+    galleryDropZone.onclick = () => {
+        if (!saveBtn.disabled) galleryInput.click();
+    };
+}
+
+if (galleryInput) {
+    galleryInput.onchange = async (e) => {
+        const files = Array.from(e.target.files);
+        if (files.length === 0) return;
+        
+        if (userRole !== 'admin') {
+            alert("관리자만 사진을 추가할 수 있습니다.");
+            return;
+        }
+
+        saveBtn.disabled = true;
+        saveBtn.textContent = '사진 업로드 중...';
+
+        for (const file of files) {
+            try {
+                const compressed = await compressImage(file);
+                const safeName = file.name.replace(/[^a-z0-9.]/gi, '_');
+                const path = `characters/${charId}/gallery/${Date.now()}_${safeName}`;
+                const storageRef = ref(storage, path);
+                
+                const uploadTask = await uploadBytesResumable(storageRef, compressed);
+                const url = await getDownloadURL(uploadTask.ref);
+                currentGallery.push(url);
+                renderGalleryPreview();
+            } catch (err) {
+                console.error("Gallery upload error:", err);
+                alert(`${file.name} 업로드 실패: ${err.message}`);
+            }
+        }
+        
+        saveBtn.disabled = false;
+        saveBtn.textContent = '저장하기';
+        checkPermission();
+    };
+}
+
 async function compressImage(file) {
     return new Promise((resolve) => {
         console.log("Starting image compression...");
@@ -317,6 +385,7 @@ form.onsubmit = async (e) => {
         alias: document.getElementById('info-alias').value,
         birthday: document.getElementById('info-birthday').value,
         image: document.getElementById('image-url').value,
+        gallery: currentGallery, // 갤러리 추가
         updatedAt: serverTimestamp(),
         updatedBy: currentUser.displayName || '익명'
     };

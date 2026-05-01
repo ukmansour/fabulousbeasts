@@ -159,3 +159,112 @@ body {
     }
 }
 
+/* Gallery System */
+.wiki-gallery-wrap {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+.gallery-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+.gallery-title-row h3 {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #444;
+}
+.gallery-view-btn {
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    border: 1px solid var(--primary-color);
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.gallery-view-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+.gallery-item {
+    aspect-ratio: 1 / 1;
+    border: 1px solid #eee;
+    overflow: hidden;
+    cursor: pointer;
+    background: #eee;
+}
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: 0.2s;
+}
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+/* Modal for Gallery */
+.gallery-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 5000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+.gallery-modal.active { display: flex; }
+.modal-close {
+    position: absolute; top: 1rem; right: 1rem;
+    color: white; font-size: 2rem; cursor: pointer;
+}
+.modal-content {
+    max-width: 90%;
+    max-height: 80vh;
+}
+.modal-content img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+}
+.modal-nav {
+    display: flex; gap: 2rem; margin-top: 1.5rem;
+}
+.modal-nav-btn {
+    color: white; font-size: 1.5rem; cursor: pointer; border: 1px solid white; padding: 0.5rem 1rem;
+}
+
+/* Edit Gallery UI */
+.edit-gallery-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+.edit-gallery-item {
+    position: relative;
+    aspect-ratio: 1/1;
+    border: 1px solid #ddd;
+}
+.edit-gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+.remove-gallery-img {
+    position: absolute; top: 0; right: 0;
+    background: rgba(255,0,0,0.7); color: white;
+    width: 20px; height: 20px; font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+}
+
