@@ -26,11 +26,19 @@ const MAX_SIZE_MB = 25;
 
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
+    userRole = 'member'; // 초기화
+    
     if (user) {
+        // [중요] 마스터 관리자 계정은 즉시 admin 권한 부여
+        if (user.email === "hodu@youshouyan.wiki") {
+            userRole = 'admin';
+        }
+
         try {
             const userSnap = await getDoc(doc(db, "users", user.uid));
             if (userSnap.exists()) {
-                userRole = userSnap.data().role || 'member';
+                const dbRole = userSnap.data().role || 'member';
+                if (dbRole === 'admin') userRole = 'admin';
             }
         } catch (e) { console.error("Error fetching user role:", e); }
     }

@@ -8,9 +8,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    // 사용자의 현재 정보를 가져옴
+    // 사용자의 현재 정보를 가져옴 (문서가 없을 경우 기본값 반환)
     function getUserData() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+      let userPath = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(userPath) ? get(userPath).data : {"role": "member"};
     }
 
     // 차단 여부 확인
@@ -19,10 +20,11 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // 마스터 이메일이거나, DB 상의 role이 admin인 경우 허용 (차단되지 않았어야 함)
-      return isAuthenticated() && !isBanned() && (
+      // 1. 인증된 사용자여야 함
+      // 2. 마스터 이메일이면 무조건 허용 OR (차단되지 않았고 DB상 role이 admin인 경우)
+      return isAuthenticated() && (
         request.auth.token.email == "hodu@youshouyan.wiki" ||
-        getUserData().role == 'admin'
+        (!isBanned() && getUserData().role == 'admin')
       );
     }
 

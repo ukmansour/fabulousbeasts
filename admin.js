@@ -10,6 +10,12 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
 
     try {
+        // [중요] 마스터 관리자 계정은 즉시 허용
+        if (user.email === "hodu@youshouyan.wiki") {
+            renderAdminPage();
+            return;
+        }
+
         const userSnap = await getDoc(doc(db, "users", user.uid));
         if (userSnap.exists() && userSnap.data().role === 'admin') {
             renderAdminPage();

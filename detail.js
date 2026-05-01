@@ -22,8 +22,10 @@ let isUserAdmin = false;
 // 권한 확인 및 마스터 관리자 예외 처리
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
+    userRole = 'member';
+    isUserAdmin = false;
     const info = document.getElementById('user-info');
-    
+
     if (user) {
         // [중요] 마스터 관리자 계정은 즉시 admin 권한 부여
         if (user.email === "hodu@youshouyan.wiki") {
