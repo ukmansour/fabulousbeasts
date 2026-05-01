@@ -336,13 +336,23 @@ function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     
-    const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(8));
-    onSnapshot(q, (snap) => {
+    const charCol = collection(db, "characters");
+    const q = query(charCol, orderBy("updatedAt", "desc"), limit(8));
+    
+    onSnapshot(q, async (snap) => {
+        let docs = snap.docs;
         if (snap.empty) {
-            list.innerHTML = '<p style="font-size:0.8rem; color:#999;">변경 내역이 없습니다.</p>';
+            try {
+                const fallbackSnap = await getDocs(query(charCol, limit(8)));
+                docs = fallbackSnap.docs;
+            } catch (err) { console.error("Fallback query failed:", err); }
+        }
+
+        if (docs.length === 0) {
+            list.innerHTML = '';
             return;
         }
-        list.innerHTML = snap.docs.map(doc => {
+        list.innerHTML = docs.map(doc => {
             const d = doc.data();
             return `
                 <div class="recent-item">

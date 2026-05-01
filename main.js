@@ -105,21 +105,33 @@ function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     
-    console.log("Starting real-time recent changes listener...");
-    const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(12));
+    const charCol = collection(db, "characters");
+    const q = query(charCol, orderBy("updatedAt", "desc"), limit(12));
     
-    onSnapshot(q, (snap) => {
+    onSnapshot(q, async (snap) => {
+        let docs = snap.docs;
+        
+        // [폴백] 수정 시간이 있는 문서가 없으면 전체 목록에서 가져옴
         if (snap.empty) {
-            list.innerHTML = '<p style="font-size:0.8rem; color:#999;">변경 내역이 없습니다.</p>';
+            try {
+                const fallbackSnap = await getDocs(query(charCol, limit(12)));
+                docs = fallbackSnap.docs;
+            } catch (err) { console.error("Fallback query failed:", err); }
+        }
+
+        if (docs.length === 0) {
+            list.innerHTML = '<p style="font-size:0.8rem; color:#999;">문서가 아직 없습니다.</p>';
             return;
         }
         
-        list.innerHTML = snap.docs.map(doc => {
+        list.innerHTML = docs.map(doc => {
             const d = doc.data();
             let dateStr = '방금 전';
             if (d.updatedAt) {
                 const date = d.updatedAt.seconds ? new Date(d.updatedAt.seconds * 1000) : new Date(d.updatedAt);
                 dateStr = isNaN(date) ? '방금 전' : date.toLocaleDateString();
+            } else {
+                dateStr = '기록 없음';
             }
             
             return `
