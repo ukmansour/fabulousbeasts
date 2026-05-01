@@ -26,6 +26,17 @@ onAuthStateChanged(auth, async (user) => {
             const userSnap = await getDoc(userRef);
             if (userSnap.exists()) {
                 userRole = userSnap.data().role || 'member';
+                if (userRole === 'banned') {
+                    alert("⚠️ 귀하의 계정은 차단되었습니다.");
+                    document.body.innerHTML = `
+                        <div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#f8f9fa; font-family:sans-serif;">
+                            <h1 style="color:#dc2626; font-size:3rem; margin-bottom:1rem;">🚫 접근 차단됨</h1>
+                            <p style="font-size:1.2rem; color:#666;">관리자에 의해 이용 권한이 제한되었습니다.</p>
+                            <button onclick="auth.signOut().then(() => location.reload())" style="margin-top:2rem; padding:0.8rem 2rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">로그아웃</button>
+                        </div>
+                    `;
+                    return;
+                }
                 isAdmin = userRole === 'admin';
             } else {
                 // [가입 즉시 등록 로직]

@@ -1,5 +1,6 @@
 import { db, auth } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { CHARACTERS } from './data.js';
 
 const epList = document.getElementById('episode-list');
@@ -21,15 +22,30 @@ if (input) {
     };
 }
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
-    if (user && info) {
-        info.innerHTML = `<span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName || '유저'}님</span>
-                          <a href="#" class="nav-link" id="logout-btn">로그아웃</a>`;
-        document.getElementById('logout-btn').onclick = (e) => {
-            e.preventDefault();
-            if (confirm("로그아웃하시겠습니까?")) signOut(auth).then(() => location.href = 'index.html');
-        };
+    if (user) {
+        // [차단 확인]
+        try {
+            const userSnap = await getDoc(doc(db, "users", user.uid));
+            if (userSnap.exists() && userSnap.data().role === 'banned') {
+                alert("⚠️ 귀하의 계정은 차단되었습니다.");
+                document.body.innerHTML = `<div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#f8f9fa;">
+                    <h1 style="color:#dc2626;">🚫 접근 차단됨</h1>
+                    <button onclick="auth.signOut().then(() => location.reload())" style="margin-top:2rem; padding:0.8rem 2rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer;">로그아웃</button>
+                </div>`;
+                return;
+            }
+        } catch (e) { console.error(e); }
+
+        if (info) {
+            info.innerHTML = `<span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName || '유저'}님</span>
+                              <a href="#" class="nav-link" id="logout-btn">로그아웃</a>`;
+            document.getElementById('logout-btn').onclick = (e) => {
+                e.preventDefault();
+                if (confirm("로그아웃하시겠습니까?")) signOut(auth).then(() => location.href = 'index.html');
+            };
+        }
     }
 });
 

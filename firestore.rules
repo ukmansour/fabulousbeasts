@@ -8,17 +8,27 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // 사용자의 현재 정보를 가져옴
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // 차단 여부 확인
+    function isBanned() {
+      return isAuthenticated() && getUserData().role == 'banned';
+    }
+
     function isAdmin() {
-      // 마스터 이메일이거나, DB 상의 role이 admin인 경우 허용
-      return isAuthenticated() && (
+      // 마스터 이메일이거나, DB 상의 role이 admin인 경우 허용 (차단되지 않았어야 함)
+      return isAuthenticated() && !isBanned() && (
         request.auth.token.email == "hodu@youshouyan.wiki" ||
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
+        getUserData().role == 'admin'
       );
     }
 
     // [유저 컬렉션]
     match /users/{userId} {
-      allow read: if true;
+      allow read: if !isBanned(); 
       allow create: if request.auth != null; 
       allow update: if (request.auth.token.email == "hodu@youshouyan.wiki") || isAdmin() || (request.auth != null && request.auth.uid == userId);
       allow delete: if (request.auth.token.email == "hodu@youshouyan.wiki") || isAdmin();
@@ -26,19 +36,19 @@ service cloud.firestore {
 
     // [캐릭터 컬렉션]
     match /characters/{charId} {
-      allow read: if true;
+      allow read: if !isBanned();
       allow write: if isAdmin();
     }
 
     // [카테고리]
     match /categories/{catId} {
-      allow read: if true;
+      allow read: if !isBanned();
       allow write: if isAdmin();
     }
 
     // [공지사항]
     match /notices/{noticeId} {
-      allow read: if true;
+      allow read: if !isBanned();
       allow write: if isAdmin();
     }
   }

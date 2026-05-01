@@ -17,6 +17,17 @@ onAuthStateChanged(auth, async (user) => {
             
             if (userSnap.exists()) {
                 const userData = userSnap.data();
+                if (userData.role === 'banned') {
+                    alert("⚠️ 귀하의 계정은 차단되었습니다. 사이트 이용이 불가능합니다.");
+                    document.body.innerHTML = `
+                        <div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#f8f9fa; font-family:sans-serif;">
+                            <h1 style="color:#dc2626; font-size:3rem; margin-bottom:1rem;">🚫 접근 차단됨</h1>
+                            <p style="font-size:1.2rem; color:#666;">관리자에 의해 이용 권한이 제한되었습니다.</p>
+                            <button onclick="auth.signOut().then(() => location.reload())" style="margin-top:2rem; padding:0.8rem 2rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">로그아웃</button>
+                        </div>
+                    `;
+                    return;
+                }
                 isAdmin = userData.role === 'admin';
                 // [이메일 정보 업데이트] 이메일이 기록되지 않은 경우를 대비
                 if (!userData.email && user.email) {

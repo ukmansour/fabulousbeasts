@@ -109,37 +109,50 @@ async function loadAndRenderUsers() {
 
         users.forEach(user => {
             const isMe = user.uid === currentUser.uid;
-            const isAdmin = user.role === 'admin';
+            const role = user.role || 'member';
+            const isAdmin = role === 'admin';
+            const isBanned = role === 'banned';
             const date = user.joinedAt?.seconds
                 ? new Date(user.joinedAt.seconds * 1000).toLocaleDateString('ko-KR')
                 : '기록 없음';
 
-            const roleBadge = isAdmin
-                ? `<span style="background:#fef3c7; color:#92400e; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">👑 관리자</span>`
-                : `<span style="background:#f0f9ff; color:#0369a1; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">일반 멤버</span>`;
+            let roleBadge = '';
+            if (isAdmin) roleBadge = `<span style="background:#fef3c7; color:#92400e; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">👑 관리자</span>`;
+            else if (isBanned) roleBadge = `<span style="background:#fee2e2; color:#dc2626; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">🚫 차단됨</span>`;
+            else roleBadge = `<span style="background:#f0f9ff; color:#0369a1; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">일반 멤버</span>`;
 
-            let actionBtn = '';
+            let actionBtns = '';
             if (isMe) {
-                actionBtn = `<span style="font-size:0.8rem; color:#aaa;">(본인)</span>`;
-            } else if (isAdmin) {
-                actionBtn = `<button onclick="window.changeRole('${user.id}', 'member')"
-                    style="padding:0.35rem 0.8rem; background:white; border:1.5px solid #dc2626; color:#dc2626; border-radius:4px; cursor:pointer; font-weight:700; font-size:0.8rem;">
-                    ▼ 멤버로 강등
-                </button>`;
+                actionBtns = `<span style="font-size:0.8rem; color:#aaa;">(본인)</span>`;
             } else {
-                actionBtn = `<button onclick="window.changeRole('${user.id}', 'admin')"
-                    style="padding:0.35rem 0.8rem; background:#00a0e9; border:none; color:white; border-radius:4px; cursor:pointer; font-weight:700; font-size:0.8rem;">
-                    ▲ 관리자 승격
-                </button>`;
+                // 일반 멤버라면 -> 관리자 승격 / 차단 버튼
+                if (role === 'member') {
+                    actionBtns = `
+                        <button onclick="window.changeRole('${user.id}', 'admin')" style="padding:0.3rem 0.6rem; background:#00a0e9; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem; margin-right:4px;">▲ 관리자</button>
+                        <button onclick="window.changeRole('${user.id}', 'banned')" style="padding:0.3rem 0.6rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem;">🚫 차단</button>
+                    `;
+                } 
+                // 관리자라면 -> 멤버 강등
+                else if (role === 'admin') {
+                    actionBtns = `
+                        <button onclick="window.changeRole('${user.id}', 'member')" style="padding:0.3rem 0.6rem; background:white; border:1px solid #dc2626; color:#dc2626; border-radius:4px; cursor:pointer; font-size:0.75rem;">▼ 멤버로 강등</button>
+                    `;
+                }
+                // 차단 상태라면 -> 차단 해제(멤버로)
+                else if (role === 'banned') {
+                    actionBtns = `
+                        <button onclick="window.changeRole('${user.id}', 'member')" style="padding:0.3rem 0.6rem; background:#10b981; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem;">✅ 차단 해제</button>
+                    `;
+                }
             }
 
             html += `
-                <tr style="border-bottom:1px solid #eee; ${isMe ? 'background:#f8faff;' : ''}">
+                <tr style="border-bottom:1px solid #eee; ${isMe ? 'background:#f8faff;' : ''} ${isBanned ? 'background:#fff5f5;' : ''}">
                     <td style="padding:0.8rem; font-weight:${isMe ? '800' : '500'};">${user.nickname || '이름 없음'}${isMe ? ' <span style="color:#00a0e9; font-size:0.75rem;">(나)</span>' : ''}</td>
                     <td style="padding:0.8rem; color:#666; font-size:0.85rem;">${user.email || '-'}</td>
                     <td style="padding:0.8rem; text-align:center;">${roleBadge}</td>
                     <td style="padding:0.8rem; text-align:center; color:#999; font-size:0.85rem;">${date}</td>
-                    <td style="padding:0.8rem; text-align:center;">${actionBtn}</td>
+                    <td style="padding:0.8rem; text-align:center;">${actionBtns}</td>
                 </tr>
             `;
         });
@@ -154,7 +167,11 @@ async function loadAndRenderUsers() {
 }
 
 window.changeRole = async (uid, newRole) => {
-    const actionText = newRole === 'admin' ? '관리자로 승격' : '일반 멤버로 강등';
+    let actionText = '';
+    if (newRole === 'admin') actionText = '관리자로 승격';
+    else if (newRole === 'banned') actionText = '해당 사용자를 차단';
+    else actionText = '권한을 일반 멤버로 변경(또는 차단 해제)';
+
     const code = prompt(`${actionText}하시겠습니까?\n보안 코드를 입력하세요:`);
     if (code === null) return;
     if (code !== "5555") { alert("보안 코드가 틀렸습니다."); return; }
