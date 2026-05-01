@@ -214,10 +214,19 @@ body {
 .modal-thumb.active { opacity: 1; border-color: #00a0e9; transform: scale(1.1); }
 .modal-thumb:hover { opacity: 0.8; }
 
-.gallery-preview-simple { display: flex; gap: 4px; margin-top: 8px; width: 100%; }
-.gallery-thumb-simple { flex: 1; aspect-ratio: 1; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #eee; width: 0; /* flex-basis 0 대용 */ }
-.gallery-more-btn { flex: 1; aspect-ratio: 1; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 0.65rem; font-weight: bold; color: #475569; width: 0; }
-.gallery-more-btn:hover { background: #e2e8f0; }
+/* New Gallery Preview Layout */
+.gallery-row-3 { display: flex; gap: 4px; margin-top: 8px; width: 100%; }
+.gallery-thumb-sq { flex: 1; aspect-ratio: 1/1; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #eee; width: 0; }
+.gallery-thumb-sq:hover { filter: brightness(0.9); }
+
+.gallery-wide-btn { 
+    width: 100%; margin-top: 8px; padding: 10px; 
+    background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; 
+    color: #475569; font-size: 0.85rem; font-weight: bold; 
+    cursor: pointer; text-align: center; transition: 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.gallery-wide-btn:hover { background: #e2e8f0; color: #1e293b; }
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @media (max-width: 768px) {

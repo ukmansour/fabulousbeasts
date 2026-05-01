@@ -200,22 +200,21 @@ function renderInfobox(data) {
 
     const themeColor = data.color || 'var(--primary-color)';
 
-    // [갤러리 미리보기: 가로 3분할 방식]
+    // [갤러리 미리보기: 3칸 정사각형 + 하단 가로 버튼]
     let galleryHtml = '';
     if (data.gallery && data.gallery.length > 0) {
         currentGallery = data.gallery;
-        const previewImages = data.gallery.slice(0, 2); 
+        const previewImages = data.gallery.slice(0, 3); // 3장 추출
         
         galleryHtml = `
-            <div class="gallery-preview-simple">
+            <div class="gallery-row-3">
                 ${previewImages.map((img, idx) => `
-                    <img src="${img}" class="gallery-thumb-simple" onclick="window.openGallery(${idx})" alt="썸네일 ${idx+1}">
+                    <img src="${img}" class="gallery-thumb-sq" onclick="window.openGallery(${idx})" alt="썸네일 ${idx+1}">
                 `).join('')}
-                <div class="gallery-more-btn" onclick="window.openGallery(0)">
-                    <span style="font-size:1.1rem; line-height:1;">+</span>
-                    <span style="font-size:0.6rem;">더 보기 (${data.gallery.length})</span>
-                </div>
             </div>
+            <button class="gallery-wide-btn" onclick="window.openGallery(0)">
+                🖼️ 갤러리 더보기 (${data.gallery.length})
+            </button>
         `;
     }
 
@@ -224,8 +223,8 @@ function renderInfobox(data) {
             <caption class="infobox-title" style="background:${themeColor}">${data.name || charId}</caption>
             <tbody>
                 <tr>
-                    <td colspan="2" class="infobox-image" style="padding: 8px;">
-                        <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="대표사진" style="margin-bottom:0;">
+                    <td colspan="2" class="infobox-image" style="padding: 10px;">
+                        <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="대표사진" style="margin-bottom:0; border-radius:6px;">
                         ${galleryHtml}
                     </td>
                 </tr>
