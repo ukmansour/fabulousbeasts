@@ -163,7 +163,7 @@ async function renderRecentChanges() {
         list.innerHTML = sorted.map(d => {
             let dateStr = '-';
             if (d.updatedAt?.seconds) {
-                dateStr = new Date(d.updatedAt.seconds * 1000).toLocaleDateString('ko-KR');
+                dateStr = new Date(d.updatedAt.seconds * 1000).toLocaleString('ko-KR');
             }
             return `
                 <div class="recent-item" style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">
