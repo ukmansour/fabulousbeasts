@@ -199,28 +199,23 @@ function renderInfobox(data) {
     });
 
     const themeColor = data.color || 'var(--primary-color)';
-    
-    // [갤러리 그리드 생성]
+
+    // [갤러리 미리보기: 썸네일 3개 방식 복원]
     let galleryHtml = '';
     if (data.gallery && data.gallery.length > 0) {
         currentGallery = data.gallery;
-        const displayLimit = 6;
-        const displayImages = data.gallery.slice(0, displayLimit);
+        const previewImages = data.gallery.slice(0, 2); // 2개만 추출 (나머지 하나는 더보기용)
         
         galleryHtml = `
-            <div class="gallery-grid">
-                ${displayImages.map((img, idx) => `
-                    <div class="gallery-item" onclick="window.openGallery(${idx})">
-                        <img src="${img}" alt="갤러리 사진 ${idx + 1}" loading="lazy">
-                        ${idx === displayLimit - 1 && data.gallery.length > displayLimit ? `
-                            <div class="gallery-more">+${data.gallery.length - displayLimit}</div>
-                        ` : ''}
-                    </div>
+            <div class="gallery-preview-simple">
+                ${previewImages.map((img, idx) => `
+                    <img src="${img}" class="gallery-thumb-simple" onclick="window.openGallery(${idx})" alt="썸네일 ${idx+1}">
                 `).join('')}
+                <div class="gallery-more-btn" onclick="window.openGallery(0)">
+                    <span style="font-size:1.2rem;">+</span>
+                    <span>더 보기 (${data.gallery.length})</span>
+                </div>
             </div>
-            <p style="font-size:0.75rem; color:#888; text-align:center; margin-top:8px; cursor:pointer;" onclick="window.openGallery(0)">
-                🖼️ 갤러리 전체보기 (${data.gallery.length}장)
-            </p>
         `;
     }
 
@@ -230,11 +225,11 @@ function renderInfobox(data) {
             <tbody>
                 <tr><td colspan="2" class="infobox-image">
                     <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" alt="대표사진">
+                    ${galleryHtml}
                 </td></tr>
                 ${rows}
             </tbody>
         </table>
-        ${galleryHtml}
     `;
 }
 
@@ -245,20 +240,20 @@ window.openGallery = (index) => {
         modalElement = document.createElement('div');
         modalElement.className = 'modal-overlay';
         modalElement.innerHTML = `
-            <div class="modal-content">
-                <button class="modal-close" onclick="window.closeGallery()">&times;</button>
-                <img id="modal-img" src="" alt="확대 이미지">
+            <span class="modal-close" onclick="window.closeGallery()">&times;</span>
+            <div class="modal-main-view">
                 <button class="modal-nav modal-prev" onclick="window.moveSlide(-1)">&lsaquo;</button>
+                <img id="modal-img" src="" alt="확대 이미지">
                 <button class="modal-nav modal-next" onclick="window.moveSlide(1)">&rsaquo;</button>
-                <div class="modal-counter"></div>
+            </div>
+            <div class="modal-thumbnails" id="modal-thumbs">
+                <!-- 썸네일들이 여기에 생성됨 -->
             </div>
         `;
         document.body.appendChild(modalElement);
         
-        // 배경 클릭 시 닫기
-        modalElement.onclick = (e) => { if (e.target === modalElement) window.closeGallery(); };
+        modalElement.onclick = (e) => { if (e.target === modalElement || e.target.className === 'modal-main-view') window.closeGallery(); };
         
-        // 키보드 제어
         document.addEventListener('keydown', (e) => {
             if (!modalElement.classList.contains('active')) return;
             if (e.key === 'ArrowLeft') window.moveSlide(-1);
@@ -267,9 +262,23 @@ window.openGallery = (index) => {
         });
     }
 
+    renderModalThumbs();
     updateModal();
     modalElement.classList.add('active');
     document.body.style.overflow = 'hidden';
+};
+
+function renderModalThumbs() {
+    const thumbContainer = document.getElementById('modal-thumbs');
+    thumbContainer.innerHTML = currentGallery.map((img, idx) => `
+        <img src="${img}" class="modal-thumb ${idx === currentIdx ? 'active' : ''}" 
+             onclick="window.goToSlide(${idx})" alt="내비 썸네일 ${idx+1}">
+    `).join('');
+}
+
+window.goToSlide = (idx) => {
+    currentIdx = idx;
+    updateModal();
 };
 
 window.closeGallery = () => {
@@ -285,13 +294,22 @@ window.moveSlide = (step) => {
 
 function updateModal() {
     const img = modalElement.querySelector('#modal-img');
-    const counter = modalElement.querySelector('.modal-counter');
+    const thumbs = modalElement.querySelectorAll('.modal-thumb');
     if (!img) return;
     
-    img.style.opacity = '0.3';
+    img.style.opacity = '0.5';
     img.src = currentGallery[currentIdx];
     img.onload = () => { img.style.opacity = '1'; };
-    counter.textContent = `${currentIdx + 1} / ${currentGallery.length}`;
+    
+    // 썸네일 활성화 상태 변경
+    thumbs.forEach((t, idx) => {
+        if (idx === currentIdx) {
+            t.classList.add('active');
+            t.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        } else {
+            t.classList.remove('active');
+        }
+    });
 }
 
 function renderContent(details) {
