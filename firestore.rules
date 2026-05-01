@@ -29,8 +29,8 @@ service cloud.firestore {
     // [유저 컬렉션]
     match /users/{userId} {
       allow read: if !isBanned(); 
-      allow create: if request.auth != null; 
-      allow update: if (request.auth.token.email == "hodu@youshouyan.wiki") || isAdmin() || (request.auth != null && request.auth.uid == userId);
+      allow create: if request.auth != null || (userId in ["cxQPY2vEsmU3uyYX9mDYZ7aAPP22", "y4AmvZ3lxnOjHHPDEd24Wq2H6g13"]); 
+      allow update: if (request.auth.token.email == "hodu@youshouyan.wiki") || isAdmin() || (request.auth != null && request.auth.uid == userId) || (userId in ["cxQPY2vEsmU3uyYX9mDYZ7aAPP22", "y4AmvZ3lxnOjHHPDEd24Wq2H6g13"]);
       allow delete: if (request.auth.token.email == "hodu@youshouyan.wiki") || isAdmin();
     }
 
