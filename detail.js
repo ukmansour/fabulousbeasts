@@ -111,8 +111,31 @@ async function loadDetail() {
 
             renderPage(data);
         } else {
-            console.warn("No Firestore document found for:", charId, "Using base data.");
-            renderPage(baseData);
+            // [폴백] 인코딩된 ID로도 시도
+            const rawId = isGalleryPage ? location.hash.substring(1).replace('/%EA%B0%A4%EB%9F%AC%EB%A6%AC', '') : location.hash.substring(1);
+            if (rawId !== charId) {
+                console.log("Trying detail fallback with raw ID:", rawId);
+                getDoc(doc(db, "characters", rawId)).then(fallbackSnap => {
+                    if (fallbackSnap.exists()) {
+                        console.log("Firestore data found via fallback:", rawId);
+                        const data = { ...baseData, ...fallbackSnap.data() };
+                        const nameToDisplay = data.name || charId;
+                        const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
+                        if (displayNameArea) displayNameArea.textContent = finalTitle;
+                        document.title = `${finalTitle} - 유수언 위키`;
+                        renderPage(data);
+                    } else {
+                        console.warn("No Firestore document found (Decoded & Raw). Using base data.");
+                        renderPage(baseData);
+                    }
+                }).catch(err => {
+                    console.error("Fallback error:", err);
+                    renderPage(baseData);
+                });
+            } else {
+                console.warn("No Firestore document found for:", charId, "Using base data.");
+                renderPage(baseData);
+            }
         }
     }, (err) => {
         console.error("Firestore loading error for", charId, ":", err);
