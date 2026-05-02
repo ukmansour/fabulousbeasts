@@ -3,56 +3,39 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // [공통 함수]
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    // 사용자의 현재 정보를 가져옴 (문서가 없을 경우 기본값 반환)
-    // request.auth.uid가 null일 경우를 대비하여 UID를 인자로 받음
-    function getUserData(uid) {
-      let userPath = /databases/$(database)/documents/users/$(uid);
-      return exists(userPath) ? get(userPath).data : {"role": "member"};
-    }
-
-    // 차단 여부 확인
-    function isBanned() {
-      return isAuthenticated() && getUserData(request.auth.uid).role == 'banned';
-    }
-
+    // [공통 함수] 관리자 여부 확인
     function isAdmin() {
-      // 1. 인증된 사용자여야 함
-      // 2. 마스터 이메일이면 무조건 허용 OR (차단되지 않았고 DB상 role이 admin인 경우)
-      return isAuthenticated() && (
+      return request.auth != null && (
         request.auth.token.email == "hodu@youshouyan.wiki" ||
-        (getUserData(request.auth.uid).role == 'admin')
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'
       );
     }
 
     // [유저 컬렉션]
     match /users/{userId} {
-      allow read: if !isBanned(); 
-      allow create: if request.auth != null || (userId in ["cxQPY2vEsmU3uyYX9mDYZ7aAPP22", "y4AmvZ3lxnOjHHPDEd24Wq2H6g13"]); 
-      allow update: if (request.auth.token.email == "hodu@youshouyan.wiki") || isAdmin() || (isAuthenticated() && request.auth.uid == userId) || (userId in ["cxQPY2vEsmU3uyYX9mDYZ7aAPP22", "y4AmvZ3lxnOjHHPDEd24Wq2H6g13"]);
-      allow delete: if (request.auth.token.email == "hodu@youshouyan.wiki") || isAdmin();
+      // 닉네임 중복 체크 등을 위해 공개 읽기 허용
+      allow read: if true;
+      // 본인 또는 관리자만 수정 가능
+      allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
     }
 
     // [캐릭터 컬렉션]
     match /characters/{charId} {
-      // 비로그인 사용자는 읽기 허용, 로그인 사용자는 차단되지 않았을 때만 읽기 허용
-      allow read: if !isAuthenticated() || !isBanned();
+      // 누구나 읽기 허용
+      allow read: if true;
+      // 관리자만 쓰기 허용
       allow write: if isAdmin();
     }
 
     // [카테고리]
     match /categories/{catId} {
-      allow read: if !isAuthenticated() || !isBanned();
+      allow read: if true;
       allow write: if isAdmin();
     }
 
     // [공지사항]
     match /notices/{noticeId} {
-      allow read: if !isAuthenticated() || !isBanned();
+      allow read: if true;
       allow write: if isAdmin();
     }
   }
