@@ -45,7 +45,7 @@ function showRecoveryUI() {
 
     document.getElementById('recovery-btn').onclick = async () => {
         const code = document.getElementById('recovery-code').value;
-        if (code !== "5555") { alert("보안 코드가 틀렸습니다."); return; }
+        if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
         try {
             await setDoc(doc(db, "users", currentUser.uid), {
@@ -180,7 +180,7 @@ window.changeRole = async (uid, newRole) => {
 
     const code = prompt(`${actionText}하시겠습니까?\n보안 코드를 입력하세요:`);
     if (code === null) return;
-    if (code !== "5555") { alert("보안 코드가 틀렸습니다."); return; }
+    if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
     try {
         await updateDoc(doc(db, "users", uid), { role: newRole });
@@ -242,7 +242,7 @@ async function loadNotice() {
 window.saveNotice = async () => {
     const pwd = prompt("저장하시려면 비밀번호를 입력하세요:");
     if (pwd === null) return;
-    if (pwd.trim() !== "5555") {
+    if (pwd.trim() !== "9889") {
         alert("비밀번호가 일치하지 않습니다.");
         return;
     }
