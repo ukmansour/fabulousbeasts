@@ -116,15 +116,33 @@ async function fetchFirestoreData() {
 
 async function loadNotice() {
     const el = document.getElementById('notice-display');
-    if (!el) return;
+    const newsEl = document.getElementById('home-news');
+    const guideEl = document.getElementById('home-guide');
+    
     try {
-        const snap = await getDoc(doc(db, "notices", "main"));
-        if (snap.exists() && snap.data().content) {
-            el.textContent = snap.data().content;
-            el.style.color = '#333';
+        if (el) {
+            const snap = await getDoc(doc(db, "notices", "main"));
+            if (snap.exists() && snap.data().content) {
+                el.textContent = snap.data().content;
+                el.style.color = '#333';
+            }
+        }
+        
+        if (newsEl) {
+            const newsSnap = await getDoc(doc(db, "notices", "news"));
+            if (newsSnap.exists() && newsSnap.data().content) {
+                newsEl.textContent = newsSnap.data().content;
+            }
+        }
+
+        if (guideEl) {
+            const guideSnap = await getDoc(doc(db, "notices", "guide"));
+            if (guideSnap.exists() && guideSnap.data().content) {
+                guideEl.textContent = guideSnap.data().content;
+            }
         }
     } catch (e) {
-        console.error("Notice load error:", e);
+        console.error("Notice/News load error:", e);
     }
 }
 
