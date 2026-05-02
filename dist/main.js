@@ -131,14 +131,18 @@ async function loadNotice() {
         if (newsEl) {
             const newsSnap = await getDoc(doc(db, "notices", "news"));
             if (newsSnap.exists() && newsSnap.data().content) {
-                newsEl.textContent = newsSnap.data().content;
+                newsEl.innerHTML = newsSnap.data().content
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/\n/g, '<br>');
             }
         }
 
         if (guideEl) {
             const guideSnap = await getDoc(doc(db, "notices", "guide"));
             if (guideSnap.exists() && guideSnap.data().content) {
-                guideEl.textContent = guideSnap.data().content;
+                guideEl.innerHTML = guideSnap.data().content
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/\n/g, '<br>');
             }
         }
     } catch (e) {
