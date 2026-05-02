@@ -2,6 +2,27 @@ import { db, auth } from './firebase-config.js';
 import { collection, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+// ─── 툴바 삽입 함수 ────────────────────────────────────────────
+window.insertText = (textareaId, type) => {
+    const ta = document.getElementById(textareaId);
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const selected = ta.value.substring(start, end);
+    let replacement = '';
+    switch (type) {
+        case 'bold':   replacement = `**${selected || '굵은글씨'}**`; break;
+        case 'italic': replacement = `*${selected || '기울임'}*`; break;
+        case 'list':   replacement = `\n• ${selected || '항목'}`; break;
+        case 'link':   replacement = `[${selected || '링크이름'}](주소)`; break;
+        case 'hr':     replacement = `\n---\n`; break;
+    }
+    ta.focus();
+    ta.value = ta.value.substring(0, start) + replacement + ta.value.substring(end);
+    const pos = start + replacement.length;
+    ta.setSelectionRange(pos, pos);
+};
+
 const contentArea = document.getElementById('admin-content');
 let currentUser = null;
 
