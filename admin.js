@@ -241,7 +241,8 @@ async function loadNotice() {
 
 window.saveNotice = async () => {
     const pwd = prompt("저장하시려면 비밀번호를 입력하세요:");
-    if (pwd !== "5555") {
+    if (pwd === null) return;
+    if (pwd.trim() !== "5555") {
         alert("비밀번호가 일치하지 않습니다.");
         return;
     }
