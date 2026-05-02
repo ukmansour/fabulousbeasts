@@ -150,12 +150,20 @@ body {
 /* 모바일 화면 최적화 */
 @media (max-width: 768px) {
     .infobox {
-        float: none; /* 모바일에서는 사진 상자가 우측에 떠있지 않게 해제 */
-        width: 100%; /* 화면 꽉 차게 변경 */
-        margin: 1rem 0 1.5rem 0; /* 여백 조정 */
+        float: none;
+        width: 100% !important;
+        margin: 0 0 1.5rem 0 !important;
+        display: block;
+    }
+    .infobox img {
+        max-width: 100%;
+        height: auto;
     }
     .wiki-article {
-        padding: 1.5rem 1rem 10rem 1rem; /* 모바일에서도 아래쪽 빈 공간을 충분히 유지 */
+        padding: 1.5rem 1rem 10rem 1rem;
+    }
+    .wiki-title {
+        font-size: 1.8rem;
     }
 }
 
