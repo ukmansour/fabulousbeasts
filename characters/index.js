@@ -165,7 +165,7 @@ export function getFlattenedCharacters() {
         for (const key in obj) {
             if (obj[key].id) {
                 const char = { ...obj[key] };
-                char.details = '본문 내용이 비어있습니다.';
+                char.details = `## ${char.name}\n${char.name}에 대한 자세한 정보가 아직 등록되지 않았습니다. 관리자 권한으로 내용을 추가해 주세요.`;
                 flattened.push(char);
             } else {
                 traverse(obj[key]);

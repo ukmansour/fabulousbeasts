@@ -91,21 +91,27 @@ async function loadDetail() {
     
     // Firestore 실시간 데이터 로드
     const docRef = doc(db, "characters", charId);
+    console.log("Attempting to load Firestore doc:", charId);
+    
     onSnapshot(docRef, (snap) => {
-        let data = baseData;
         if (snap.exists()) {
-            data = { ...baseData, ...snap.data() };
-        }
-        
-        // 표시 이름 갱신 (ID가 아닌 실제 이름으로)
-        const nameToDisplay = data.name || charId;
-        const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
-        if (displayNameArea) displayNameArea.textContent = finalTitle;
-        document.title = `${finalTitle} - 유수언 위키`;
+            console.log("Firestore data found for:", charId, snap.data());
+            const data = { ...baseData, ...snap.data() };
+            
+            // 표시 이름 갱신
+            const nameToDisplay = data.name || charId;
+            const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
+            if (displayNameArea) displayNameArea.textContent = finalTitle;
+            document.title = `${finalTitle} - 유수언 위키`;
 
-        renderPage(data);
+            renderPage(data);
+        } else {
+            console.warn("No Firestore document found for:", charId, "Using base data.");
+            renderPage(baseData);
+        }
     }, (err) => {
-        console.error("Firestore loading error:", err);
+        console.error("Firestore loading error for", charId, ":", err);
+        // 권한 오류 등이 발생해도 기본 데이터는 보여줌
         renderPage(baseData);
     });
 
