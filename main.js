@@ -131,23 +131,44 @@ async function loadNotice() {
         if (newsEl) {
             const newsSnap = await getDoc(doc(db, "notices", "news"));
             if (newsSnap.exists() && newsSnap.data().content) {
-                newsEl.innerHTML = newsSnap.data().content
-                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                    .replace(/\n/g, '<br>');
+                newsEl.innerHTML = renderMarkdown(newsSnap.data().content);
             }
         }
 
         if (guideEl) {
             const guideSnap = await getDoc(doc(db, "notices", "guide"));
             if (guideSnap.exists() && guideSnap.data().content) {
-                guideEl.innerHTML = guideSnap.data().content
-                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                    .replace(/\n/g, '<br>');
+                guideEl.innerHTML = renderMarkdown(guideSnap.data().content);
             }
         }
     } catch (e) {
         console.error("Notice/News load error:", e);
     }
+}
+
+function renderMarkdown(text) {
+    if (!text) return '';
+    let html = text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .split('\n').map(line => {
+            if (line.startsWith('## ')) return `<h2>${line.replace('## ', '')}</h2>`;
+            if (line.startsWith('### ')) return `<h3>${line.replace('### ', '')}</h3>`;
+            if (line === '---') return '<hr>';
+            if (line.startsWith('* ') || line.startsWith('• ')) {
+                return `<li>${line.substring(2)}</li>`;
+            }
+            return `<p>${line}</p>`;
+        }).join('');
+
+    html = html
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" style="max-width:100%; border-radius:4px; display:block; margin:10px auto;">')
+        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+
+    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+    return html;
 }
 
 function renderFeatured() {

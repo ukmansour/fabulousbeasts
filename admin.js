@@ -8,7 +8,8 @@ window.insertText = (textareaId, type) => {
     if (!ta) return;
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
-    const selected = ta.value.substring(start, end);
+    const text = ta.value;
+    const selected = text.substring(start, end);
     let replacement = '';
     switch (type) {
         case 'bold':   replacement = `**${selected || '굵은글씨'}**`; break;
@@ -18,10 +19,25 @@ window.insertText = (textareaId, type) => {
         case 'hr':     replacement = `\n---\n`; break;
     }
     ta.focus();
-    ta.value = ta.value.substring(0, start) + replacement + ta.value.substring(end);
+    ta.value = text.substring(0, start) + replacement + text.substring(end);
     const pos = start + replacement.length;
     ta.setSelectionRange(pos, pos);
 };
+
+// 툴바 버튼 이벤트 리스너 설정
+function initAdminToolbars() {
+    document.querySelectorAll('.admin-toolbar-btn').forEach(btn => {
+        // 기존 onclick 제거 (이미 존재할 수 있으므로)
+        btn.onclick = null; 
+        btn.addEventListener('click', (e) => {
+            const targetId = btn.getAttribute('data-target');
+            const type = btn.getAttribute('data-type');
+            if (targetId && type) {
+                window.insertText(targetId, type);
+            }
+        });
+    });
+}
 
 const contentArea = document.getElementById('admin-content');
 let currentUser = null;
@@ -233,6 +249,7 @@ window.switchTab = (tab) => {
     // 공지 탭으로 이동 시 데이터 로드
     if (tab === 'notice') {
         loadNotice();
+        if (typeof initAdminToolbars === 'function') initAdminToolbars();
     }
 };
 
@@ -304,3 +321,5 @@ window.saveNotice = async () => {
         }
     }
 };
+
+initAdminToolbars();
