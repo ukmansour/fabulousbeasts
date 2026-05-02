@@ -1,5 +1,5 @@
 import { db, auth } from './firebase-config.js';
-import { doc, getDoc, collection, getDocs, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { doc, getDoc, collection, getDocs, setDoc, serverTimestamp, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
 
@@ -93,6 +93,9 @@ async function loadDetail() {
     document.title = `${pageTitle} - 유수언 위키`;
 
     const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
+    
+    // 로컬 데이터를 이용해 화면을 즉시 렌더링 (체감 로딩 속도 대폭 향상)
+    renderPage(baseData);
     
     // Firestore 실시간 데이터 로드
     const docRef = doc(db, "characters", charId);
@@ -295,8 +298,9 @@ async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     try {
-        const snap = await getDocs(collection(db, "characters"));
-        const data = snap.docs.map(d => ({id: d.id, ...d.data()})).sort((a,b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0)).slice(0, 8);
+        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(8));
+        const snap = await getDocs(q);
+        const data = snap.docs.map(d => ({id: d.id, ...d.data()}));
         list.innerHTML = data.map(d => {
             const date = d.updatedAt ? new Date(d.updatedAt.seconds * 1000).toLocaleString('ko-KR') : '-';
             return `
