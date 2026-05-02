@@ -150,10 +150,10 @@ body {
 /* 모바일 화면 최적화 */
 @media (max-width: 768px) {
     .infobox {
-        float: none;
+        float: none !important;
         width: 100% !important;
         margin: 0 0 1.5rem 0 !important;
-        display: block;
+        display: block !important;
     }
     .infobox img {
         max-width: 100%;

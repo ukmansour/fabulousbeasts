@@ -36,7 +36,7 @@ loginTab.addEventListener('click', () => {
     isLogin = true;
     loginTab.classList.add('active');
     signupTab.classList.remove('active');
-    submitBtn.textContent = '위키 로그인';
+    submitBtn.textContent = '로그인';
     emailGroup.style.display = 'none';
     passwordConfirmInput.style.display = 'none';
     nicknameInput.placeholder = "닉네임";
@@ -47,7 +47,7 @@ signupTab.addEventListener('click', () => {
     isLogin = false;
     signupTab.classList.add('active');
     loginTab.classList.remove('active');
-    submitBtn.textContent = '위키 멤버 가입';
+    submitBtn.textContent = '멤버 가입';
     emailGroup.style.display = 'flex';
     passwordConfirmInput.style.display = 'block';
     nicknameInput.placeholder = "사용할 닉네임 (중복 불가)";

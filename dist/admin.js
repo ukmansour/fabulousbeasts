@@ -216,45 +216,59 @@ window.switchTab = (tab) => {
 };
 
 async function loadNotice() {
-    const textarea = document.getElementById('notice-content');
-    if (!textarea) return;
+    const noticeArea = document.getElementById('notice-content');
+    const newsArea = document.getElementById('news-content');
+    const guideArea = document.getElementById('guide-content');
     
     try {
-        const snap = await getDoc(doc(db, "notices", "main"));
-        if (snap.exists()) {
-            textarea.value = snap.data().content || '';
-            console.log("Notice loaded from Firestore");
+        if (noticeArea) {
+            const snap = await getDoc(doc(db, "notices", "main"));
+            if (snap.exists()) noticeArea.value = snap.data().content || '';
         }
+        if (newsArea) {
+            const snap = await getDoc(doc(db, "notices", "news"));
+            if (snap.exists()) newsArea.value = snap.data().content || '';
+        }
+        if (guideArea) {
+            const snap = await getDoc(doc(db, "notices", "guide"));
+            if (snap.exists()) guideArea.value = snap.data().content || '';
+        }
+        console.log("Notices loaded from Firestore");
     } catch (e) {
         console.error("공지 불러오기 실패:", e);
     }
 }
 
 window.saveNotice = async () => {
-    const textarea = document.getElementById('notice-content');
-    const status = document.getElementById('notice-status');
-    if (!textarea || !status) return;
-
-    const content = textarea.value.trim();
-    if (!content) {
-        alert("공지 내용을 입력해주세요.");
+    const pwd = prompt("저장하시려면 비밀번호를 입력하세요:");
+    if (pwd !== "5555") {
+        alert("비밀번호가 일치하지 않습니다.");
         return;
     }
+
+    const noticeArea = document.getElementById('notice-content');
+    const newsArea = document.getElementById('news-content');
+    const guideArea = document.getElementById('guide-content');
+    const status = document.getElementById('notice-status');
+    if (!status) return;
 
     status.textContent = '데이터베이스에 저장 중...';
     status.style.color = '#666';
 
     try {
-        console.log("Saving notice to Firestore...");
-        await setDoc(doc(db, "notices", "main"), {
-            content: content,
+        console.log("Saving notices to Firestore...");
+        const updateData = {
             updatedAt: serverTimestamp(),
             updatedBy: currentUser?.displayName || currentUser?.email || '관리자'
-        });
+        };
+
+        if (noticeArea) await setDoc(doc(db, "notices", "main"), { content: noticeArea.value.trim(), ...updateData });
+        if (newsArea) await setDoc(doc(db, "notices", "news"), { content: newsArea.value.trim(), ...updateData });
+        if (guideArea) await setDoc(doc(db, "notices", "guide"), { content: guideArea.value.trim(), ...updateData });
         
-        status.textContent = '공지가 성공적으로 저장되었습니다!';
+        status.textContent = '홈 화면 내용이 성공적으로 저장되었습니다!';
         status.style.color = 'green';
-        alert("공지가 저장되었습니다.");
+        alert("저장되었습니다.");
         setTimeout(() => { status.textContent = ''; }, 3000);
     } catch (e) {
         console.error("Notice save error:", e);

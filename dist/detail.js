@@ -90,7 +90,7 @@ async function loadDetail() {
     if (!charId) return;
     const pageTitle = isGalleryPage ? `${charId} (갤러리)` : charId;
     if (displayNameArea) displayNameArea.textContent = pageTitle;
-    document.title = `${pageTitle} - 유수언 위키`;
+    document.title = `${pageTitle} - 유수언`;
 
     const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
     
@@ -110,7 +110,7 @@ async function loadDetail() {
             const nameToDisplay = data.name || charId;
             const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
             if (displayNameArea) displayNameArea.textContent = finalTitle;
-            document.title = `${finalTitle} - 유수언 위키`;
+            document.title = `${finalTitle} - 유수언`;
 
             renderPage(data);
         } else {
@@ -125,7 +125,7 @@ async function loadDetail() {
                         const nameToDisplay = data.name || charId;
                         const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
                         if (displayNameArea) displayNameArea.textContent = finalTitle;
-                        document.title = `${finalTitle} - 유수언 위키`;
+                        document.title = `${finalTitle} - 유수언`;
                         renderPage(data);
                     } else {
                         console.warn("No Firestore document found (Decoded & Raw). Using base data.");
@@ -207,7 +207,7 @@ function renderInfobox(data) {
     const galleryHTML = gallery.length > 0 ? `
         <div class="wiki-gallery-wrap" style="margin-top:15px; border-top:1px solid #eee; padding-top:10px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <strong style="font-size:12px; color:#555;">갤러리</strong>
+                <strong style="font-size:12px; color:#555;">갤러리 (${gallery.length}장)</strong>
                 <a href="#${charId}/갤러리" style="font-size:11px; color:var(--primary-color); text-decoration:none;">전체보기 ></a>
             </div>
             <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:5px;">
@@ -221,7 +221,7 @@ function renderInfobox(data) {
     ` : '';
 
     infoboxArea.innerHTML = `
-        <div class="infobox" style="float:right; width:280px; border:1px solid var(--primary-color); margin-left:20px; background:white; position:relative; z-index:10;">
+        <div class="infobox" style="position:relative; z-index:10;">
             <div style="background:var(--primary-color); color:white; padding:8px; text-align:center; font-weight:800; font-size:1rem;">${data.name || charId}</div>
             <div style="padding:10px; text-align:center; border-bottom:1px solid #eee;" onclick="window.showLarge('${data.image}')">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" style="max-width:100%; cursor:zoom-in;">
