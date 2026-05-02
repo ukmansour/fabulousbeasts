@@ -95,8 +95,10 @@ async function initHome() {
 
 async function fetchFirestoreData() {
     try {
+        console.log("Fetching Firestore data for home page...");
         const snap = await getDocs(collection(db, "characters"));
         const firestoreChars = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log(`Successfully fetched ${firestoreChars.length} characters from Firestore`);
         
         firestoreChars.forEach(fChar => {
             const idx = mergedCharacters.findIndex(c => c.id === fChar.id);
