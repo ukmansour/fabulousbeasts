@@ -32,6 +32,15 @@
             <div class="wiki-subtitle">유수언(有兽焉) 공식 정보를 집대성하는 공간</div>
             
             <div class="wiki-content">
+                <!-- 유수언 문서 바로가기 -->
+                <div class="portal-card" style="background: linear-gradient(135deg, #4dd2ff, #99e6ff); color: #005580; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 1rem; border: 1px solid #b3f0ff;" onclick="location.href='detail.html#유수언'">
+                    <div>
+                        <h2 style="margin-top:0; border:none; color: #005580; font-size: 1.5rem;">유수언(有兽焉) 문서 보기</h2>
+                        <p style="margin-bottom:0; color: #006699; font-weight: 500;">작품의 개요와 배경 세계관에 대해 알아보세요.</p>
+                    </div>
+                    <span style="font-size: 2rem; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));">📖</span>
+                </div>
+
                 <!-- 애니메이션 시청 홍보 배너 -->
                 <div class="portal-card" style="background: linear-gradient(135deg, var(--primary-color), #51C3F7); color: white; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="location.href='watch.html'">
                     <div>
@@ -84,6 +93,12 @@
             <div class="sidebar-box" style="background: var(--primary-light);">
                 <div class="sidebar-title">커뮤니티</div>
                 <p style="font-size: 0.8rem; color: #555;">여러분의 작은 기여가 큰 기록이 됩니다. 지금 바로 편집에 참여해 보세요!</p>
+            </div>
+            <div class="sidebar-box" style="border-left: 3px solid var(--primary-color);">
+                <div class="sidebar-title">📢 공지사항</div>
+                <div id="notice-display" style="font-size: 0.85rem; color: #444; line-height: 1.7; white-space: pre-wrap; min-height: 3rem;">
+                    <span style="color: #aaa;">공지사항이 없습니다.</span>
+                </div>
             </div>
         </aside>
     </div>

@@ -84,3 +84,15 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
     *   Removed the `reset-db.js` utility file and all associated logic.
     *   This prevents accidental data loss and streamlines the administrative interface.
 
+## Bug Fixes (2026.05.02)
+
+**Objective:** Fix a bug where wiki documents were not visible to users who were not logged in.
+
+**Changes:**
+1.  **Firestore Security Rules Update (`firestore.rules`)**:
+    *   Refactored `isBanned()` and `getUserData()` functions to safely handle unauthenticated (guest) users. Previously, accessing `request.auth.uid` when null caused a rule evaluation error.
+    *   Explicitly allowed public read access to `characters`, `categories`, and `notices` for non-banned users.
+    *   This ensures that guest users can view the full wiki content stored in Firestore, whereas previously they could only see static placeholder data or "Load failed" messages.
+2.  **Nickname Check Fix**:
+    *   Restored read access to the `users` collection for guests (filtered by the `isBanned` check) to allow nickname availability verification during signup.
+

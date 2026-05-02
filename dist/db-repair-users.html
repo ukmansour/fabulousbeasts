@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>유저 데이터 강제 복구</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f2f5; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); text-align: center; }
+        button { padding: 1rem 2rem; font-size: 1.1rem; font-weight: bold; color: white; background: #00a0e9; border: none; border-radius: 6px; cursor: pointer; }
+        #status { margin-top: 1rem; color: #666; white-space: pre-wrap; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>👥 기존 유저 강제 등록</h1>
+        <p>hodu(마스터) 및 jec2083 유저를 DB에 추가합니다.</p>
+        <button id="repair-btn">데이터 복구 시작</button>
+        <div id="status"></div>
+    </div>
+
+    <script type="module">
+        import { db, auth } from './firebase-config.js';
+        import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const btn = document.getElementById('repair-btn');
+        const status = document.getElementById('status');
+
+        btn.onclick = async () => {
+            if (!confirm("데이터베이스에 유저 정보를 강제로 삽입하시겠습니까?")) return;
+            
+            btn.disabled = true;
+            status.textContent = "복구 작업 중...";
+
+            const usersToRestore = [
+                {
+                    uid: "cxQPY2vEsmU3uyYX9mDYZ7aAPP22",
+                    nickname: "호두",
+                    email: "hodu@youshouyan.wiki",
+                    role: "admin"
+                },
+                {
+                    uid: "y4AmvZ3lxnOjHHPDEd24Wq2H6g13",
+                    nickname: "jec2083",
+                    email: "jec2083@naver.com",
+                    role: "member"
+                }
+            ];
+
+            try {
+                for (const u of usersToRestore) {
+                    status.textContent += `\n${u.nickname} 등록 시도...`;
+                    await setDoc(doc(db, "users", u.uid), {
+                        uid: u.uid,
+                        nickname: u.nickname,
+                        email: u.email,
+                        role: u.role,
+                        joinedAt: serverTimestamp(),
+                        contributionCount: 0
+                    });
+                    status.textContent += " 성공!";
+                }
+                status.textContent += "\n\n✅ 모든 작업이 완료되었습니다! 이제 관리자 페이지에서 확인하세요.";
+                alert("복구 완료!");
+            } catch (e) {
+                status.textContent += `\n❌ 오류 발생: ${e.message}`;
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+            }
+        };
+    </script>
+</body>
+</html>

@@ -58,7 +58,8 @@ body {
 
 .wiki-article {
     background: var(--bg-main); border: 1px solid var(--border-color);
-    padding: 2.5rem; min-height: 85vh; position: relative;
+    padding: 2.5rem 2.5rem 15rem 2.5rem; /* 문서 아래에 충분한 공백(15rem) 추가 */
+    min-height: 85vh; position: relative;
 }
 
 /* Tabs */
@@ -90,7 +91,7 @@ body {
 .wiki-content h2 { 
     border-bottom: 1px solid var(--border-color); 
     padding-bottom: 0.2rem; 
-    margin: 2.5rem 0 1rem 0; 
+    margin: 2.5rem 0 0.4rem 0; /* 제목 아래 간격을 1rem -> 0.4rem으로 대폭 줄임 */
     font-size: 1.6rem; 
     color: #000; 
     display: flex;
@@ -98,7 +99,7 @@ body {
     align-items: center;
 }
 .wiki-content h3 {
-    margin: 2rem 0 0.8rem 0;
+    margin: 2rem 0 0.3rem 0; /* 소제목 아래 간격도 0.8rem -> 0.3rem으로 줄임 */
     font-size: 1.3rem;
     display: flex;
     justify-content: space-between;
@@ -127,7 +128,7 @@ body {
 .char-grid-portal { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; }
 .char-card-mini { border: 1px solid #eee; background: white; text-decoration: none; color: inherit; transition: 0.2s; }
 .char-card-mini:hover { border-color: var(--primary-color); transform: translateY(-2px); }
-.char-card-mini img { width: 100%; height: 110px; object-fit: cover; }
+.char-card-mini img { width: 100%; aspect-ratio: 1 / 1.1; object-fit: cover; }
 .char-card-mini span { display: block; padding: 0.4rem; text-align: center; font-size: 0.8rem; font-weight: 700; }
 
 /* Editor */
@@ -145,3 +146,188 @@ body {
     .wiki-outer-container { grid-template-columns: 1fr; }
     .wiki-sidebar { display: none; }
 }
+
+/* 모바일 화면 최적화 */
+@media (max-width: 768px) {
+    .infobox {
+        float: none; /* 모바일에서는 사진 상자가 우측에 떠있지 않게 해제 */
+        width: 100%; /* 화면 꽉 차게 변경 */
+        margin: 1rem 0 1.5rem 0; /* 여백 조정 */
+    }
+    .wiki-article {
+        padding: 1.5rem 1rem 10rem 1rem; /* 모바일에서도 아래쪽 빈 공간을 충분히 유지 */
+    }
+}
+
+/* Gallery System */
+.wiki-gallery-wrap {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: #fdfdfd;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+.gallery-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+.gallery-title-row h3 {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #444;
+}
+.gallery-view-btn {
+    font-size: 0.75rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    border: 1px solid var(--primary-color);
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    font-weight: 700;
+    cursor: pointer;
+}
+.gallery-view-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+.gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 80px);
+    gap: 0.5rem;
+    justify-content: flex-start;
+}
+.gallery-item {
+    width: 80px;
+    height: 80px;
+    border: 1px solid #eee;
+    overflow: hidden;
+    cursor: pointer;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+.gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: 0.2s;
+}
+.gallery-item:hover img {
+    transform: scale(1.05);
+}
+
+/* Full Grid Modal */
+.full-grid-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: white;
+    z-index: 6000;
+    display: none;
+    flex-direction: column;
+    padding: 2rem;
+    overflow-y: auto;
+}
+.full-grid-modal.active { display: flex; }
+.full-grid-header {
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 2px solid #333; padding-bottom: 1rem; margin-bottom: 2rem;
+}
+.full-grid-title { font-size: 1.5rem; font-weight: 800; color: #333; }
+.full-grid-close { font-size: 2rem; cursor: pointer; color: #333; }
+.full-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 1rem;
+}
+.grid-thumb {
+    aspect-ratio: 1/1;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    transition: 0.2s;
+}
+.grid-thumb:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+.grid-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+/* Modal for Gallery */
+.gallery-modal {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.9);
+    z-index: 5000;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+.gallery-modal.active { display: flex; }
+.modal-close {
+    position: absolute; top: 1rem; right: 1.5rem;
+    color: white; font-size: 3rem; cursor: pointer;
+    z-index: 5010;
+}
+.modal-content {
+    max-width: 95%;
+    max-height: 85vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content img {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    border: 2px solid rgba(255,255,255,0.1);
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+.modal-nav {
+    display: flex; gap: 1rem; margin-top: 1.5rem;
+}
+.modal-nav-btn {
+    color: white; font-size: 1rem; cursor: pointer; 
+    border: 1px solid rgba(255,255,255,0.3); 
+    background: rgba(255,255,255,0.1);
+    padding: 0.6rem 1.5rem;
+    border-radius: 4px;
+    transition: 0.2s;
+}
+.modal-nav-btn:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: white;
+}
+
+/* Edit Gallery UI */
+.edit-gallery-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 0.4rem;
+    margin-top: 0.8rem;
+}
+.edit-gallery-item {
+    position: relative;
+    aspect-ratio: 1/1;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.edit-gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+.remove-gallery-img {
+    position: absolute; top: 2px; right: 2px;
+    background: rgba(0,0,0,0.5); color: white;
+    width: 20px; height: 20px; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+    border-radius: 50%;
+}
+.remove-gallery-img:hover { background: #dc2626; }
+.gallery-clear-btn {
+    font-size: 0.75rem; color: #ff4d4f; border: 1px solid #ff4d4f;
+    background: white; padding: 0.2rem 0.5rem; border-radius: 3px;
+    cursor: pointer; margin-top: 0.5rem;
+}
+.gallery-clear-btn:hover { background: #ff4d4f; color: white; }
+
