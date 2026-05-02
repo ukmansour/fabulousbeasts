@@ -64,6 +64,11 @@ function updateEditVisibility() {
         // 관리자라면 버튼 표시, 아니면 숨김
         editBtn.style.display = isUserAdmin ? 'inline-block' : 'none';
         editBtn.style.opacity = '1';
+        if (isUserAdmin) {
+            editBtn.href = `edit.html#${charId}`;
+        } else {
+            editBtn.href = '#';
+        }
     }
 }
 

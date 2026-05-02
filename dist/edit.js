@@ -69,8 +69,19 @@ function checkPermission() {
             saveBtn.disabled = true;
         }
     } else {
-        // 관리자인 경우: UI 활성화 및 메시지 숨김
-        uploadMsg.style.display = 'none';
+        // 관리자인 경우: UI 활성화 및 메시지 원상복구
+        if (uploadMsg.textContent.includes("🔒")) {
+            uploadMsg.textContent = "이미지 업로드 (인포박스용)";
+            uploadMsg.style.color = "inherit";
+            if (previewImg.style.display !== 'block') {
+                uploadMsg.style.display = 'block';
+            } else {
+                uploadMsg.style.display = 'none';
+            }
+        } else if (previewImg.style.display !== 'block') {
+            uploadMsg.style.display = 'block';
+        }
+        
         saveBtn.disabled = false;
         saveBtn.title = "";
         form.querySelectorAll('input, textarea, button, select').forEach(el => {
