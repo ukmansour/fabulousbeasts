@@ -97,9 +97,17 @@ authForm.addEventListener('submit', async (e) => {
             // 3. Firebase Auth 프로필 업데이트
             await updateProfile(user, { displayName: nickname });
 
-            // [읽기/쓰기 최적화] 일반 사용자는 가입 시 Firestore에 문서를 생성하지 않습니다.
-            // 관리자로 승급되거나 차단될 때만 Firestore에 기록되도록 하여 초기 읽기/쓰기를 줄입니다.
-            console.log("User created in Auth only (Optimization):", user.uid);
+            // 4. Firestore 데이터베이스에 유저 정보 저장 (권한 관리를 위해 필수)
+            await setDoc(doc(db, "users", user.uid), {
+                uid: user.uid,
+                nickname: nickname,
+                email: signupEmail,
+                role: 'member',
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            });
+
+            console.log("User successfully created in Auth and Firestore.");
             alert(`${nickname}님, 가입이 완료되었습니다!`);
 
             window.location.href = 'index.html';
