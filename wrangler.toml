@@ -1,0 +1,18 @@
+name = "fabulousbeasts"
+main = "worker.js"
+compatibility_date = "2026-05-04"
+
+# Static Assets 설정
+[assets]
+directory = "./"
+
+# Cloudflare D1 바인딩
+[[d1_databases]]
+binding = "DB"
+database_name = "fabulousbeasts"
+database_id = "00c6acd8-27f4-497b-8bda-1508a7f5bd83"
+
+# Cloudflare R2 바인딩
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "fabulousbeasts2"
