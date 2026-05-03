@@ -131,20 +131,26 @@ async function loadInitialData() {
         const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
 
         if (response.ok) {
-            const dbData = await response.json();
-            console.log("D1 data received for edit:", dbData);
-            const data = { 
-                ...baseData, 
-                details: dbData.content,
-                category: dbData.category,
-                species: dbData.species,
-                nation: dbData.nation,
-                alias: dbData.alias,
-                birthday: dbData.birthday,
-                image: dbData.image,
-                gallery: typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery
-            };
-            fillForm(data);
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                const dbData = await response.json();
+                console.log("D1 data received for edit:", dbData);
+                const data = { 
+                    ...baseData, 
+                    details: dbData.content,
+                    category: dbData.category,
+                    species: dbData.species,
+                    nation: dbData.nation,
+                    alias: dbData.alias,
+                    birthday: dbData.birthday,
+                    image: dbData.image,
+                    gallery: typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery
+                };
+                fillForm(data);
+            } else {
+                console.warn("Expected JSON but received:", contentType);
+                fillForm(baseData);
+            }
         } else {
             console.log("D1 data not found, using base data.");
             fillForm(baseData);
