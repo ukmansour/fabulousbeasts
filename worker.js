@@ -52,35 +52,29 @@ export default {
       }
     }
 
-    // 2. GET: 최근 변경된 문서 목록 (Select Recent)
+    // 2. GET: 최근 변경된 문서 목록
     if (request.method === "GET" && path === "/recent") {
       try {
         const { results } = await env.DB.prepare(
           "SELECT title, author, category, updated_at FROM wiki_pages ORDER BY updated_at DESC LIMIT 8"
         ).all();
 
-        return new Response(JSON.stringify(results), {
-          headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-          }
-        });
+        return new Response(JSON.stringify(results), { headers: corsHeaders });
       } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
       }
     }
 
-    // 3. POST: 문서 저장/수정 (Update/Insert)
+    // 3. POST: 문서 저장/수정
     if (request.method === "POST" && path === "/wiki") {
       try {
         const data = await request.json();
         const { title, content, author, category, species, nation, alias, birthday, image, gallery } = data;
 
         if (!title || !content) {
-          return new Response("Title and Content are required", { status: 400 });
+          return new Response(JSON.stringify({ error: "Title and Content are required" }), { status: 400, headers: corsHeaders });
         }
 
-        // D1 Query: UPSERT
         await env.DB.prepare(`
           INSERT INTO wiki_pages (title, content, author, category, species, nation, alias, birthday, image, gallery, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -96,96 +90,61 @@ export default {
             gallery = excluded.gallery,
             updated_at = CURRENT_TIMESTAMP
         `).bind(
-          title, 
-          content, 
-          author || "Anonymous", 
-          category || "General",
-          species || "",
-          nation || "",
-          alias || "",
-          birthday || "",
-          image || "",
+          title, content, author || "Anonymous", category || "General",
+          species || "", nation || "", alias || "", birthday || "", image || "",
           gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]"
         ).run();
 
-        // 캐시 무효화
         const cacheUrl = new URL(request.url);
         cacheUrl.pathname = `/wiki/${encodeURIComponent(title)}`;
-        const cacheRequest = new Request(cacheUrl.toString(), { method: "GET" });
-        ctx.waitUntil(cache.delete(cacheRequest));
+        ctx.waitUntil(cache.delete(new Request(cacheUrl.toString(), { method: "GET" })));
 
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*" 
-          }
-        });
+        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
       } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { 
-          status: 500,
-          headers: { "Access-Control-Allow-Origin": "*" }
-        });
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
       }
     }
 
-    // 4. GET: 사용자 권한 확인 (User Role)
+    // 4. GET: 사용자 권한 확인
     if (request.method === "GET" && path.startsWith("/user/")) {
       const uid = path.split("/").pop();
       try {
-        const result = await env.DB.prepare(
-          "SELECT role FROM users WHERE uid = ?"
-        ).bind(uid).first();
-
-        return new Response(JSON.stringify(result || { role: "member" }), {
-          headers: { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-          }
-        });
+        const result = await env.DB.prepare("SELECT role FROM users WHERE uid = ?").bind(uid).first();
+        return new Response(JSON.stringify(result || { role: "member" }), { headers: corsHeaders });
       } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
       }
     }
 
-    // 5. POST: 사용자 권한 수정 (Admin only check should be in frontend or via secret)
+    // 5. POST: 사용자 권한 수정
     if (request.method === "POST" && path === "/user/role") {
       try {
         const { uid, role, nickname, email, secret } = await request.json();
-        
-        // 간단한 보안 확인 (실제 운영 시 더 강력한 인증 필요)
-        if (secret !== "9889") {
-          return new Response("Unauthorized", { status: 401 });
-        }
+        if (secret !== "9889") return new Response("Unauthorized", { status: 401 });
 
         await env.DB.prepare(`
           INSERT INTO users (uid, role, nickname, email, updated_at)
           VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-          ON CONFLICT(uid) DO UPDATE SET
-            role = excluded.role,
-            nickname = excluded.nickname,
-            email = excluded.email,
-            updated_at = CURRENT_TIMESTAMP
+          ON CONFLICT(uid) DO UPDATE SET role = excluded.role, nickname = excluded.nickname, email = excluded.email, updated_at = CURRENT_TIMESTAMP
         `).bind(uid, role, nickname || "", email || "").run();
 
-        return new Response(JSON.stringify({ success: true }), {
-          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-        });
+        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
       } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
       }
     }
 
-    // CORS Preflight 처리
+    // 6. OPTIONS: CORS Preflight
     if (request.method === "OPTIONS") {
-      return new Response(null, {
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type",
-        }
-      });
+      return new Response(null, { headers: corsHeaders });
     }
 
-    return new Response("Not Found", { status: 404 });
+    // 7. 정적 자산(Static Assets) 처리 (위의 API 경로에 해당하지 않는 모든 요청)
+    // Wrangler Assets 설정이 활성화되어 있으면 env.ASSETS를 통해 파일을 서빙합니다.
+    if (env.ASSETS) {
+      return env.ASSETS.fetch(request);
+    }
+
+    return new Response(JSON.stringify({ error: "Not Found" }), { status: 404, headers: corsHeaders });
   }
 };
