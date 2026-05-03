@@ -374,7 +374,10 @@ if (form) {
                 body: JSON.stringify(updatedData)
             });
 
-            if (!response.ok) throw new Error('저장 중 서버 에러가 발생했습니다.');
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || '서버 저장 실패');
+            }
             
             location.href = `detail.html#${charId}`;
         } catch (err) {
