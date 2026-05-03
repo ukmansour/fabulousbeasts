@@ -144,8 +144,8 @@ function initSearch() {
         if (val.length < 1) { results.classList.remove('active'); return; }
         const matches = mergedCharacters.filter(c => (c.name||'').toLowerCase().includes(val) || c.id.toLowerCase().includes(val)).slice(0, 10);
         results.innerHTML = matches.length > 0 
-            ? matches.map(m => `<div class="search-item" onclick="location.href='detail.html#${m.id}'"><strong>${m.name || m.id}</strong></div>`).join('')
-            : `<div class="search-item" onclick="location.href='edit.html#${val}'">"${val}" 문서 만들기</div>`;
+            ? matches.map(m => `<a href="detail.html#${m.id}" class="search-item" style="display:block; text-decoration:none; color:inherit;"><strong>${m.name || m.id}</strong></a>`).join('')
+            : `<a href="edit.html#${val}" class="search-item" style="display:block; text-decoration:none; color:inherit;">"${val}" 문서 만들기</a>`;
         results.classList.add('active');
     };
     document.addEventListener('click', (e) => { if(!input.contains(e.target)) results.classList.remove('active'); });

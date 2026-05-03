@@ -17,7 +17,7 @@ if (input) {
         const val = input.value.trim().toLowerCase();
         if (val.length < 1) { results.classList.remove('active'); return; }
         const matches = CHARACTERS.filter(c => (c.name||'').toLowerCase().includes(val) || c.id.toLowerCase().includes(val)).slice(0, 8);
-        results.innerHTML = matches.map(m => `<div class="search-item" onclick="location.href='detail.html#${m.id}'">${m.name}</div>`).join('');
+        results.innerHTML = matches.map(m => `<a href="detail.html#${m.id}" class="search-item" style="display:block; text-decoration:none; color:inherit;">${m.name}</a>`).join('');
         results.classList.add('active');
     };
 }
