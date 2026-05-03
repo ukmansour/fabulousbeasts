@@ -1,5 +1,5 @@
-import { db, auth } from './firebase-config.js';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { db, auth, getDocSafe, getDocsSafe } from './firebase-config.js';
+import { collection, doc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // ─── 툴바 삽입 함수 ────────────────────────────────────────────
@@ -53,7 +53,7 @@ onAuthStateChanged(auth, async (user) => {
             return;
         }
 
-        const userSnap = await getDoc(doc(db, "users", user.uid));
+        const userSnap = await getDocSafe(doc(db, "users", user.uid));
         if (userSnap.exists() && userSnap.data().role === 'admin') {
             renderAdminPage();
         } else {
@@ -108,7 +108,8 @@ async function renderAdminPage() {
 
 async function loadAndRenderUsers() {
     try {
-        const snap = await getDocs(collection(db, "users"));
+        // 사용자 목록은 최대 100명까지만 (필요 시 페이징 구현 권장)
+        const snap = await getDocsSafe(collection(db, "users"), 100);
         
         if (snap.empty) {
             contentArea.innerHTML = `
@@ -260,15 +261,15 @@ async function loadNotice() {
     
     try {
         if (noticeArea) {
-            const snap = await getDoc(doc(db, "notices", "main"));
+            const snap = await getDocSafe(doc(db, "notices", "main"));
             if (snap.exists()) noticeArea.value = snap.data().content || '';
         }
         if (newsArea) {
-            const snap = await getDoc(doc(db, "notices", "news"));
+            const snap = await getDocSafe(doc(db, "notices", "news"));
             if (snap.exists()) newsArea.value = snap.data().content || '';
         }
         if (guideArea) {
-            const snap = await getDoc(doc(db, "notices", "guide"));
+            const snap = await getDocSafe(doc(db, "notices", "guide"));
             if (snap.exists()) guideArea.value = snap.data().content || '';
         }
         console.log("Notices loaded from Firestore");
