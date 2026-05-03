@@ -140,8 +140,12 @@ async function loadDetail() {
                 console.warn("Expected JSON but received:", contentType);
                 renderPage(baseData);
             }
+        } else if (response.status === 404) {
+            console.log("D1 data not found (404). Showing no-document notice.");
+            renderNoDocumentNotice(charId);
         } else {
-            console.log("D1 data not found or error, using base data.");
+            console.log("D1 error, using base data.");
+            renderPage(baseData);
         }
     } catch (err) {
         console.error("D1 loading error:", err);
@@ -314,6 +318,26 @@ async function renderRecentChanges() {
         }).join('');
     } catch(e) {
         console.error("Recent changes load error:", e);
+    }
+}
+
+function renderNoDocumentNotice(title) {
+    if (infoboxArea) infoboxArea.innerHTML = '';
+    if (tocWrapper) tocWrapper.style.display = 'none';
+    if (contentArea) {
+        contentArea.innerHTML = `
+            <div style="text-align:center; padding:80px 20px; background:white; border-radius:16px; border:1px solid #eee; box-shadow:0 10px 30px rgba(0,0,0,0.03); margin-top:20px;">
+                <div style="font-size:4rem; margin-bottom:20px;">📜</div>
+                <h2 style="font-size:1.5rem; color:#333; margin-bottom:12px; font-weight:800;">"${title}" 문서가 아직 없습니다.</h2>
+                <p style="color:#666; margin-bottom:30px; line-height:1.6;">
+                    이 문서는 아직 작성되지 않았습니다.<br>
+                    여러분의 지식으로 위키를 채워주세요!
+                </p>
+                <a href="edit.html#${encodeURIComponent(title)}" style="display:inline-block; padding:12px 30px; background:var(--primary-color); color:white; border-radius:8px; text-decoration:none; font-weight:bold; transition:transform 0.2s; box-shadow:0 4px 15px rgba(33, 150, 243, 0.3);">
+                    새 문서 작성하기
+                </a>
+            </div>
+        `;
     }
 }
 
