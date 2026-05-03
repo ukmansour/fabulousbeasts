@@ -79,7 +79,6 @@ onAuthStateChanged(auth, async (user) => {
 
 async function initHome() {
     // 1. 먼저 기본 데이터로 렌더링 (즉각적인 반응성)
-    renderFeatured();
     renderCategoryGrid();
     initSearch();
     
@@ -87,7 +86,6 @@ async function initHome() {
     await fetchFirestoreData();
     
     // 3. 업데이트된 데이터로 다시 렌더링
-    renderFeatured();
     renderCategoryGrid();
     renderRecentChanges();
     loadNotice();
