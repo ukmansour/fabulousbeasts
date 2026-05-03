@@ -92,7 +92,12 @@ function showRecoveryUI() {
 }
 
 async function renderAdminPage() {
-    contentArea.innerHTML = `<div style="text-align:center; padding:2rem;">회원 목록을 불러오는 중...</div>`;
+    contentArea.innerHTML = `
+        <div style="display:flex; justify-content:center; padding:3rem;">
+            <div class="loading-spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid var(--primary-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;"></div>
+        </div>
+        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
+    `;
     
     try {
         const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
@@ -103,61 +108,69 @@ async function renderAdminPage() {
         });
 
         if (users.length === 0) {
-            contentArea.innerHTML = `<div style="text-align:center; padding:2rem;">가입한 회원이 없습니다.</div>`;
+            contentArea.innerHTML = `<div style="text-align:center; padding:3rem; color:var(--text-muted);">가입한 회원이 없습니다.</div>`;
             return;
         }
 
         let html = `
-            <div style="background:white; padding:2rem; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-                <h2 style="font-size:1.2rem; margin-bottom:1rem; border-bottom:2px solid var(--primary-color); padding-bottom:0.5rem;">회원 관리</h2>
-                <div style="overflow-x:auto;">
-                    <table style="width:100%; border-collapse:collapse; text-align:left;">
-                        <thead>
-                            <tr style="background:#f8f9fa; border-bottom:2px solid #ddd;">
-                                <th style="padding:12px 10px; font-weight:800; color:#333;">닉네임</th>
-                                <th style="padding:12px 10px; font-weight:800; color:#333;">이메일</th>
-                                <th style="padding:12px 10px; font-weight:800; color:#333;">현재 권한</th>
-                                <th style="padding:12px 10px; font-weight:800; color:#333;">상태 변경</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+            <div style="max-width:800px; margin:0 auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; padding-bottom:0.5rem; border-bottom:2px solid #eee;">
+                    <h2 style="font-size:1.1rem; font-weight:900; color:#222;">회원 관리 (${users.length}명)</h2>
+                </div>
+                <div style="display:flex; flex-direction:column; gap:0.8rem;">
         `;
 
         users.forEach(u => {
-            let roleBadge = '';
-            if (u.role === 'admin') roleBadge = '<span style="background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:bold;">관리자</span>';
-            else if (u.role === 'banned') roleBadge = '<span style="background:#fee2e2; color:#dc2626; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:bold;">차단됨</span>';
-            else roleBadge = '<span style="background:#f0f9ff; color:#0369a1; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:bold;">일반 멤버</span>';
+            let roleText = '일반 멤버';
+            let roleColor = '#0369a1';
+            let roleBg = '#f0f9ff';
+            
+            if (u.role === 'admin') {
+                roleText = '관리자';
+                roleColor = '#92400e';
+                roleBg = '#fef3c7';
+            } else if (u.role === 'banned') {
+                roleText = '차단됨';
+                roleColor = '#dc2626';
+                roleBg = '#fee2e2';
+            }
 
             html += `
-                <tr style="border-bottom:1px solid #eee;">
-                    <td style="padding:12px 10px;">${u.nickname || '이름 없음'}</td>
-                    <td style="padding:12px 10px;">${u.email || '-'}</td>
-                    <td style="padding:12px 10px;">${roleBadge}</td>
-                    <td style="padding:12px 10px;">
-                        <select onchange="window.changeUserRole('${u.id}', this.value)" style="padding:6px; border:1px solid #ccc; border-radius:4px; font-size:0.85rem; outline:none; cursor:pointer;">
-                            <option value="">변경 선택...</option>
-                            <option value="member">일반 멤버로 강등</option>
-                            <option value="admin">관리자로 승격</option>
-                            <option value="banned">차단하기 (접근 금지)</option>
+                <div style="background:white; border:1px solid #eee; border-radius:6px; padding:1rem; display:flex; justify-content:space-between; align-items:center; transition:0.2s;">
+                    <div style="display:flex; flex-direction:column; gap:0.2rem;">
+                        <div style="display:flex; align-items:center; gap:0.6rem;">
+                            <span style="font-weight:800; font-size:0.95rem; color:#333;">${u.nickname || '이름 없음'}</span>
+                            <span style="background:${roleBg}; color:${roleColor}; padding:2px 8px; border-radius:4px; font-size:0.7rem; font-weight:800;">${roleText}</span>
+                        </div>
+                        <div style="font-size:0.8rem; color:#777;">${u.email || '이메일 정보 없음'}</div>
+                    </div>
+                    
+                    <div style="display:flex; align-items:center; gap:0.5rem;">
+                        <select onchange="window.changeUserRole('${u.id}', this.value)" style="padding:0.4rem; border:1px solid #ddd; border-radius:4px; font-size:0.8rem; background:#fafafa; cursor:pointer; outline:none;">
+                            <option value="">권한 변경...</option>
+                            <option value="member">일반 멤버</option>
+                            <option value="admin">관리자 승격</option>
+                            <option value="banned">사용 차단</option>
                         </select>
-                    </td>
-                </tr>
+                    </div>
+                </div>
             `;
         });
 
         html += `
-                        </tbody>
-                    </table>
+                </div>
+                <div style="margin-top:2rem; text-align:center; font-size:0.75rem; color:#aaa;">
+                    관리 권한을 변경하려면 보안 코드가 필요합니다.
                 </div>
             </div>
         `;
         contentArea.innerHTML = html;
     } catch (e) {
         console.error("사용자 목록 불러오기 실패:", e);
-        contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:red;">사용자 목록을 불러오는 중 오류가 발생했습니다: ${e.message}</div>`;
+        contentArea.innerHTML = `<div style="text-align:center; padding:3rem; color:#dc2626; font-weight:700;">오류: ${e.message}</div>`;
     }
 }
+
 
 window.changeUserRole = async (uid, newRole) => {
     if (!newRole) return;
