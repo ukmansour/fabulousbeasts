@@ -73,31 +73,40 @@ export default {
     if (request.method === "POST" && path === "/wiki") {
       try {
         const data = await request.json();
+        console.log("[Worker] Save request received:", JSON.stringify(data));
         const { title, content, author, category, species, nation, alias, birthday, image, gallery } = data;
 
-        if (!title || !content) {
-          return new Response(JSON.stringify({ error: "Title and Content are required" }), { status: 400, headers: corsHeaders });
+        if (!title || title.trim() === "") {
+          return new Response(JSON.stringify({ error: "문서 제목이 없습니다." }), { status: 400, headers: corsHeaders });
+        }
+        if (!content || content.trim() === "") {
+          return new Response(JSON.stringify({ error: "본문 내용이 비어 있습니다." }), { status: 400, headers: corsHeaders });
         }
 
-        await env.DB.prepare(`
-          INSERT INTO wiki_pages (title, content, author, category, species, nation, alias, birthday, image, gallery, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-          ON CONFLICT(title) DO UPDATE SET
-            content = excluded.content,
-            author = excluded.author,
-            category = excluded.category,
-            species = excluded.species,
-            nation = excluded.nation,
-            alias = excluded.alias,
-            birthday = excluded.birthday,
-            image = excluded.image,
-            gallery = excluded.gallery,
-            updated_at = CURRENT_TIMESTAMP
-        `).bind(
-          title, content, author || "Anonymous", category || "General",
-          species || "", nation || "", alias || "", birthday || "", image || "",
-          gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]"
-        ).run();
+        try {
+          await env.DB.prepare(`
+            INSERT INTO wiki_pages (title, content, author, category, species, nation, alias, birthday, image, gallery, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ON CONFLICT(title) DO UPDATE SET
+              content = excluded.content,
+              author = excluded.author,
+              category = excluded.category,
+              species = excluded.species,
+              nation = excluded.nation,
+              alias = excluded.alias,
+              birthday = excluded.birthday,
+              image = excluded.image,
+              gallery = excluded.gallery,
+              updated_at = CURRENT_TIMESTAMP
+          `).bind(
+            title, content, author || "Anonymous", category || "General",
+            species || "", nation || "", alias || "", birthday || "", image || "",
+            gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]"
+          ).run();
+        } catch (d1Err) {
+          console.error("[Worker] D1 Save Error:", d1Err.message, d1Err.stack);
+          return new Response(JSON.stringify({ error: `데이터베이스 저장 오류: ${d1Err.message}` }), { status: 500, headers: corsHeaders });
+        }
 
         const cacheUrl = new URL(request.url);
         cacheUrl.pathname = `/wiki/${encodeURIComponent(title)}`;
@@ -107,7 +116,8 @@ export default {
 
         return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
       } catch (err) {
-        return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        console.error("[Worker] General Save Error:", err);
+        return new Response(JSON.stringify({ error: `서버 내부 오류: ${err.message}` }), { status: 500, headers: corsHeaders });
       }
     }
 
