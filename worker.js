@@ -30,7 +30,10 @@ export default {
         if (!result) {
           return new Response(JSON.stringify({ error: "Not Found" }), { 
             status: 404,
-            headers: { "Content-Type": "application/json" }
+            headers: { 
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*"
+            }
           });
         }
 
@@ -39,20 +42,44 @@ export default {
           headers: {
             "Content-Type": "application/json",
             "Cache-Control": "public, max-age=60",
-            "Access-Control-Allow-Origin": "*" // CORS 허용
+            "Access-Control-Allow-Origin": "*" 
           }
         });
 
-        // 캐시 저장 (ctx.waitUntil을 사용하여 응답 후 비동기로 저장)
+        // 캐시 저장
         ctx.waitUntil(cache.put(request, response.clone()));
         
         return response;
       } catch (err) {
-        return new Response(err.message, { status: 500 });
+        return new Response(JSON.stringify({ error: err.message }), { 
+          status: 500,
+          headers: { 
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+          }
+        });
       }
     }
 
-    // 2. POST: 문서 저장/수정 (Update/Insert)
+    // 2. GET: 최근 변경된 문서 목록 (Select Recent)
+    if (request.method === "GET" && path === "/recent") {
+      try {
+        const { results } = await env.DB.prepare(
+          "SELECT title, author, category, updated_at FROM wiki_pages ORDER BY updated_at DESC LIMIT 8"
+        ).all();
+
+        return new Response(JSON.stringify(results), {
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+          }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+      }
+    }
+
+    // 3. POST: 문서 저장/수정 (Update/Insert)
     if (request.method === "POST" && path === "/wiki") {
       try {
         const data = await request.json();
@@ -62,8 +89,7 @@ export default {
           return new Response("Title and Content are required", { status: 400 });
         }
 
-        // D1 Query: UPSERT (Insert or Update on Conflict)
-        // updated_at은 CURRENT_TIMESTAMP로 자동 갱신
+        // D1 Query: UPSERT
         await env.DB.prepare(`
           INSERT INTO wiki_pages (title, content, author, category, species, nation, alias, birthday, image, gallery, updated_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -88,10 +114,10 @@ export default {
           alias || "",
           birthday || "",
           image || "",
-          gallery ? JSON.stringify(gallery) : "[]"
+          gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]"
         ).run();
 
-        // [중요] 수정 시 기존 캐시 무효화 (해당 타이틀의 GET 요청 캐시 삭제)
+        // 캐시 무효화
         const cacheUrl = new URL(request.url);
         cacheUrl.pathname = `/wiki/${encodeURIComponent(title)}`;
         const cacheRequest = new Request(cacheUrl.toString(), { method: "GET" });
@@ -104,7 +130,10 @@ export default {
           }
         });
       } catch (err) {
-        return new Response(err.message, { status: 500 });
+        return new Response(JSON.stringify({ error: err.message }), { 
+          status: 500,
+          headers: { "Access-Control-Allow-Origin": "*" }
+        });
       }
     }
 

@@ -94,32 +94,41 @@ async function loadDetail() {
     // 로컬 데이터를 이용해 화면을 즉시 렌더링
     renderPage(baseData);
     
-    // Firestore 데이터 로드 (onSnapshot 대신 getDocSafe 사용으로 최적화)
+    // D1 데이터 로드
     try {
-        const docRef = doc(db, "characters", charId);
-        console.log("Loading Firestore doc:", charId);
-        const snap = await getDocSafe(docRef);
+        console.log("Loading D1 doc:", charId);
+        const response = await fetch(`/wiki/${encodeURIComponent(charId)}`);
         
-        if (snap.exists()) {
-            const data = { ...baseData, ...snap.data() };
+        if (response.ok) {
+            const dbData = await response.json();
+            console.log("D1 data received:", dbData);
+            
+            // D1 컬럼명을 Firestore 호환 형식으로 매핑
+            const data = { 
+                ...baseData, 
+                details: dbData.content,
+                author: dbData.author,
+                category: dbData.category,
+                species: dbData.species,
+                nation: dbData.nation,
+                alias: dbData.alias,
+                birthday: dbData.birthday,
+                image: dbData.image,
+                gallery: typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery,
+                updatedAt: { seconds: Math.floor(new Date(dbData.updated_at).getTime() / 1000) },
+                updatedBy: dbData.author
+            };
+            
             const nameToDisplay = data.name || charId;
             const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
             if (displayNameArea) displayNameArea.textContent = finalTitle;
             document.title = `${finalTitle} - 유수언`;
             renderPage(data);
         } else {
-            // 폴백 처리
-            const rawId = isGalleryPage ? location.hash.substring(1).replace('/%EA%B0%A4%EB%9F%AC%EB%A6%AC', '') : location.hash.substring(1);
-            if (rawId !== charId) {
-                const fallbackSnap = await getDocSafe(doc(db, "characters", rawId));
-                if (fallbackSnap.exists()) {
-                    const data = { ...baseData, ...fallbackSnap.data() };
-                    renderPage(data);
-                }
-            }
+            console.log("D1 data not found or error, using base data.");
         }
     } catch (err) {
-        console.error("Firestore loading error:", err);
+        console.error("D1 loading error:", err);
     }
 
     renderRecentChanges();
@@ -272,21 +281,24 @@ async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     try {
-        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"));
-        const snap = await getDocsSafe(q, 8); // 8개 제한
-        const data = snap.docs.map(d => ({id: d.id, ...d.data()}));
-        list.innerHTML = data.map(d => {
-            const date = d.updatedAt ? new Date(d.updatedAt.seconds * 1000).toLocaleString('ko-KR') : '-';
+        const response = await fetch('/recent');
+        if (!response.ok) return;
+        const results = await response.json();
+        
+        list.innerHTML = results.map(d => {
+            const date = d.updated_at ? new Date(d.updated_at).toLocaleString('ko-KR') : '-';
             return `
                 <div style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">
-                    <a href="detail.html#${d.id}" style="font-size:13px; color:var(--text-link); text-decoration:none; font-weight:700;">${d.name || d.id}</a>
+                    <a href="detail.html#${d.title}" style="font-size:13px; color:var(--text-link); text-decoration:none; font-weight:700;">${d.title}</a>
                     <div style="font-size:11px; color:#999; margin-top:2px;">
-                        <span>${d.updatedBy || '익명'}</span> | <span>${date}</span>
+                        <span>${d.author || '익명'}</span> | <span>${date}</span>
                     </div>
                 </div>
             `;
         }).join('');
-    } catch(e) {}
+    } catch(e) {
+        console.error("Recent changes load error:", e);
+    }
 }
 
 window.onhashchange = () => {

@@ -125,35 +125,34 @@ function initToolbar() {
 async function loadInitialData() {
     if (!charId) return;
     initCategorySelect();
+    // D1 데이터 로드
     try {
-        console.log("Loading data for Edit:", charId);
-        const baseData = CHARACTERS.find(c => c.id === charId) || {};
-        const docRef = doc(db, "characters", charId);
-        
-        // onSnapshot 대신 getDocSafe 사용으로 읽기 최적화
-        const snap = await getDocSafe(docRef);
-        if (snap.exists()) {
-            const dbData = snap.data();
-            console.log("Edit data received from Firestore:", dbData);
-            const data = { ...baseData, ...dbData };
+        console.log("Loading D1 doc for Edit:", charId);
+        const response = await fetch(`/wiki/${encodeURIComponent(charId)}`);
+        const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
+
+        if (response.ok) {
+            const dbData = await response.json();
+            console.log("D1 data received for edit:", dbData);
+            const data = { 
+                ...baseData, 
+                details: dbData.content,
+                category: dbData.category,
+                species: dbData.species,
+                nation: dbData.nation,
+                alias: dbData.alias,
+                birthday: dbData.birthday,
+                image: dbData.image,
+                gallery: typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery
+            };
             fillForm(data);
         } else {
-            // 폴백 처리
-            const rawId = location.hash.substring(1);
-            if (rawId !== charId) {
-                const fallbackSnap = await getDocSafe(doc(db, "characters", rawId));
-                if (fallbackSnap.exists()) {
-                    fillForm({ ...baseData, ...fallbackSnap.data() });
-                } else {
-                    fillForm(baseData);
-                }
-            } else {
-                fillForm(baseData);
-            }
+            console.log("D1 data not found, using base data.");
+            fillForm(baseData);
         }
     } catch (err) { 
-        console.error("LoadInitialData error:", err); 
-        alert("편집기 초기화 실패: " + err.message);
+        console.error("D1 loading error:", err); 
+        alert("데이터 로드 실패: " + err.message);
     }
 }
 
@@ -351,20 +350,27 @@ if (form) {
         saveBtn.disabled = true;
         saveBtn.textContent = '저장 중...';
         const updatedData = {
+            title: charId,
             name: document.getElementById('edit-name').value,
             category: categorySelect ? categorySelect.value : '기타',
-            details: editor.value,
+            content: editor.value,
             species: document.getElementById('info-species').value,
             nation: document.getElementById('info-nation').value,
             alias: document.getElementById('info-alias').value,
             birthday: document.getElementById('info-birthday').value,
             image: document.getElementById('image-url').value,
             gallery: currentGallery,
-            updatedAt: serverTimestamp(),
-            updatedBy: currentUser.displayName || '익명'
+            author: currentUser.displayName || '익명'
         };
         try {
-            await setDoc(doc(db, "characters", charId), updatedData, { merge: true });
+            const response = await fetch('/wiki', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedData)
+            });
+
+            if (!response.ok) throw new Error('저장 중 서버 에러가 발생했습니다.');
+            
             location.href = `detail.html#${charId}`;
         } catch (err) {
             alert("저장 실패: " + err.message);

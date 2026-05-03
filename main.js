@@ -107,32 +107,22 @@ async function renderRecentChanges() {
     if (!list) return;
     
     try {
-        // 최근 변경 사항은 최대 8개면 충분함
-        const snap = await getDocsSafe(collection(db, "characters"), 8);
+        const response = await fetch('/recent');
+        if (!response.ok) throw new Error('Recent changes fetch failed');
+        const results = await response.json();
         
-        if (snap.empty) {
+        if (results.length === 0) {
             list.innerHTML = '<p style="font-size:0.8rem; color:#999;">문서가 아직 없습니다.</p>';
             return;
         }
         
-        const sorted = snap.docs
-            .map(d => ({ id: d.id, ...d.data() }))
-            .sort((a, b) => {
-                const ta = a.updatedAt?.seconds ?? 0;
-                const tb = b.updatedAt?.seconds ?? 0;
-                return tb - ta;
-            });
-        
-        list.innerHTML = sorted.map(d => {
-            let dateStr = '-';
-            if (d.updatedAt?.seconds) {
-                dateStr = new Date(d.updatedAt.seconds * 1000).toLocaleString('ko-KR');
-            }
+        list.innerHTML = results.map(d => {
+            const dateStr = d.updated_at ? new Date(d.updated_at).toLocaleString('ko-KR') : '-';
             return `
                 <div class="recent-item" style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">
-                    <a href="detail.html#${d.id}" class="recent-link" style="font-weight:700; color:var(--text-link); text-decoration:none; font-size:14px;">${d.name || d.id}</a>
+                    <a href="detail.html#${d.title}" class="recent-link" style="font-weight:700; color:var(--text-link); text-decoration:none; font-size:14px;">${d.title}</a>
                     <div class="recent-meta" style="font-size:11px; color:#999; margin-top:2px;">
-                        <span>${d.updatedBy || '익명'}</span> | <span>${dateStr}</span>
+                        <span>${d.author || '익명'}</span> | <span>${dateStr}</span>
                     </div>
                 </div>`;
         }).join('');
