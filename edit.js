@@ -69,10 +69,23 @@ function initCategorySelect() {
 }
 
 function checkPermission() {
-    const container = document.querySelector('.container');
+    const container = document.querySelector('.editor-container');
+    const formEl = document.getElementById('edit-form');
+    const headerEl = document.querySelector('.editor-header');
+    
     if (!container) return;
 
+    let errorDiv = document.getElementById('permission-error-div');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.id = 'permission-error-div';
+        container.appendChild(errorDiv);
+    }
+
     if (userRole !== 'admin') {
+        if (formEl) formEl.style.display = 'none';
+        if (headerEl) headerEl.style.display = 'none';
+
         const errorCode = currentUser ? '403' : '401';
         const errorMsg = currentUser ? '🔒 관리자 권한이 필요합니다' : '🔒 로그인이 필요합니다';
         const subMsg = currentUser ? '이 문서를 편집할 수 있는 권한이 없습니다.' : '편집을 진행하시려면 로그인이 필요합니다.';
@@ -80,25 +93,30 @@ function checkPermission() {
             `<a href="detail.html#${charId}" style="padding:10px 25px; background:#f0f0f0; color:#333; border-radius:5px; text-decoration:none; font-weight:bold; display:inline-block;">상세 페이지로 돌아가기</a>` :
             `<a href="auth.html" style="padding:10px 25px; background:var(--primary-color); color:white; border-radius:5px; text-decoration:none; font-weight:bold; display:inline-block;">로그인하러 가기</a>`;
 
-        container.innerHTML = `
+        errorDiv.innerHTML = `
             <div style="text-align:center; padding:100px 20px; background:white; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.05); margin-top:50px;">
                 <h1 style="color:#ff4d4f; font-size:5rem; margin-bottom:10px;">${errorCode}</h1>
                 <h2 style="margin-bottom:20px; font-weight:800;">${errorMsg}</h2>
                 <p style="color:#666; margin-bottom:40px; font-size:1.1rem;">${subMsg}</p>
                 ${actionBtn}
             </div>`;
-        
-        if (form) form.onsubmit = (e) => e.preventDefault();
+        errorDiv.style.display = 'block';
     } else {
+        if (formEl) formEl.style.display = 'block';
+        if (headerEl) headerEl.style.display = 'block';
+        errorDiv.style.display = 'none';
+
         if (uploadMsg) {
             uploadMsg.textContent = "이미지 업로드 (인포박스용)";
             uploadMsg.style.color = "inherit";
         }
         saveBtn.disabled = false;
         saveBtn.title = "";
-        form.querySelectorAll('input, textarea, button, select').forEach(el => {
-            el.disabled = false;
-        });
+        if (form) {
+            form.querySelectorAll('input, textarea, button, select').forEach(el => {
+                el.disabled = false;
+            });
+        }
     }
 }
 
