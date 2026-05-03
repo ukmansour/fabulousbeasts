@@ -1,8 +1,9 @@
 {
   "name": "fabulousbeasts",
   "compatibility_date": "2026-04-30",
+  "main": "worker.js",
   "assets": {
-    "directory": "./dist"
+    "directory": "./"
   },
   "d1_databases": [
     {
@@ -11,4 +12,4 @@
       "database_id": "00c6acd8-27f4-497b-8bda-1508a7f5bd83"
     }
   ]
-}
+}
