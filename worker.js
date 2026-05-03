@@ -137,6 +137,53 @@ export default {
       }
     }
 
+    // 4. GET: 사용자 권한 확인 (User Role)
+    if (request.method === "GET" && path.startsWith("/user/")) {
+      const uid = path.split("/").pop();
+      try {
+        const result = await env.DB.prepare(
+          "SELECT role FROM users WHERE uid = ?"
+        ).bind(uid).first();
+
+        return new Response(JSON.stringify(result || { role: "member" }), {
+          headers: { 
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*"
+          }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+      }
+    }
+
+    // 5. POST: 사용자 권한 수정 (Admin only check should be in frontend or via secret)
+    if (request.method === "POST" && path === "/user/role") {
+      try {
+        const { uid, role, nickname, email, secret } = await request.json();
+        
+        // 간단한 보안 확인 (실제 운영 시 더 강력한 인증 필요)
+        if (secret !== "9889") {
+          return new Response("Unauthorized", { status: 401 });
+        }
+
+        await env.DB.prepare(`
+          INSERT INTO users (uid, role, nickname, email, updated_at)
+          VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+          ON CONFLICT(uid) DO UPDATE SET
+            role = excluded.role,
+            nickname = excluded.nickname,
+            email = excluded.email,
+            updated_at = CURRENT_TIMESTAMP
+        `).bind(uid, role, nickname || "", email || "").run();
+
+        return new Response(JSON.stringify({ success: true }), {
+          headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+        });
+      } catch (err) {
+        return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+      }
+    }
+
     // CORS Preflight 처리
     if (request.method === "OPTIONS") {
       return new Response(null, {
