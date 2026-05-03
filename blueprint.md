@@ -84,15 +84,28 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
     *   Removed the `reset-db.js` utility file and all associated logic.
     *   This prevents accidental data loss and streamlines the administrative interface.
 
-## Bug Fixes (2026.05.02)
+## UI Refinements & Admin Enhancements (Latest Update)
 
-**Objective:** Fix a bug where wiki documents were not visible to users who were not logged in.
+**Objective:** Improve the mobile user experience, enhance administrative control over the homepage, and optimize overall performance.
 
 **Changes:**
-1.  **Firestore Security Rules Update (`firestore.rules`)**:
-    *   Refactored `isBanned()` and `getUserData()` functions to safely handle unauthenticated (guest) users. Previously, accessing `request.auth.uid` when null caused a rule evaluation error.
-    *   Explicitly allowed public read access to `characters`, `categories`, and `notices` for non-banned users.
-    *   This ensures that guest users can view the full wiki content stored in Firestore, whereas previously they could only see static placeholder data or "Load failed" messages.
-2.  **Nickname Check Fix**:
-    *   Restored read access to the `users` collection for guests (filtered by the `isBanned` check) to allow nickname availability verification during signup.
+1.  **Mobile & Layout Optimization**:
+    *   Refined the home screen layout for better mobile responsiveness.
+    *   Adjusted font sizes, line-heights, and padding in the news and guide sections for a more compact and readable look.
+    *   Fixed text alignment issues in various content blocks.
+2.  **Admin Homepage Editor**:
+    *   Implemented a dedicated editor for the homepage content, allowing administrators to update news and guides directly.
+    *   Integrated an editor toolbar for easier formatting.
+    *   Added password protection and updated the security code (from `5555` to `9889`) for administrative actions.
+3.  **Markdown & Rendering Improvements**:
+    *   Fixed a bug where line breaks were not correctly rendered in news and guide content.
+    *   Implemented markdown rendering for the homepage to support headers, lists, and links.
+4.  **Performance & Reliability**:
+    *   Optimized document loading performance for a faster user experience.
+    *   Resolved script caching issues by implementing versioning (v3) for admin scripts.
+    *   Fixed a URL encoding mismatch that occasionally caused detail page content to go missing.
+5.  **Developer Experience**:
+    *   Added a cross-platform build script (`build.js`) to streamline the deployment process.
+6.  **Terminology & Branding**:
+    *   Updated the site subtitle to "팬 사이트" (Fan Site) and phased out "wiki" terminology to better reflect the project's focus.
 

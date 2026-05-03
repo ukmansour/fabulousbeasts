@@ -150,6 +150,24 @@ body {
     gap: 1rem;
     margin-bottom: 2rem;
 }
+.home-info-item {
+    background: #fff;
+    border: 1px solid var(--border-color);
+    padding: 0.7rem;
+    border-radius: 4px;
+}
+.home-info-item h2 {
+    margin-top: 0;
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 0.3rem;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+.home-info-content {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: #444;
+}
 .char-card-mini { border: 1px solid #eee; background: white; text-decoration: none; color: inherit; transition: 0.2s; }
 .char-card-mini:hover { border-color: var(--primary-color); transform: translateY(-2px); }
 .char-card-mini img { width: 100%; aspect-ratio: 1 / 1.1; object-fit: cover; }
@@ -232,6 +250,8 @@ body {
     /* 뉴스/가이드 그리드: 1열로 변경 */
     .home-info-grid {
         grid-template-columns: 1fr;
+        gap: 0.8rem;
+        margin-bottom: 2rem;
     }
 
     /* 캐릭터 카드 그리드 최적화 */

@@ -33,40 +33,40 @@
             
             <div class="wiki-content">
                 <!-- 유수언 문서 바로가기 -->
-                <div class="portal-card" style="background: linear-gradient(135deg, #4dd2ff, #99e6ff); color: #005580; display: flex; justify-content: space-between; align-items: center; cursor: pointer; margin-bottom: 1rem; border: 1px solid #b3f0ff;" onclick="location.href='detail.html#유수언'">
+                <div class="portal-card" style="background: linear-gradient(135deg, #4dd2ff, #99e6ff); color: #005580; border-color: #b3f0ff;" onclick="location.href='detail.html#유수언'">
                     <div>
-                        <h2 style="margin-top:0; border:none; color: #005580; font-size: 1.5rem;">유수언(有兽焉) 문서 보기</h2>
-                        <p style="margin-bottom:0; color: #006699; font-weight: 500;">작품의 개요와 배경 세계관에 대해 알아보세요.</p>
+                        <h2 style="color: #005580;">유수언(有兽焉) 문서 보기</h2>
+                        <p style="color: #006699;">작품의 개요와 배경 세계관에 대해 알아보세요.</p>
                     </div>
-                    <span style="font-size: 2rem; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));">📖</span>
+                    <span style="filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));">📖</span>
                 </div>
 
                 <!-- 애니메이션 시청 홍보 배너 -->
-                <div class="portal-card" style="background: linear-gradient(135deg, var(--primary-color), #51C3F7); color: white; display: flex; justify-content: space-between; align-items: center; cursor: pointer;" onclick="location.href='watch.html'">
+                <div class="portal-card" style="background: linear-gradient(135deg, var(--primary-color), #51C3F7); color: white;" onclick="location.href='watch.html'">
                     <div>
-                        <h2 style="margin-top:0; border:none; color: white; font-size: 1.5rem;">유수언 애니메이션 시청하기</h2>
-                        <p style="margin-bottom:0; opacity: 0.9;">공식 채널의 모든 에피소드를 한곳에서 감상하세요.</p>
+                        <h2 style="color: white;">유수언 애니메이션 시청하기</h2>
+                        <p style="opacity: 0.9;">공식 채널의 모든 에피소드를 한곳에서 감상하세요.</p>
                     </div>
-                    <span style="font-size: 2rem;">▶</span>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-                    <!-- 최근 소식 섹션 -->
-                    <div style="background: #fff; border: 1px solid var(--border-color); padding: 0.7rem; border-radius: 4px;">
-                        <h2 style="margin-top:0; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.3rem; margin-bottom:0.5rem; font-size: 1rem;">최근 소식</h2>
-                        <div id="home-news" style="font-size: 0.9rem; line-height: 1.5; color: #444;">• 유수언 디자인 전면 개편 안내 (2026.04.25)<br>• 애니메이션 시청 전용 페이지 오픈<br>• 신규 캐릭터 정보 업데이트 모집 중</div>
-                    </div>
-                    <!-- 가이드 -->
-                    <div style="background: #fff; border: 1px solid var(--border-color); padding: 0.7rem; border-radius: 4px;">
-                        <h2 style="margin-top:0; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.3rem; margin-bottom:0.5rem; font-size: 1rem;">가이드</h2>
-                        <div id="home-guide" style="font-size: 0.88rem; color: #666; line-height: 1.5;">• [[캐릭터ID]] 형식으로 링크를 생성하세요.<br>• 마크다운 문법을 사용하여 풍성하게 꾸미세요.<br>• 로그인 후 누구나 편집할 수 있습니다.</div>
-                    </div>
+                    <span>▶</span>
                 </div>
 
                 <div style="margin-bottom: 3rem;">
                     <h2 id="featured">주요 캐릭터</h2>
                     <div id="featured-characters-grid" class="char-grid-portal">
                         <!-- JS injects here -->
+                    </div>
+                </div>
+
+                <div class="home-info-grid">
+                    <!-- 최근 소식 섹션 -->
+                    <div class="home-info-item">
+                        <h2>최근 소식</h2>
+                        <div id="home-news" class="home-info-content">• 유수언 디자인 전면 개편 안내 (2026.04.25)<br>• 애니메이션 시청 전용 페이지 오픈<br>• 신규 캐릭터 정보 업데이트 모집 중</div>
+                    </div>
+                    <!-- 가이드 -->
+                    <div class="home-info-item">
+                        <h2>가이드</h2>
+                        <div id="home-guide" class="home-info-content" style="color: #666;">• [[캐릭터ID]] 형식으로 링크를 생성하세요.<br>• 마크다운 문법을 사용하여 풍성하게 꾸미세요.<br>• 로그인 후 누구나 편집할 수 있습니다.</div>
                     </div>
                 </div>
 
