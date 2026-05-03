@@ -9,19 +9,23 @@ export default {
     const path = url.pathname;
     const cache = caches.default;
 
-    // 1. GET: 특정 제목의 문서 불러오기 (Select with Cache)
+    console.log(`[Worker] Request: ${request.method} ${path}`);
+
+    // CORS Headers
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+      "Content-Type": "application/json"
+    };
+
+    // 1. GET: 특정 제목의 문서 불러오기
     if (request.method === "GET" && path.startsWith("/wiki/")) {
       const title = decodeURIComponent(path.split("/").pop());
-
-      // 캐시 확인 (브라우저/CDN 캐시 활용)
-      let response = await cache.match(request);
-      if (response) {
-        console.log(`Cache Hit: ${title}`);
-        return response;
-      }
-
-      console.log(`Cache Miss: ${title}. Fetching from D1...`);
       
+      let response = await cache.match(request);
+      if (response) return response;
+
       try {
         const result = await env.DB.prepare(
           "SELECT * FROM wiki_pages WHERE title = ?"
@@ -29,34 +33,21 @@ export default {
 
         if (!result) {
           return new Response(JSON.stringify({ error: "Not Found" }), { 
-            status: 404,
-            headers: { 
-              "Content-Type": "application/json",
-              "Access-Control-Allow-Origin": "*"
-            }
+            status: 404, 
+            headers: corsHeaders 
           });
         }
 
-        // 응답 생성 및 캐시 설정 (60초간 캐싱)
         response = new Response(JSON.stringify(result), {
-          headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": "public, max-age=60",
-            "Access-Control-Allow-Origin": "*" 
-          }
+          headers: { ...corsHeaders, "Cache-Control": "public, max-age=60" }
         });
 
-        // 캐시 저장
         ctx.waitUntil(cache.put(request, response.clone()));
-        
         return response;
       } catch (err) {
         return new Response(JSON.stringify({ error: err.message }), { 
-          status: 500,
-          headers: { 
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*"
-          }
+          status: 500, 
+          headers: corsHeaders 
         });
       }
     }

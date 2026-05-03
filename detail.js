@@ -99,30 +99,35 @@ async function loadDetail() {
         const response = await fetch(`/wiki/${encodeURIComponent(charId)}`);
         
         if (response.ok) {
-            const dbData = await response.json();
-            console.log("D1 data received:", dbData);
-            
-            // D1 컬럼명을 Firestore 호환 형식으로 매핑
-            const data = { 
-                ...baseData, 
-                details: dbData.content,
-                author: dbData.author,
-                category: dbData.category,
-                species: dbData.species,
-                nation: dbData.nation,
-                alias: dbData.alias,
-                birthday: dbData.birthday,
-                image: dbData.image,
-                gallery: typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery,
-                updatedAt: { seconds: Math.floor(new Date(dbData.updated_at).getTime() / 1000) },
-                updatedBy: dbData.author
-            };
-            
-            const nameToDisplay = data.name || charId;
-            const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
-            if (displayNameArea) displayNameArea.textContent = finalTitle;
-            document.title = `${finalTitle} - 유수언`;
-            renderPage(data);
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                const dbData = await response.json();
+                console.log("D1 data received:", dbData);
+                
+                const data = { 
+                    ...baseData, 
+                    details: dbData.content,
+                    author: dbData.author,
+                    category: dbData.category,
+                    species: dbData.species,
+                    nation: dbData.nation,
+                    alias: dbData.alias,
+                    birthday: dbData.birthday,
+                    image: dbData.image,
+                    gallery: typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery,
+                    updatedAt: { seconds: Math.floor(new Date(dbData.updated_at).getTime() / 1000) },
+                    updatedBy: dbData.author
+                };
+                
+                const nameToDisplay = data.name || charId;
+                const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
+                if (displayNameArea) displayNameArea.textContent = finalTitle;
+                document.title = `${finalTitle} - 유수언`;
+                renderPage(data);
+            } else {
+                console.warn("Expected JSON but received:", contentType);
+                renderPage(baseData);
+            }
         } else {
             console.log("D1 data not found or error, using base data.");
         }
