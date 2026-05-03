@@ -25,11 +25,11 @@ export const CHARACTER_COLLECTION = {
             sibuxiang: { id: 'sibuxiang', category: '메인 캐릭터', name: '사불상 (四不像)', image: 'https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png' }
         },
         '비휴 형제': {
-            tianlu: { id: 'tianlu', category: '메인 캐릭터', name: '천록 (天禄 / 피피)', image: 'https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png' },
+            tianlu: { id: 'tianlu', category: '메인 캐릭터', name: '천록 (天禄 / 피피)', image: 'https://static.wikitide.net/youshouyanwiki/thumb/a/ab/Tianlu.png/300px-Tianlu.png' },
             pixiu: { id: 'pixiu', category: '메인 캐릭터', name: '벽사 (辟邪)', image: 'https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png' }
         },
         '동료': {
-            tony: { id: 'tony', category: '메인 캐릭터', name: '투예 (兔爷 / 토야)', image: 'https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png' }
+            tony: { id: 'tony', category: '메인 캐릭터', name: '투예 (兔爷 / 토야)', image: 'https://static.wikitide.net/youshouyanwiki/thumb/0/00/TuyeFullbodyD.png/300px-TuyeFullbodyD.png' }
         }
     },
     '녹인점': {
