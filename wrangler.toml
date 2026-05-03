@@ -2,17 +2,18 @@ name = "fabulousbeasts"
 main = "worker.js"
 compatibility_date = "2026-05-04"
 
-# Static Assets 설정
+# 정적 자산 설정 (Frontend)
 [assets]
 directory = "./"
+binding = "ASSETS"
 
-# Cloudflare D1 바인딩
+# Cloudflare D1 바인딩 (데이터베이스)
 [[d1_databases]]
 binding = "DB"
 database_name = "fabulousbeasts"
 database_id = "00c6acd8-27f4-497b-8bda-1508a7f5bd83"
 
-# Cloudflare R2 바인딩
+# Cloudflare R2 바인딩 (이미지/영상 저장소)
 [[r2_buckets]]
 binding = "BUCKET"
 bucket_name = "fabulousbeasts2"

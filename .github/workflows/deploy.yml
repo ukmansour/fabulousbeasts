@@ -28,3 +28,14 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: deploy
+        continue-on-error: true
+
+      - name: Show wrangler logs on failure
+        if: always()
+        run: |
+          echo "--- Wrangler Logs Start ---"
+          # wrangler-action은 보통 특정 위치에 로그를 남기거나, 에러 시 상세 출력을 지원합니다.
+          # 공식 문서상 로그 파일 위치가 없을 경우를 대비해 npx wrangler deploy를 직접 실행해보는 것도 방법이지만, 
+          # 일단 요청하신 로그 확인 명령어를 추가합니다.
+          cat /home/runner/.config/.wrangler/logs/*.log || echo "No logs found"
+          echo "--- Wrangler Logs End ---"
