@@ -1,0 +1,15 @@
+name = "fabulousbeasts"
+main = "worker.js"
+compatibility_date = "2026-05-03"
+
+# Static Assets (Frontend) 설정 (필요한 경우)
+[assets]
+directory = "./"
+
+# Cloudflare D1 바인딩 설정
+[[d1_databases]]
+binding = "DB" # Worker에서 env.DB로 접근할 이름
+database_name = "wiki_db" # D1 대시보드에서 생성한 DB 이름
+database_id = "00c6acd8-27f4-497b-8bda-1508a7f5bd83" # npx wrangler d1 create wiki_db 실행 후 받은 ID 입력
+
+# Cache API는 별도 바인딩 없이 기본적으로 사용 가능합니다.
