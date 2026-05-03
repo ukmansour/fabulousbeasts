@@ -81,9 +81,11 @@ for (let s = 1; s <= 5; s++) {
 function renderEpisodes(season) {
     epList.innerHTML = '';
     const eps = EPISODES[season] || [];
-    eps.forEach(ep => {
+    eps.forEach((ep, index) => {
         const item = document.createElement('div');
         item.className = 'ep-item';
+        // 첫 번째 에피소드 기본 선택 처리
+        if (index === 0) item.classList.add('active');
         item.innerHTML = `<span class="ep-num">${ep.num}화</span><span class="ep-title">${ep.title}</span>`;
         item.onclick = () => {
             document.querySelectorAll('.ep-item').forEach(el => el.classList.remove('active'));
@@ -92,6 +94,11 @@ function renderEpisodes(season) {
         };
         epList.appendChild(item);
     });
+
+    // 목록이 렌더링될 때 자동으로 첫 번째 에피소드 비디오를 로드 (클릭 이벤트와 동일한 효과)
+    if (eps.length > 0) {
+        playVideo(eps[0]);
+    }
 }
 
 function playVideo(ep) {
