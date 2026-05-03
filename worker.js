@@ -13,7 +13,7 @@ export default {
     const path = url.pathname;
     const cache = caches.default;
 
-    console.log(`[Worker] Request: ${request.method} ${path}`);
+    console.log(`[Worker] Request: ${request.method} ${path} (URL: ${request.url})`);
 
     // CORS Headers
     const corsHeaders = {
