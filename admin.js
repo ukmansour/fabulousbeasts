@@ -92,59 +92,103 @@ function showRecoveryUI() {
 }
 
 async function renderAdminPage() {
-    // [읽기 최적화] 사용자 전체 목록을 불러오지 않고, 수동 관리 콘솔을 렌더링합니다.
-    contentArea.innerHTML = `
-        <div style="background:white; padding:2rem; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
-            <h2 style="font-size:1.2rem; margin-bottom:1rem; border-bottom:2px solid var(--primary-color); padding-bottom:0.5rem;">회원 권한 수동 관리</h2>
-            <p style="color:#666; font-size:0.9rem; margin-bottom:1.5rem;">대량의 DB 읽기를 방지하기 위해 사용자 목록을 자동으로 표시하지 않습니다.<br>관리가 필요한 사용자의 <strong>UID</strong>를 입력하여 직접 권한을 수정하세요.</p>
-            
-            <div style="max-width:500px; margin:0 auto; padding:1rem; background:#f8f9fa; border-radius:8px;">
-                <label style="display:block; font-weight:bold; margin-bottom:0.5rem; font-size:0.85rem;">관리 대상 사용자 UID</label>
-                <input type="text" id="target-uid" placeholder="사용자 UID를 입력하세요" 
-                    style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:4px; margin-bottom:1.5rem; outline:none; font-family:monospace;">
-                
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
-                    <button onclick="window.manualChangeRole('admin')" style="padding:0.8rem; background:#fef3c7; color:#92400e; border:1px solid #fcd34d; border-radius:4px; font-weight:bold; cursor:pointer;">관리자로 승격</button>
-                    <button onclick="window.manualChangeRole('member')" style="padding:0.8rem; background:#f0f9ff; color:#0369a1; border:1px solid #bae6fd; border-radius:4px; font-weight:bold; cursor:pointer;">일반 멤버로 변경</button>
-                    <button onclick="window.manualChangeRole('banned')" style="padding:0.8rem; background:#fee2e2; color:#dc2626; border:1px solid #fecaca; border-radius:4px; font-weight:bold; cursor:pointer; grid-column: span 2; margin-top:0.5rem;">차단하기</button>
+    contentArea.innerHTML = `<div style="text-align:center; padding:2rem;">회원 목록을 불러오는 중...</div>`;
+    
+    try {
+        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const users = [];
+        usersSnapshot.forEach(docSnap => {
+            users.push({ id: docSnap.id, ...docSnap.data() });
+        });
+
+        if (users.length === 0) {
+            contentArea.innerHTML = `<div style="text-align:center; padding:2rem;">가입한 회원이 없습니다.</div>`;
+            return;
+        }
+
+        let html = `
+            <div style="background:white; padding:2rem; border:1px solid #ddd; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.05);">
+                <h2 style="font-size:1.2rem; margin-bottom:1rem; border-bottom:2px solid var(--primary-color); padding-bottom:0.5rem;">회원 관리</h2>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%; border-collapse:collapse; text-align:left;">
+                        <thead>
+                            <tr style="background:#f8f9fa; border-bottom:2px solid #ddd;">
+                                <th style="padding:12px 10px; font-weight:800; color:#333;">닉네임</th>
+                                <th style="padding:12px 10px; font-weight:800; color:#333;">이메일</th>
+                                <th style="padding:12px 10px; font-weight:800; color:#333;">현재 권한</th>
+                                <th style="padding:12px 10px; font-weight:800; color:#333;">상태 변경</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+
+        users.forEach(u => {
+            let roleBadge = '';
+            if (u.role === 'admin') roleBadge = '<span style="background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:bold;">관리자</span>';
+            else if (u.role === 'banned') roleBadge = '<span style="background:#fee2e2; color:#dc2626; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:bold;">차단됨</span>';
+            else roleBadge = '<span style="background:#f0f9ff; color:#0369a1; padding:4px 10px; border-radius:20px; font-size:0.8rem; font-weight:bold;">일반 멤버</span>';
+
+            html += `
+                <tr style="border-bottom:1px solid #eee;">
+                    <td style="padding:12px 10px;">${u.nickname || '이름 없음'}</td>
+                    <td style="padding:12px 10px;">${u.email || '-'}</td>
+                    <td style="padding:12px 10px;">${roleBadge}</td>
+                    <td style="padding:12px 10px;">
+                        <select onchange="window.changeUserRole('${u.id}', this.value)" style="padding:6px; border:1px solid #ccc; border-radius:4px; font-size:0.85rem; outline:none; cursor:pointer;">
+                            <option value="">변경 선택...</option>
+                            <option value="member">일반 멤버로 강등</option>
+                            <option value="admin">관리자로 승격</option>
+                            <option value="banned">차단하기 (접근 금지)</option>
+                        </select>
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            
-            <div style="margin-top:2rem; font-size:0.8rem; color:#999; border-top:1px solid #eee; padding-top:1rem;">
-                <p>※ UID는 해당 사용자의 가입 정보에서 확인하거나, 주소창의 세그먼트 등을 통해 알 수 있습니다.</p>
-                <p>※ 이 방식은 <strong>수정 시에만 데이터베이스에 접근</strong>하므로 불필요한 읽기 비용을 발생시키지 않습니다.</p>
-            </div>
-        </div>
-    `;
+        `;
+        contentArea.innerHTML = html;
+    } catch (e) {
+        console.error("사용자 목록 불러오기 실패:", e);
+        contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:red;">사용자 목록을 불러오는 중 오류가 발생했습니다: ${e.message}</div>`;
+    }
 }
 
-window.manualChangeRole = async (newRole) => {
-    const uid = document.getElementById('target-uid').value.trim();
-    if (!uid) { alert("UID를 입력해주세요."); return; }
-
-    let actionText = '';
-    if (newRole === 'admin') actionText = '관리자로 승격';
-    else if (newRole === 'banned') actionText = '차단';
-    else actionText = '일반 멤버로 변경';
-
-    if (!confirm(`UID [${uid}] 사용자를 ${actionText}하시겠습니까?`)) return;
+window.changeUserRole = async (uid, newRole) => {
+    if (!newRole) return;
+    
+    let actionText = newRole === 'admin' ? '관리자로 승격' : newRole === 'banned' ? '차단' : '일반 멤버로 변경';
+    if (!confirm(`해당 사용자를 ${actionText}하시겠습니까?`)) {
+        renderAdminPage(); // select 값 원상복구
+        return;
+    }
 
     const code = prompt("보안 코드를 입력하세요:");
-    if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
+    if (code !== "9889") { 
+        alert("보안 코드가 틀렸습니다."); 
+        renderAdminPage();
+        return; 
+    }
 
     try {
         const userRef = doc(db, "users", uid);
         await setDoc(userRef, { 
-            uid: uid,
             role: newRole,
             updatedAt: serverTimestamp()
         }, { merge: true });
         
         alert(`${actionText} 완료!`);
-        document.getElementById('target-uid').value = ''; // 입력창 비우기
+        renderAdminPage(); // 성공 시 새로고침
     } catch (e) {
         alert("오류 발생: " + e.message);
+        renderAdminPage();
     }
 };
 
 initAdminToolbars();
+
