@@ -27,3 +27,12 @@ CREATE TABLE IF NOT EXISTS users (
     email TEXT,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 수정 이력(History) 테이블
+CREATE TABLE IF NOT EXISTS wiki_revisions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    content TEXT,
+    author TEXT,
+    edited_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
