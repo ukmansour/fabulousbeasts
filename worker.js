@@ -1,6 +1,10 @@
 /**
- * Cloudflare Worker: Wiki Backend (Firestore to D1)
- * handles GET (Select with Cache) and POST (Update/Insert)
+ * Cloudflare Worker: Wiki Backend (D1 + R2)
+ * GET  /wiki/:title    - D1 문서 조회 (캐시 우선)
+ * POST /wiki           - D1 문서 저장/수정 (UPSERT)
+ * POST /upload         - R2 이미지 업로드 → 퍼블릭 URL 반환
+ * GET  /recent         - 최근 수정 문서 목록
+ * GET  /setup-db       - D1 테이블 자동 생성
  */
 
 export default {
@@ -18,6 +22,44 @@ export default {
       "Access-Control-Allow-Headers": "Content-Type",
       "Content-Type": "application/json"
     };
+
+    // 0. OPTIONS: CORS Preflight (맨 위에서 처리)
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    // === R2 이미지 업로드 ===
+    // POST /upload : FormData로 파일을 받아 R2에 저장하고 퍼블릭 URL 반환
+    if (request.method === "POST" && path === "/upload") {
+      try {
+        if (!env.BUCKET) {
+          return new Response(JSON.stringify({ error: "R2 버킷이 Worker에 바인딩되지 않았습니다. wrangler.jsonc를 확인해 주세요." }), { status: 500, headers: corsHeaders });
+        }
+
+        const formData = await request.formData();
+        const file = formData.get("file");
+        const folder = formData.get("folder") || "characters";
+
+        if (!file) {
+          return new Response(JSON.stringify({ error: "업로드할 파일이 없습니다." }), { status: 400, headers: corsHeaders });
+        }
+
+        const ext = file.name.split(".").pop().toLowerCase() || "jpg";
+        const safeName = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+        await env.BUCKET.put(safeName, file.stream(), {
+          httpMetadata: { contentType: file.type || "image/jpeg" }
+        });
+
+        // R2 퍼블릭 URL (media.fabulousbeasts.kr 도메인이 R2 버킷에 연결되어 있어야 합니다)
+        const publicUrl = `https://media.fabulousbeasts.kr/${safeName}`;
+
+        return new Response(JSON.stringify({ success: true, url: publicUrl }), { headers: corsHeaders });
+      } catch (err) {
+        console.error("[Worker] R2 Upload Error:", err);
+        return new Response(JSON.stringify({ error: `이미지 업로드 실패: ${err.message}` }), { status: 500, headers: corsHeaders });
+      }
+    }
 
     // 1. GET: 특정 제목의 문서 불러오기
     if (request.method === "GET" && path.startsWith("/wiki/")) {

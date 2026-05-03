@@ -1,8 +1,21 @@
-import { db, auth, storage, getDocSafe } from './firebase-config.js';
+import { db, auth, getDocSafe } from './firebase-config.js';
 import { doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS, CATEGORIES } from './data.js';
+
+// R2 이미지 업로드 헬퍼 (Firebase Storage 대체)
+async function uploadToR2(file, folder) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+    const response = await fetch('/upload', { method: 'POST', body: formData });
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || '이미지 업로드 실패');
+    }
+    const result = await response.json();
+    return result.url;
+}
 
 const charId = decodeURIComponent(location.hash.substring(1));
 const form = document.getElementById('edit-form');
@@ -277,37 +290,20 @@ if (imageInput) {
             saveBtn.textContent = '업로드 중...';
 
             const compressedFile = await compressImage(file);
-            const fileName = file.name || 'image.jpg';
-            const safeFileName = fileName.replace(/[^a-z0-9.]/gi, '_') || `img_${Date.now()}.jpg`;
-            const uploadPath = `characters/${charId}/${Date.now()}_${safeFileName}`;
-            
-            const storageRef = ref(storage, uploadPath);
-            const uploadTask = uploadBytesResumable(storageRef, compressedFile);
+            uploadStatus.textContent = 'R2에 업로드 중...';
 
-            uploadTask.on('state_changed', 
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    uploadStatus.textContent = `업로드 중... (${Math.round(progress)}%)`;
-                }, 
-                (error) => {
-                    alert("업로드 실패: " + error.message);
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = '저장하기';
-                    checkPermission();
-                }, 
-                async () => {
-                    const url = await getDownloadURL(uploadTask.snapshot.ref);
-                    document.getElementById('image-url').value = url;
-                    previewImg.src = url;
-                    previewImg.style.display = 'block';
-                    uploadStatus.textContent = '업로드 완료!';
-                    uploadStatus.style.color = 'green';
-                    setTimeout(() => { uploadStatus.style.display = 'none'; }, 3000);
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = '저장하기';
-                    checkPermission();
-                }
-            );
+            const url = await uploadToR2(compressedFile, `characters/${charId}`);
+
+            document.getElementById('image-url').value = url;
+            previewImg.src = url;
+            previewImg.style.display = 'block';
+            if (uploadMsg) uploadMsg.style.display = 'none';
+            uploadStatus.textContent = '업로드 완료!';
+            uploadStatus.style.color = 'green';
+            setTimeout(() => { uploadStatus.style.display = 'none'; uploadStatus.style.color = ''; }, 3000);
+            saveBtn.disabled = false;
+            saveBtn.textContent = '저장하기';
+            checkPermission();
         } catch (err) {
             alert("에러 발생: " + err.message);
             saveBtn.disabled = false;
@@ -336,15 +332,12 @@ if (galleryInput) {
         for (const file of files) {
             try {
                 const compressed = await compressImage(file);
-                const safeName = file.name.replace(/[^a-z0-9.]/gi, '_');
-                const path = `characters/${charId}/gallery/${Date.now()}_${safeName}`;
-                const storageRef = ref(storage, path);
-                const uploadTask = await uploadBytesResumable(storageRef, compressed);
-                const url = await getDownloadURL(uploadTask.ref);
+                const url = await uploadToR2(compressed, `characters/${charId}/gallery`);
                 currentGallery.push(url);
                 renderGalleryPreview();
             } catch (err) {
                 console.error("Gallery upload error:", err);
+                alert("갤러리 사진 업로드 실패: " + err.message);
             }
         }
         saveBtn.disabled = false;
