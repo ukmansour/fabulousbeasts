@@ -8,7 +8,7 @@ async function uploadToR2(file, folder) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('folder', folder);
-    const response = await fetch('/upload', { method: 'POST', body: formData });
+    const response = await fetch('/api/upload', { method: 'POST', body: formData });
     if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         throw new Error(err.error || '이미지 업로드 실패');
@@ -174,7 +174,7 @@ async function loadInitialData() {
     // D1 데이터 로드
     try {
         console.log("Loading D1 doc for Edit:", charId);
-        const response = await fetch(`/wiki/${encodeURIComponent(charId)}`);
+        const response = await fetch(`/api/wiki/${encodeURIComponent(charId)}`);
         const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
 
         if (response.ok) {
@@ -395,7 +395,7 @@ if (form) {
             author: currentUser.displayName || '익명'
         };
         try {
-            const response = await fetch('/wiki', {
+            const response = await fetch('/api/wiki', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatedData)

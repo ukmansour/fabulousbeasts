@@ -89,7 +89,7 @@ async function renderRecentChanges() {
     if (!list) return;
     
     try {
-        const response = await fetch('/recent');
+        const response = await fetch('/api/recent');
         if (!response.ok) throw new Error('Recent changes fetch failed');
         const results = await response.json();
         

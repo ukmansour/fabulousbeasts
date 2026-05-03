@@ -1,10 +1,10 @@
 /**
  * Cloudflare Worker: Wiki Backend (D1 + R2)
- * GET  /wiki/:title    - D1 문서 조회 (캐시 우선)
- * POST /wiki           - D1 문서 저장/수정 (UPSERT)
- * POST /upload         - R2 이미지 업로드 → 퍼블릭 URL 반환
- * GET  /recent         - 최근 수정 문서 목록
- * GET  /setup-db       - D1 테이블 자동 생성
+ * GET  /api/wiki/:title    - D1 문서 조회 (캐시 우선)
+ * POST /api/wiki           - D1 문서 저장/수정 (UPSERT)
+ * POST /api/upload         - R2 이미지 업로드 → 퍼블릭 URL 반환
+ * GET  /api/recent         - 최근 수정 문서 목록
+ * GET  /api/setup-db       - D1 테이블 자동 생성
  */
 
 export default {
@@ -30,7 +30,7 @@ export default {
 
     // === R2 이미지 업로드 ===
     // POST /upload : FormData로 파일을 받아 R2에 저장하고 퍼블릭 URL 반환
-    if (request.method === "POST" && path === "/upload") {
+    if (request.method === "POST" && path === "/api/upload") {
       try {
         if (!env.BUCKET) {
           return new Response(JSON.stringify({ error: "R2 버킷이 Worker에 바인딩되지 않았습니다. wrangler.jsonc를 확인해 주세요." }), { status: 500, headers: corsHeaders });
@@ -62,7 +62,7 @@ export default {
     }
 
     // 1. GET: 특정 제목의 문서 불러오기
-    if (request.method === "GET" && path.startsWith("/wiki/")) {
+    if (request.method === "GET" && path.startsWith("/api/wiki/")) {
       const title = decodeURIComponent(path.split("/").pop());
       
       // 캐시 확인 (환경에 따라 없을 수 있음)
@@ -99,7 +99,7 @@ export default {
     }
 
     // 2. GET: 최근 변경된 문서 목록
-    if (request.method === "GET" && path === "/recent") {
+    if (request.method === "GET" && path === "/api/recent") {
       try {
         const { results } = await env.DB.prepare(
           "SELECT title, author, category, updated_at FROM wiki_pages ORDER BY updated_at DESC LIMIT 8"
@@ -112,7 +112,7 @@ export default {
     }
 
     // 2.5. GET: 데이터베이스 자동 초기화 (사용자 편의 기능)
-    if (request.method === "GET" && path === "/setup-db") {
+    if (request.method === "GET" && path === "/api/setup-db") {
       try {
         const setupQueries = [
           `CREATE TABLE IF NOT EXISTS wiki_pages (
@@ -156,7 +156,7 @@ export default {
 
     // 3. POST: 문서 저장/수정
 
-    if (request.method === "POST" && path === "/wiki") {
+    if (request.method === "POST" && path === "/api/wiki") {
       try {
         const data = await request.json();
         console.log("[Worker] Save request received:", JSON.stringify(data));
@@ -211,7 +211,7 @@ export default {
         }
 
         const cacheUrl = new URL(request.url);
-        cacheUrl.pathname = `/wiki/${encodeURIComponent(title)}`;
+        cacheUrl.pathname = `/api/wiki/${encodeURIComponent(title)}`;
         if (cache) {
           ctx.waitUntil(cache.delete(new Request(cacheUrl.toString(), { method: "GET" })).catch(e => console.warn("Cache delete failed:", e)));
         }
@@ -224,7 +224,7 @@ export default {
     }
 
     // 4. GET: 사용자 권한 확인
-    if (request.method === "GET" && path.startsWith("/user/")) {
+    if (request.method === "GET" && path.startsWith("/api/user/")) {
       const uid = path.split("/").pop();
       try {
         const result = await env.DB.prepare("SELECT role FROM users WHERE uid = ?").bind(uid).first();
@@ -235,7 +235,7 @@ export default {
     }
 
     // 5. POST: 사용자 권한 수정
-    if (request.method === "POST" && path === "/user/role") {
+    if (request.method === "POST" && path === "/api/user/role") {
       try {
         const { uid, role, nickname, email, secret } = await request.json();
         if (secret !== "9889") return new Response("Unauthorized", { status: 401 });

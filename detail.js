@@ -108,7 +108,7 @@ async function loadDetail() {
     // D1 데이터 로드
     try {
         console.log("Loading D1 doc:", charId);
-        const response = await fetch(`/wiki/${encodeURIComponent(charId)}`);
+        const response = await fetch(`/api/wiki/${encodeURIComponent(charId)}`);
         
         if (response.ok) {
             const contentType = response.headers.get("content-type");

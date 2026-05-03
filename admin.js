@@ -189,12 +189,14 @@ window.changeUserRole = async (uid, newRole) => {
     }
 
     try {
-        const userRef = doc(db, "users", uid);
-        await setDoc(userRef, { 
-            role: newRole,
-            updatedAt: serverTimestamp()
-        }, { merge: true });
+        const res = await fetch('/api/user/role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid, role: newRole })
+        });
         
+        if (!res.ok) throw new Error('서버 요청 실패');
+
         alert(`${actionText} 완료!`);
         renderAdminPage(); // 성공 시 새로고침
     } catch (e) {
