@@ -3,5 +3,12 @@
   "compatibility_date": "2026-04-30",
   "assets": {
     "directory": "./dist"
-  }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "fabulousbeasts",
+      "database_id": "00c6acd8-27f4-497b-8bda-1508a7f5bd83"
+    }
+  ]
 }

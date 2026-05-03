@@ -107,3 +107,21 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
     *   Disabled dynamic content loading (`loadNotice`) in `main.js` to eliminate associated Firestore reads.
     *   This shifts all structural and informational updates to the codebase, ensuring maximum performance and zero runtime cost for static content.
 
+## Database Migration (Firestore to Cloudflare D1) (2026.05.03)
+
+**Objective:** Migrate the wiki backend from Firebase Firestore to Cloudflare D1 for better performance, cost optimization, and simplified management.
+
+**Changes:**
+1.  **D1 Schema Design (`schema.sql`)**:
+    *   Created a `wiki_pages` table to store character data, with `title` as the primary key.
+    *   Mapped Firestore fields (content, author, category, species, nation, alias, birthday, image, gallery) to SQL columns.
+    *   Added indexes on `updated_at` and `category` for optimized querying.
+2.  **Worker Backend (`worker.js`)**:
+    *   Implemented a Cloudflare Worker to handle D1 queries.
+    *   **GET /wiki/:title**: Fetches character data from D1 with automated Cloudflare CDN caching (60s TTL).
+    *   **POST /wiki**: Handles document updates using SQL `UPSERT` logic (INSERT ... ON CONFLICT DO UPDATE).
+    *   **Cache Invalidation**: Automatically purges the GET cache when a document is updated via POST.
+3.  **Wrangler Configuration**:
+    *   Bound the D1 database `fabulousbeasts` to the worker as `env.DB`.
+    *   Configured both `wrangler.toml` and `wrangler.jsonc` for consistent development environments.
+
