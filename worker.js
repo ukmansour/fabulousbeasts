@@ -23,7 +23,11 @@ export default {
     if (request.method === "GET" && path.startsWith("/wiki/")) {
       const title = decodeURIComponent(path.split("/").pop());
       
-      let response = await cache.match(request);
+      // 캐시 확인 (환경에 따라 없을 수 있음)
+      let response = null;
+      if (cache) {
+        try { response = await cache.match(request); } catch(e) { console.warn("Cache match failed:", e); }
+      }
       if (response) return response;
 
       try {
@@ -97,7 +101,9 @@ export default {
 
         const cacheUrl = new URL(request.url);
         cacheUrl.pathname = `/wiki/${encodeURIComponent(title)}`;
-        ctx.waitUntil(cache.delete(new Request(cacheUrl.toString(), { method: "GET" })));
+        if (cache) {
+          ctx.waitUntil(cache.delete(new Request(cacheUrl.toString(), { method: "GET" })).catch(e => console.warn("Cache delete failed:", e)));
+        }
 
         return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
       } catch (err) {
