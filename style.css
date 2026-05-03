@@ -35,7 +35,7 @@ body {
 .logo { display: flex; align-items: center; gap: 0.4rem; text-decoration: none; color: white; font-weight: 800; font-size: 0.95rem; }
 .logo img { height: 16px; filter: brightness(0) invert(1); } /* 요청하신 대로 아주 작게 유지 */
 
-.search-container { flex: 1; max-width: 400px; position: relative; }
+.search-container { flex: 1; max-width: 400px; min-width: 0; position: relative; }
 .search-input { width: 100%; padding: 0.3rem 0.7rem; border-radius: 2px; border: none; font-size: 0.85rem; outline: none; }
 .search-results {
     position: absolute; top: 110%; left: 0; right: 0;
@@ -124,8 +124,32 @@ body {
 .wiki-content a:hover { text-decoration: underline; }
 
 /* Portal Home */
-.portal-card { background: var(--primary-light); border: 1px solid var(--primary-color); border-radius: 4px; padding: 1.5rem; margin-bottom: 2rem; }
+/* Portal Home */
+.portal-card { 
+    background: var(--primary-light); 
+    border: 1px solid var(--primary-color); 
+    border-radius: 4px; 
+    padding: 1.5rem; 
+    margin-bottom: 2rem; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    cursor: pointer;
+    transition: 0.2s;
+}
+.portal-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.portal-card h2 { margin: 0; border: none; font-size: 1.5rem; }
+.portal-card p { margin: 0; font-weight: 500; }
+
 .char-grid-portal { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; }
+
+/* Home info grid (뉴스 + 가이드) */
+.home-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
 .char-card-mini { border: 1px solid #eee; background: white; text-decoration: none; color: inherit; transition: 0.2s; }
 .char-card-mini:hover { border-color: var(--primary-color); transform: translateY(-2px); }
 .char-card-mini img { width: 100%; aspect-ratio: 1 / 1.1; object-fit: cover; }
@@ -160,10 +184,60 @@ body {
         height: auto;
     }
     .wiki-article {
-        padding: 1.5rem 1rem 10rem 1rem;
+        padding: 1rem 0.8rem 6rem 0.8rem;
     }
     .wiki-title {
-        font-size: 1.8rem;
+        font-size: 1.5rem;
+    }
+    .wiki-subtitle {
+        font-size: 0.75rem;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    /* 헤더 모바일 최적화 */
+    .header-content {
+        padding: 0 0.5rem;
+        gap: 0.5rem;
+    }
+    .logo span {
+        display: none; /* 로고 텍스트 숨기기 - 공간 절약 */
+    }
+    .top-nav {
+        gap: 0.5rem;
+    }
+    .nav-link {
+        font-size: 0.72rem;
+    }
+
+    /* 포털 카드 모바일 최적화 */
+    .portal-card {
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .portal-card h2 {
+        font-size: 1.2rem !important;
+        margin-bottom: 0.3rem;
+    }
+    .portal-card p {
+        font-size: 0.85rem !important;
+    }
+    .portal-card > span {
+        font-size: 1.5rem !important;
+        margin-left: auto;
+    }
+
+    /* 뉴스/가이드 그리드: 1열로 변경 */
+    .home-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* 캐릭터 카드 그리드 최적화 */
+    .char-grid-portal {
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 0.6rem;
     }
 }
 
