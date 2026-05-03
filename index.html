@@ -52,27 +52,180 @@
 
                 <div class="home-info-grid">
                     <!-- 최근 소식 섹션 -->
-                    <div style="background: #fff; border: 1px solid var(--border-color); padding: 0.7rem; border-radius: 4px;">
-                        <h2 style="margin-top:0; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.3rem; margin-bottom:0.5rem; font-size: 1rem;">최근 소식</h2>
-                        <div id="home-news" style="font-size: 0.9rem; line-height: 1.5; color: #444;">• 유수언 디자인 전면 개편 안내 (2026.04.25)<br>• 애니메이션 시청 전용 페이지 오픈<br>• 신규 캐릭터 정보 업데이트 모집 중</div>
+                    <div class="home-info-item">
+                        <h2>최근 소식</h2>
+                        <div id="home-news" class="home-info-content">• 유수언 디자인 전면 개편 안내 (2026.04.25)<br>• 애니메이션 시청 전용 페이지 오픈<br>• 신규 캐릭터 정보 업데이트 모집 중</div>
                     </div>
                     <!-- 가이드 -->
-                    <div style="background: #fff; border: 1px solid var(--border-color); padding: 0.7rem; border-radius: 4px;">
-                        <h2 style="margin-top:0; border-bottom: 2px solid var(--primary-light); padding-bottom: 0.3rem; margin-bottom:0.5rem; font-size: 1rem;">가이드</h2>
-                        <div id="home-guide" style="font-size: 0.88rem; color: #666; line-height: 1.5;">• [[캐릭터ID]] 형식으로 링크를 생성하세요.<br>• 마크다운 문법을 사용하여 풍성하게 꾸미세요.<br>• 로그인 후 누구나 편집할 수 있습니다.</div>
-                    </div>
-                </div>
-
-                <div style="margin-bottom: 3rem;">
-                    <h2 id="featured">주요 캐릭터</h2>
-                    <div id="featured-characters-grid" class="char-grid-portal">
-                        <!-- JS injects here -->
+                    <div class="home-info-item">
+                        <h2>가이드</h2>
+                        <div id="home-guide" class="home-info-content" style="color: #666;">• [[캐릭터ID]] 형식으로 링크를 생성하세요.<br>• 마크다운 문법을 사용하여 풍성하게 꾸미세요.<br>• 로그인 후 누구나 편집할 수 있습니다.</div>
                     </div>
                 </div>
 
                 <h2 id="characters">전체 목록</h2>
                 <div id="char-grid">
-                    <!-- JS injects categories and cards here -->
+                    <!-- [읽기 최적화] 모든 캐릭터 데이터를 HTML에 정적으로 포함하여 DB 읽기 발생을 0으로 만듭니다. -->
+                    
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">메인 캐릭터</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#sibuxiang" class="char-card-mini"><img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="사불상 (四不像)"><span>사불상 (四不像)</span></a>
+                            <a href="detail.html#tianlu" class="char-card-mini"><img src="https://static.wikitide.net/youshouyanwiki/thumb/a/ab/Tianlu.png/300px-Tianlu.png" alt="천록 (天禄 / 피피)"><span>천록 (天禄 / 피피)</span></a>
+                            <a href="detail.html#pixiu" class="char-card-mini"><img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="벽사 (辟邪)"><span>벽사 (辟邪)</span></a>
+                            <a href="detail.html#tony" class="char-card-mini"><img src="https://static.wikitide.net/youshouyanwiki/thumb/0/00/TuyeFullbodyD.png/300px-TuyeFullbodyD.png" alt="투예 (兔爷 / 토야)"><span>투예 (兔爷 / 토야)</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">녹인점</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#nok-금각" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="금각"><span>금각</span></a>
+                            <a href="detail.html#nok-은각" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="은각"><span>은각</span></a>
+                            <a href="detail.html#nok-호두" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="호두 (核桃)"><span>호두 (核桃)</span></a>
+                            <a href="detail.html#nok-파혁" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="파혁"><span>파혁</span></a>
+                            <a href="detail.html#nok-후쿠" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="후쿠"><span>후쿠</span></a>
+                            <a href="detail.html#nok-쇼타" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="쇼타"><span>쇼타</span></a>
+                            <a href="detail.html#nok-메이메이" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="메이메이"><span>메이메이</span></a>
+                            <a href="detail.html#nok-마키" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="마키"><span>마키</span></a>
+                            <a href="detail.html#nok-전호" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="전호"><span>전호</span></a>
+                            <a href="detail.html#nok-샤오자오" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="샤오자오"><span>샤오자오</span></a>
+                            <a href="detail.html#nok-영야" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="영야"><span>영야</span></a>
+                            <a href="detail.html#nok-제건" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="제건"><span>제건</span></a>
+                            <a href="detail.html#nok-링후쯔" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="링후쯔"><span>링후쯔</span></a>
+                            <a href="detail.html#nok-산예" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="산예"><span>산예</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">고대</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#anc-혼돈" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="혼돈"><span>혼돈</span></a>
+                            <a href="detail.html#anc-도철" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="도철"><span>도철</span></a>
+                            <a href="detail.html#anc-궁기" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="궁기"><span>궁기</span></a>
+                            <a href="detail.html#anc-도올" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="도올"><span>도올</span></a>
+                            <a href="detail.html#anc-사불상-(고대)" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="사불상 (고대)"><span>사불상 (고대)</span></a>
+                            <a href="detail.html#anc-제강" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="제강"><span>제강</span></a>
+                            <a href="detail.html#anc-경천수" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="경천수"><span>경천수</span></a>
+                            <a href="detail.html#anc-금오" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="금오"><span>금오</span></a>
+                            <a href="detail.html#anc-촉룡" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="촉룡"><span>촉룡</span></a>
+                            <a href="detail.html#anc-후" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="후"><span>후</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">지옥</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#hell-소루" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="소루"><span>소루</span></a>
+                            <a href="detail.html#hell-체청" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="체청"><span>체청</span></a>
+                            <a href="detail.html#hell-칭훠" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="칭훠"><span>칭훠</span></a>
+                            <a href="detail.html#hell-지마" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="지마"><span>지마</span></a>
+                            <a href="detail.html#hell-아오" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="아오"><span>아오</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">토보서 그룹</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#tob-토보서" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="토보서"><span>토보서</span></a>
+                            <a href="detail.html#tob-다람쥐-형" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="다람쥐 형"><span>다람쥐 형</span></a>
+                            <a href="detail.html#tob-황사아" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="황사아"><span>황사아</span></a>
+                            <a href="detail.html#tob-황오" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="황오"><span>황오</span></a>
+                            <a href="detail.html#tob-보보" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="보보"><span>보보</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">운남산 언덕</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#un-리치" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="리치"><span>리치</span></a>
+                            <a href="detail.html#un-장장" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="장장"><span>장장</span></a>
+                            <a href="detail.html#un-추구" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="추구"><span>추구</span></a>
+                            <a href="detail.html#un-마오마오레이" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="마오마오레이"><span>마오마오레이</span></a>
+                            <a href="detail.html#un-소산작" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="소산작"><span>소산작</span></a>
+                            <a href="detail.html#un-반호" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="반호"><span>반호</span></a>
+                            <a href="detail.html#un-해치" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="해치"><span>해치</span></a>
+                            <a href="detail.html#un-화초" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="화초"><span>화초</span></a>
+                            <a href="detail.html#un-샤오빙" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="샤오빙"><span>샤오빙</span></a>
+                            <a href="detail.html#un-유성" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="유성"><span>유성</span></a>
+                            <a href="detail.html#un-피칠성" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="피칠성"><span>피칠성</span></a>
+                            <a href="detail.html#un-토삼성" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="토삼성"><span>토삼성</span></a>
+                            <a href="detail.html#un-사일성" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="사일성"><span>사일성</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">기린</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#gir-시기린" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="시기린"><span>시기린</span></a>
+                            <a href="detail.html#gir-옥기린" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="옥기린"><span>옥기린</span></a>
+                            <a href="detail.html#gir-당기린" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="당기린"><span>당기린</span></a>
+                            <a href="detail.html#gir-봉성성" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="봉성성"><span>봉성성</span></a>
+                            <a href="detail.html#gir-포도" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="포도"><span>포도</span></a>
+                            <a href="detail.html#gir-비준" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="비준"><span>비준</span></a>
+                            <a href="detail.html#gir-사과" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="사과"><span>사과</span></a>
+                            <a href="detail.html#gir-항항" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="항항"><span>항항</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">맹극</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#men-협죽도" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="협죽도"><span>협죽도</span></a>
+                            <a href="detail.html#men-목화" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="목화"><span>목화</span></a>
+                            <a href="detail.html#men-운두" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="운두"><span>운두</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">와묘</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#wa-용묘" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="용묘"><span>용묘</span></a>
+                            <a href="detail.html#wa-묘룡" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="묘룡"><span>묘룡</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">신조</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#sin-화예조" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="화예조"><span>화예조</span></a>
+                            <a href="detail.html#sin-봉황" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="봉황"><span>봉황</span></a>
+                            <a href="detail.html#sin-금시대" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="금시대"><span>금시대</span></a>
+                            <a href="detail.html#sin-크리스티나" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="크리스티나"><span>크리스티나</span></a>
+                            <a href="detail.html#sin-비비" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="비비"><span>비비</span></a>
+                            <a href="detail.html#sin-풍황" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="풍황"><span>풍황</span></a>
+                            <a href="detail.html#sin-공작" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="공작"><span>공작</span></a>
+                            <a href="detail.html#sin-홍홍" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="홍홍"><span>홍홍</span></a>
+                            <a href="detail.html#sin-오병" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="오병"><span>오병</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">천상</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#sky-잉쟈오" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="잉쟈오"><span>잉쟈오</span></a>
+                            <a href="detail.html#sky-정향" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="정향"><span>정향</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">다른장르</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#oth-1" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="임시 캐릭터 1"><span>임시 캐릭터 1</span></a>
+                            <a href="detail.html#oth-2" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="임시 캐릭터 2"><span>임시 캐릭터 2</span></a>
+                            <a href="detail.html#oth-3" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="임시 캐릭터 3"><span>임시 캐릭터 3</span></a>
+                            <a href="detail.html#oth-4" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="임시 캐릭터 4"><span>임시 캐릭터 4</span></a>
+                            <a href="detail.html#oth-5" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="임시 캐릭터 5"><span>임시 캐릭터 5</span></a>
+                            <a href="detail.html#oth-6" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="임시 캐릭터 6"><span>임시 캐릭터 6</span></a>
+                        </div>
+                    </div>
+
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">기타</h3>
+                        <div class="char-grid-portal">
+                            <a href="detail.html#etc-1" class="char-card-mini"><img src="https://via.placeholder.com/150" alt="기타 캐릭터"><span>기타 캐릭터</span></a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>

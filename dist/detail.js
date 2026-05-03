@@ -1,5 +1,5 @@
-import { db, auth } from './firebase-config.js';
-import { doc, getDoc, collection, getDocs, setDoc, serverTimestamp, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { db, auth, getDocSafe, getDocsSafe } from './firebase-config.js';
+import { doc, collection, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
 
@@ -27,17 +27,15 @@ onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
 
     if (user) {
-        // [중요] 마스터 관리자 계정은 즉시 admin 권한 부여
         if (user.email === "hodu@youshouyan.wiki") {
             userRole = 'admin';
             isUserAdmin = true;
         }
 
         try {
-            const userSnap = await getDoc(doc(db, "users", user.uid));
+            const userSnap = await getDocSafe(doc(db, "users", user.uid));
             if (userSnap.exists()) {
                 const dbRole = userSnap.data().role || 'member';
-                // DB에 정보가 있으면 갱신 (마스터 계정은 이미 true이므로 유지됨)
                 if (dbRole === 'admin') {
                     userRole = 'admin';
                     isUserAdmin = true;
@@ -61,7 +59,6 @@ onAuthStateChanged(auth, async (user) => {
 
 function updateEditVisibility() {
     if (editBtn) {
-        // 관리자라면 버튼 표시, 아니면 숨김
         editBtn.style.display = isUserAdmin ? 'inline-block' : 'none';
         editBtn.style.opacity = '1';
         if (isUserAdmin) {
@@ -94,63 +91,41 @@ async function loadDetail() {
 
     const baseData = CHARACTERS.find(c => c.id === charId) || { id: charId, name: charId };
     
-    // 로컬 데이터를 이용해 화면을 즉시 렌더링 (체감 로딩 속도 대폭 향상)
+    // 로컬 데이터를 이용해 화면을 즉시 렌더링
     renderPage(baseData);
     
-    // Firestore 실시간 데이터 로드
-    const docRef = doc(db, "characters", charId);
-    console.log("Attempting to load Firestore doc:", charId);
-    
-    onSnapshot(docRef, (snap) => {
+    // Firestore 데이터 로드 (onSnapshot 대신 getDocSafe 사용으로 최적화)
+    try {
+        const docRef = doc(db, "characters", charId);
+        console.log("Loading Firestore doc:", charId);
+        const snap = await getDocSafe(docRef);
+        
         if (snap.exists()) {
-            console.log("Firestore data found for:", charId, snap.data());
             const data = { ...baseData, ...snap.data() };
-            
-            // 표시 이름 갱신
             const nameToDisplay = data.name || charId;
             const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
             if (displayNameArea) displayNameArea.textContent = finalTitle;
             document.title = `${finalTitle} - 유수언`;
-
             renderPage(data);
         } else {
-            // [폴백] 인코딩된 ID로도 시도
+            // 폴백 처리
             const rawId = isGalleryPage ? location.hash.substring(1).replace('/%EA%B0%A4%EB%9F%AC%EB%A6%AC', '') : location.hash.substring(1);
             if (rawId !== charId) {
-                console.log("Trying detail fallback with raw ID:", rawId);
-                getDoc(doc(db, "characters", rawId)).then(fallbackSnap => {
-                    if (fallbackSnap.exists()) {
-                        console.log("Firestore data found via fallback:", rawId);
-                        const data = { ...baseData, ...fallbackSnap.data() };
-                        const nameToDisplay = data.name || charId;
-                        const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
-                        if (displayNameArea) displayNameArea.textContent = finalTitle;
-                        document.title = `${finalTitle} - 유수언`;
-                        renderPage(data);
-                    } else {
-                        console.warn("No Firestore document found (Decoded & Raw). Using base data.");
-                        renderPage(baseData);
-                    }
-                }).catch(err => {
-                    console.error("Fallback error:", err);
-                    renderPage(baseData);
-                });
-            } else {
-                console.warn("No Firestore document found for:", charId, "Using base data.");
-                renderPage(baseData);
+                const fallbackSnap = await getDocSafe(doc(db, "characters", rawId));
+                if (fallbackSnap.exists()) {
+                    const data = { ...baseData, ...fallbackSnap.data() };
+                    renderPage(data);
+                }
             }
         }
-    }, (err) => {
-        console.error("Firestore loading error for", charId, ":", err);
-        // 권한 오류 등이 발생해도 기본 데이터는 보여줌
-        renderPage(baseData);
-    });
+    } catch (err) {
+        console.error("Firestore loading error:", err);
+    }
 
     renderRecentChanges();
 }
 
 function renderPage(data) {
-    // 최근 수정 정보 반영
     const lastEditEl = document.getElementById('last-edit');
     const lastEditorEl = document.getElementById('last-editor');
     
@@ -242,7 +217,6 @@ function renderInfobox(data) {
 function renderContent(details) {
     if (!contentArea || isGalleryPage) return;
     
-    // 마크다운 변환 로직
     let html = details
         .split('\n').map(line => {
             if (line.startsWith('## ')) return `<h2>${line.replace('## ', '')}</h2>`;
@@ -298,8 +272,8 @@ async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     try {
-        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"), limit(8));
-        const snap = await getDocs(q);
+        const q = query(collection(db, "characters"), orderBy("updatedAt", "desc"));
+        const snap = await getDocsSafe(q, 8); // 8개 제한
         const data = snap.docs.map(d => ({id: d.id, ...d.data()}));
         list.innerHTML = data.map(d => {
             const date = d.updatedAt ? new Date(d.updatedAt.seconds * 1000).toLocaleString('ko-KR') : '-';
@@ -315,5 +289,8 @@ async function renderRecentChanges() {
     } catch(e) {}
 }
 
-window.onhashchange = () => location.reload();
+window.onhashchange = () => {
+    // 무한 루프 방지: 현재 hash가 이전과 다를 때만 리로드
+    location.reload();
+};
 loadDetail();

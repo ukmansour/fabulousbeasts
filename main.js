@@ -1,67 +1,53 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
-import { db, auth } from './firebase-config.js';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { db, auth, getDocSafe, getDocsSafe } from './firebase-config.js';
+import { collection, doc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 let mergedCharacters = [...CHARACTERS];
+let recentChangesTimer = null;
 
 onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
     if (!info) return;
     if (user) {
         let isAdmin = false;
-        try {
-            const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
-            
-            if (userSnap.exists()) {
-                const userData = userSnap.data();
-                if (userData.role === 'banned') {
-                    alert("⚠️ 귀하의 계정은 차단되었습니다. 사이트 이용이 불가능합니다.");
-                    document.body.innerHTML = `
-                        <div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#f8f9fa; font-family:sans-serif;">
-                            <h1 style="color:#dc2626; font-size:3rem; margin-bottom:1rem;">🚫 접근 차단됨</h1>
-                            <p style="font-size:1.2rem; color:#666;">관리자에 의해 이용 권한이 제한되었습니다.</p>
-                            <button onclick="auth.signOut().then(() => location.reload())" style="margin-top:2rem; padding:0.8rem 2rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">로그아웃</button>
-                        </div>
-                    `;
-                    return;
-                }
-                isAdmin = userData.role === 'admin';
-                // [이메일 정보 업데이트] 이메일이 기록되지 않은 경우를 대비
-                if (!userData.email && user.email) {
-                    await updateDoc(userRef, { email: user.email });
-                }
+        
+        // [읽기 최적화] 기본적으로 Auth의 displayName 사용
+        const nickname = user.displayName || user.email?.split('@')[0] || "유저";
+        
+        // [어드민 체크 최적화] 마스터 계정은 DB 읽기 없이 즉시 관리자 부여
+        const isSupremeAdmin = user.email === "hodu@youshouyan.wiki";
+        
+        if (isSupremeAdmin) {
+            isAdmin = true;
+        } else {
+            // 일반 사용자는 세션 스토리지를 활용해 반복적인 DB 읽기 방지
+            const cachedRole = sessionStorage.getItem(`role_${user.uid}`);
+            if (cachedRole) {
+                isAdmin = cachedRole === 'admin';
             } else {
-                // [가입 즉시 등록 로직] 문서가 없으면 그 즉시 생성 (0.1초 지연도 허용 안함)
-                console.log("Creating missing user document for:", user.uid);
-                const isSupremeAdmin = user.email === "hodu@youshouyan.wiki"; 
-                
-                // 이메일 앞부분을 닉네임으로 추출 (없으면 '회원' 등 기본값)
-                const autoNickname = user.email ? user.email.split('@')[0] : (user.displayName || "회원");
-
-                const newUserData = {
-                    uid: user.uid,
-                    nickname: autoNickname,
-                    email: user.email || "",
-                    role: isSupremeAdmin ? 'admin' : 'member',
-                    joinedAt: serverTimestamp(),
-                    contributionCount: 0
-                };
-                await setDoc(userRef, newUserData);
-                isAdmin = isSupremeAdmin;
-                console.log("User document created successfully.");
+                try {
+                    // 세션에 캐시가 없을 때만 딱 한 번 읽기
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDocSafe(userRef);
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
+                        if (userData.role === 'banned') {
+                            alert("⚠️ 귀하의 계정은 차단되었습니다.");
+                            document.body.innerHTML = `<div style="padding:100px; text-align:center;"><h1>🚫 차단된 계정입니다.</h1></div>`;
+                            return;
+                        }
+                        isAdmin = userData.role === 'admin';
+                        sessionStorage.setItem(`role_${user.uid}`, userData.role);
+                    }
+                } catch (e) { console.error("Role check skipped:", e); }
             }
-        } catch (e) { 
-            console.error("User sync failed:", e); 
-            // 마스터 계정은 DB 오류 시에도 관리자 권한 허용
-            if (user.email === "hodu@youshouyan.wiki") isAdmin = true;
         }
 
         info.innerHTML = `
             ${isAdmin ? `<a href="admin.html" class="nav-link" style="color:white; font-weight:bold; margin-right:1rem; border:1px solid rgba(255,255,255,0.3); padding:0.2rem 0.5rem; border-radius:3px;">관리자 설정</a>` : ''}
-            <span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${user.displayName || '유저'}님</span>
+            <span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${nickname}님</span>
             <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
         `;
         
@@ -69,7 +55,10 @@ onAuthStateChanged(auth, async (user) => {
         if (logoutBtn) {
             logoutBtn.onclick = (e) => {
                 e.preventDefault();
-                if (confirm("로그아웃하시겠습니까?")) signOut(auth).then(() => location.reload());
+                if (confirm("로그아웃하시습니까?")) {
+                    sessionStorage.removeItem(`role_${user.uid}`);
+                    signOut(auth).then(() => location.reload());
+                }
             };
         }
     } else {
@@ -78,25 +67,24 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 async function initHome() {
-    // 1. 먼저 기본 데이터로 렌더링 (즉각적인 반응성)
-    renderFeatured();
-    renderCategoryGrid();
+    // [읽기 최적화] 모든 캐릭터 데이터가 index.html에 하드코딩되어 있으므로 renderCategoryGrid()를 호출하지 않습니다.
+    // renderCategoryGrid(); 
     initSearch();
     
-    // 2. 비동기로 클라우드 데이터 가져와서 업데이트
-    await fetchFirestoreData();
+    // 2. [읽기 최적화] 홈 화면 진입 시 Firestore 캐릭터 전체 읽기(getDocs)를 중단합니다.
+    // 사용자가 명시적으로 검색하거나 상세 페이지에 들어갈 때만 개별 데이터를 읽도록 유도합니다.
+    // await fetchFirestoreData(); 
     
-    // 3. 업데이트된 데이터로 다시 렌더링
-    renderFeatured();
-    renderCategoryGrid();
+    // 3. 최신 변경 내역 로드 (최소한의 읽기)
     renderRecentChanges();
-    loadNotice();
+    // loadNotice(); // [읽기 최적화] 공지/소식은 이제 HTML에서 정적으로 관리합니다.
 }
 
 async function fetchFirestoreData() {
     try {
         console.log("Fetching Firestore data for home page...");
-        const snap = await getDocs(collection(db, "characters"));
+        // 한 번에 최대 50개까지만 가져오도록 제한
+        const snap = await getDocsSafe(collection(db, "characters"), 50);
         const firestoreChars = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         console.log(`Successfully fetched ${firestoreChars.length} characters from Firestore`);
         
@@ -114,82 +102,13 @@ async function fetchFirestoreData() {
     }
 }
 
-async function loadNotice() {
-    const el = document.getElementById('notice-display');
-    const newsEl = document.getElementById('home-news');
-    const guideEl = document.getElementById('home-guide');
-    
-    try {
-        if (el) {
-            const snap = await getDoc(doc(db, "notices", "main"));
-            if (snap.exists() && snap.data().content) {
-                el.textContent = snap.data().content;
-                el.style.color = '#333';
-            }
-        }
-        
-        if (newsEl) {
-            const newsSnap = await getDoc(doc(db, "notices", "news"));
-            if (newsSnap.exists() && newsSnap.data().content) {
-                newsEl.innerHTML = renderMarkdown(newsSnap.data().content);
-            }
-        }
-
-        if (guideEl) {
-            const guideSnap = await getDoc(doc(db, "notices", "guide"));
-            if (guideSnap.exists() && guideSnap.data().content) {
-                guideEl.innerHTML = renderMarkdown(guideSnap.data().content);
-            }
-        }
-    } catch (e) {
-        console.error("Notice/News load error:", e);
-    }
-}
-
-function renderMarkdown(text) {
-    if (!text) return '';
-    let html = text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .split('\n').map(line => {
-            if (line.startsWith('## ')) return `<h2>${line.replace('## ', '')}</h2>`;
-            if (line.startsWith('### ')) return `<h3>${line.replace('### ', '')}</h3>`;
-            if (line === '---') return '<hr>';
-            if (line.startsWith('* ') || line.startsWith('• ')) {
-                return `<li>${line.substring(2)}</li>`;
-            }
-            return `<p>${line}</p>`;
-        }).join('');
-
-    html = html
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" style="max-width:100%; border-radius:4px; display:block; margin:10px auto;">')
-        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
-
-    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
-    return html;
-}
-
-function renderFeatured() {
-    const container = document.getElementById('featured-characters-grid');
-    if (!container) return;
-    const ids = ['tianlu', 'pixiu', 'sibuxiang', 'tony'];
-    const featured = mergedCharacters.filter(c => ids.includes(c.id));
-    container.innerHTML = featured.map(c => `
-        <a href="detail.html#${c.id}" class="char-card-mini">
-            <img src="${c.image || 'https://via.placeholder.com/150'}" alt="${c.name}">
-            <span>${c.name}</span>
-        </a>`).join('');
-}
-
 async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     
     try {
-        // 인덱스 없이 전체 가져온 뒤 클라이언트에서 정렬
-        const snap = await getDocs(collection(db, "characters"));
+        // 최근 변경 사항은 최대 8개면 충분함
+        const snap = await getDocsSafe(collection(db, "characters"), 8);
         
         if (snap.empty) {
             list.innerHTML = '<p style="font-size:0.8rem; color:#999;">문서가 아직 없습니다.</p>';
@@ -202,8 +121,7 @@ async function renderRecentChanges() {
                 const ta = a.updatedAt?.seconds ?? 0;
                 const tb = b.updatedAt?.seconds ?? 0;
                 return tb - ta;
-            })
-            .slice(0, 8);
+            });
         
         list.innerHTML = sorted.map(d => {
             let dateStr = '-';
@@ -223,8 +141,10 @@ async function renderRecentChanges() {
         list.innerHTML = '<p style="font-size:0.8rem; color:#999;">불러오기 실패</p>';
     }
     
-    // 30초마다 자동 갱신
-    setTimeout(renderRecentChanges, 30000);
+    // 무한 루프 방지: 타이머가 없을 때만 설정
+    if (!recentChangesTimer) {
+        recentChangesTimer = setInterval(renderRecentChanges, 60000); // 1분으로 주기 연장
+    }
 }
 
 function renderCategoryGrid() {

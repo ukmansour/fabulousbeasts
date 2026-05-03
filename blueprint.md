@@ -84,15 +84,26 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
     *   Removed the `reset-db.js` utility file and all associated logic.
     *   This prevents accidental data loss and streamlines the administrative interface.
 
-## Bug Fixes (2026.05.02)
+## Performance & Cost Optimization (2026.05.03)
 
-**Objective:** Fix a bug where wiki documents were not visible to users who were not logged in.
+**Objective:** Minimize Firestore read/write operations to reduce costs and improve initial load speed.
 
 **Changes:**
-1.  **Firestore Security Rules Update (`firestore.rules`)**:
-    *   Refactored `isBanned()` and `getUserData()` functions to safely handle unauthenticated (guest) users. Previously, accessing `request.auth.uid` when null caused a rule evaluation error.
-    *   Explicitly allowed public read access to `characters`, `categories`, and `notices` for non-banned users.
-    *   This ensures that guest users can view the full wiki content stored in Firestore, whereas previously they could only see static placeholder data or "Load failed" messages.
-2.  **Nickname Check Fix**:
-    *   Restored read access to the `users` collection for guests (filtered by the `isBanned` check) to allow nickname availability verification during signup.
+1.  **Full Static Character Rendering**:
+    *   Pre-rendered **all character categories and individual cards** (over 100 entries) directly in `index.html`.
+    *   Disabled the dynamic `renderCategoryGrid()` function in `main.js` to preserve the static HTML and eliminate initial rendering overhead.
+    *   This ensures the entire character grid is visible instantly without any Firestore `getDocs` calls or complex client-side mapping.
+2.  **Zero-Read User Management**:
+    *   Updated `admin.js` to prioritize Firebase Auth `displayName` for the administrator's identity, removing a mandatory Firestore read.
+    *   Implemented session-based caching for admin roles, significantly reducing repeat database checks.
+    *   Replaced the automated "User List" (which fetched the entire `users` collection) with a manual **UID-based Management Console**.
+    *   Firestore is now accessed **only when performing a specific update action** (Promote/Demote/Ban), fulfilling the goal of zero reads for user listing.
+3.  **Lazy Data Fetching**:
+    *   Disabled automatic background synchronization of the entire character collection on the home page.
+    *   The application now relies on static data for the initial view, fetching specific document details only when a user navigates to a character's detail page or performs a search.
+4.  **Full Static Content Management**:
+    *   Removed the "Home Screen Editing" features from the Admin Settings (`admin.html`, `admin.js`).
+    *   Transitioned all homepage content (Notices, Recent News, Guides) to static HTML in `index.html`.
+    *   Disabled dynamic content loading (`loadNotice`) in `main.js` to eliminate associated Firestore reads.
+    *   This shifts all structural and informational updates to the codebase, ensuring maximum performance and zero runtime cost for static content.
 

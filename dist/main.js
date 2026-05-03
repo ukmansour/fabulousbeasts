@@ -1,10 +1,11 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
-import { db, auth } from './firebase-config.js';
-import { collection, getDocs, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { db, auth, getDocSafe, getDocsSafe } from './firebase-config.js';
+import { collection, doc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 let mergedCharacters = [...CHARACTERS];
+let recentChangesTimer = null;
 
 onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
@@ -13,7 +14,7 @@ onAuthStateChanged(auth, async (user) => {
         let isAdmin = false;
         try {
             const userRef = doc(db, "users", user.uid);
-            const userSnap = await getDoc(userRef);
+            const userSnap = await getDocSafe(userRef);
             
             if (userSnap.exists()) {
                 const userData = userSnap.data();
@@ -69,7 +70,7 @@ onAuthStateChanged(auth, async (user) => {
         if (logoutBtn) {
             logoutBtn.onclick = (e) => {
                 e.preventDefault();
-                if (confirm("로그아웃하시겠습니까?")) signOut(auth).then(() => location.reload());
+                if (confirm("로그아웃하시습니까?")) signOut(auth).then(() => location.reload());
             };
         }
     } else {
@@ -79,7 +80,6 @@ onAuthStateChanged(auth, async (user) => {
 
 async function initHome() {
     // 1. 먼저 기본 데이터로 렌더링 (즉각적인 반응성)
-    renderFeatured();
     renderCategoryGrid();
     initSearch();
     
@@ -87,7 +87,6 @@ async function initHome() {
     await fetchFirestoreData();
     
     // 3. 업데이트된 데이터로 다시 렌더링
-    renderFeatured();
     renderCategoryGrid();
     renderRecentChanges();
     loadNotice();
@@ -96,7 +95,8 @@ async function initHome() {
 async function fetchFirestoreData() {
     try {
         console.log("Fetching Firestore data for home page...");
-        const snap = await getDocs(collection(db, "characters"));
+        // 한 번에 최대 50개까지만 가져오도록 제한
+        const snap = await getDocsSafe(collection(db, "characters"), 50);
         const firestoreChars = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         console.log(`Successfully fetched ${firestoreChars.length} characters from Firestore`);
         
@@ -121,7 +121,7 @@ async function loadNotice() {
     
     try {
         if (el) {
-            const snap = await getDoc(doc(db, "notices", "main"));
+            const snap = await getDocSafe(doc(db, "notices", "main"));
             if (snap.exists() && snap.data().content) {
                 el.textContent = snap.data().content;
                 el.style.color = '#333';
@@ -129,14 +129,14 @@ async function loadNotice() {
         }
         
         if (newsEl) {
-            const newsSnap = await getDoc(doc(db, "notices", "news"));
+            const newsSnap = await getDocSafe(doc(db, "notices", "news"));
             if (newsSnap.exists() && newsSnap.data().content) {
                 newsEl.innerHTML = renderMarkdown(newsSnap.data().content);
             }
         }
 
         if (guideEl) {
-            const guideSnap = await getDoc(doc(db, "notices", "guide"));
+            const guideSnap = await getDocSafe(doc(db, "notices", "guide"));
             if (guideSnap.exists() && guideSnap.data().content) {
                 guideEl.innerHTML = renderMarkdown(guideSnap.data().content);
             }
@@ -171,25 +171,13 @@ function renderMarkdown(text) {
     return html;
 }
 
-function renderFeatured() {
-    const container = document.getElementById('featured-characters-grid');
-    if (!container) return;
-    const ids = ['tianlu', 'pixiu', 'sibuxiang', 'tony'];
-    const featured = mergedCharacters.filter(c => ids.includes(c.id));
-    container.innerHTML = featured.map(c => `
-        <a href="detail.html#${c.id}" class="char-card-mini">
-            <img src="${c.image || 'https://via.placeholder.com/150'}" alt="${c.name}">
-            <span>${c.name}</span>
-        </a>`).join('');
-}
-
 async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     
     try {
-        // 인덱스 없이 전체 가져온 뒤 클라이언트에서 정렬
-        const snap = await getDocs(collection(db, "characters"));
+        // 최근 변경 사항은 최대 8개면 충분함
+        const snap = await getDocsSafe(collection(db, "characters"), 8);
         
         if (snap.empty) {
             list.innerHTML = '<p style="font-size:0.8rem; color:#999;">문서가 아직 없습니다.</p>';
@@ -202,8 +190,7 @@ async function renderRecentChanges() {
                 const ta = a.updatedAt?.seconds ?? 0;
                 const tb = b.updatedAt?.seconds ?? 0;
                 return tb - ta;
-            })
-            .slice(0, 8);
+            });
         
         list.innerHTML = sorted.map(d => {
             let dateStr = '-';
@@ -223,8 +210,10 @@ async function renderRecentChanges() {
         list.innerHTML = '<p style="font-size:0.8rem; color:#999;">불러오기 실패</p>';
     }
     
-    // 30초마다 자동 갱신
-    setTimeout(renderRecentChanges, 30000);
+    // 무한 루프 방지: 타이머가 없을 때만 설정
+    if (!recentChangesTimer) {
+        recentChangesTimer = setInterval(renderRecentChanges, 60000); // 1분으로 주기 연장
+    }
 }
 
 function renderCategoryGrid() {
