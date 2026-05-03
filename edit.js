@@ -28,7 +28,22 @@ onAuthStateChanged(auth, async (user) => {
     currentUser = user;
     userRole = 'member';
     
+    // 헤더 사용자 정보 업데이트
+    const info = document.getElementById('user-info');
     if (user) {
+        if (info) {
+            info.innerHTML = `
+                <span style="color:white; font-size:12px; margin-right:10px;">${user.displayName || user.email.split('@')[0]}님</span>
+                <a href="#" id="logout-btn" style="color:white; font-size:12px; text-decoration:none; border:1px solid rgba(255,255,255,0.3); padding:2px 5px; border-radius:3px;">로그아웃</a>
+            `;
+            document.getElementById('logout-btn').onclick = (e) => {
+                e.preventDefault();
+                if (confirm("로그아웃하시겠습니까?")) {
+                    auth.signOut().then(() => location.reload());
+                }
+            };
+        }
+
         if (user.email === "hodu@youshouyan.wiki") {
             userRole = 'admin';
         }
@@ -40,6 +55,10 @@ onAuthStateChanged(auth, async (user) => {
                 if (userData.role === 'admin') userRole = 'admin';
             }
         } catch (e) { console.error("Firestore role check error:", e); }
+    } else {
+        if (info) {
+            info.innerHTML = `<a href="auth.html" class="nav-link" style="color:white; text-decoration:none; font-size:12px; border:1px solid rgba(255,255,255,0.3); padding:2px 5px; border-radius:3px;">로그인</a>`;
+        }
     }
     checkPermission();
 });

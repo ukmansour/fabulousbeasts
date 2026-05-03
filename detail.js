@@ -51,7 +51,18 @@ onAuthStateChanged(auth, async (user) => {
             info.innerHTML = `
                 ${isUserAdmin ? `<a href="admin.html" class="nav-link" style="border:1px solid white; padding:2px 5px; border-radius:3px; margin-right:10px;">관리자</a>` : ''}
                 <span style="color:white; font-size:12px;">${user.displayName || user.email.split('@')[0]}님</span>
+                <a href="#" id="logout-btn" style="color:white; font-size:12px; margin-left:10px; text-decoration:none;">로그아웃</a>
             `;
+            document.getElementById('logout-btn').onclick = (e) => {
+                e.preventDefault();
+                if (confirm("로그아웃하시겠습니까?")) {
+                    auth.signOut().then(() => location.reload());
+                }
+            };
+        }
+    } else {
+        if (info) {
+            info.innerHTML = `<a href="auth.html" class="nav-link" style="color:white; text-decoration:none; font-size:12px;">로그인</a>`;
         }
     }
     updateEditVisibility();
