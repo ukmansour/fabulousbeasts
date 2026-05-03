@@ -84,28 +84,26 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
     *   Removed the `reset-db.js` utility file and all associated logic.
     *   This prevents accidental data loss and streamlines the administrative interface.
 
-## UI Refinements & Admin Enhancements (Latest Update)
+## Performance & Cost Optimization (2026.05.03)
 
-**Objective:** Improve the mobile user experience, enhance administrative control over the homepage, and optimize overall performance.
+**Objective:** Minimize Firestore read/write operations to reduce costs and improve initial load speed.
 
 **Changes:**
-1.  **Mobile & Layout Optimization**:
-    *   Refined the home screen layout for better mobile responsiveness.
-    *   Adjusted font sizes, line-heights, and padding in the news and guide sections for a more compact and readable look.
-    *   Fixed text alignment issues in various content blocks.
-2.  **Admin Homepage Editor**:
-    *   Implemented a dedicated editor for the homepage content, allowing administrators to update news and guides directly.
-    *   Integrated an editor toolbar for easier formatting.
-    *   Added password protection and updated the security code (from `5555` to `9889`) for administrative actions.
-3.  **Markdown & Rendering Improvements**:
-    *   Fixed a bug where line breaks were not correctly rendered in news and guide content.
-    *   Implemented markdown rendering for the homepage to support headers, lists, and links.
-4.  **Performance & Reliability**:
-    *   Optimized document loading performance for a faster user experience.
-    *   Resolved script caching issues by implementing versioning (v3) for admin scripts.
-    *   Fixed a URL encoding mismatch that occasionally caused detail page content to go missing.
-5.  **Developer Experience**:
-    *   Added a cross-platform build script (`build.js`) to streamline the deployment process.
-6.  **Terminology & Branding**:
-    *   Updated the site subtitle to "팬 사이트" (Fan Site) and phased out "wiki" terminology to better reflect the project's focus.
+1.  **Full Static Character Rendering**:
+    *   Pre-rendered **all character categories and individual cards** (over 100 entries) directly in `index.html`.
+    *   Disabled the dynamic `renderCategoryGrid()` function in `main.js` to preserve the static HTML and eliminate initial rendering overhead.
+    *   This ensures the entire character grid is visible instantly without any Firestore `getDocs` calls or complex client-side mapping.
+2.  **Zero-Read User Management**:
+    *   Updated `admin.js` to prioritize Firebase Auth `displayName` for the administrator's identity, removing a mandatory Firestore read.
+    *   Implemented session-based caching for admin roles, significantly reducing repeat database checks.
+    *   Replaced the automated "User List" (which fetched the entire `users` collection) with a manual **UID-based Management Console**.
+    *   Firestore is now accessed **only when performing a specific update action** (Promote/Demote/Ban), fulfilling the goal of zero reads for user listing.
+3.  **Lazy Data Fetching**:
+    *   Disabled automatic background synchronization of the entire character collection on the home page.
+    *   The application now relies on static data for the initial view, fetching specific document details only when a user navigates to a character's detail page or performs a search.
+4.  **Full Static Content Management**:
+    *   Removed the "Home Screen Editing" features from the Admin Settings (`admin.html`, `admin.js`).
+    *   Transitioned all homepage content (Notices, Recent News, Guides) to static HTML in `index.html`.
+    *   Disabled dynamic content loading (`loadNotice`) in `main.js` to eliminate associated Firestore reads.
+    *   This shifts all structural and informational updates to the codebase, ensuring maximum performance and zero runtime cost for static content.
 

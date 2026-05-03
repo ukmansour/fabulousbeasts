@@ -47,11 +47,10 @@
 
     <main class="admin-container">
         <h1>관리자 설정</h1>
-        <p style="color:#666; margin-bottom:2rem;">회원 권한 관리 및 공지사항 편집을 할 수 있습니다.</p>
+        <p style="color:#666; margin-bottom:2rem;">회원 권한 관리를 할 수 있습니다.</p>
 
         <div class="admin-tabs">
             <div class="admin-tab active" id="tab-btn-users" onclick="switchTab('users')">사용자 관리</div>
-            <div class="admin-tab" id="tab-btn-notice" onclick="switchTab('notice')">홈 화면 편집</div>
         </div>
 
         <div id="tab-users" class="tab-panel active">
@@ -59,46 +58,6 @@
                 <div class="loading">사용자 목록을 불러오는 중...</div>
             </div>
         </div>
-
-        <div id="tab-notice" class="tab-panel">
-            <h2 style="font-size:1.2rem; margin-bottom:0.5rem;">홈 화면 내용 편집</h2>
-            <p style="color:#666; font-size:0.9rem; margin-bottom:1rem;">메인 페이지에 표시되는 공지, 최근 소식, 가이드를 편집할 수 있습니다.</p>
-            
-            <h3 style="font-size:1rem; margin-bottom:0.3rem;">공지사항 (사이드바)</h3>
-            <div class="admin-toolbar">
-                <button type="button" class="admin-toolbar-btn" data-target="notice-content" data-type="bold">굵게</button>
-                <button type="button" class="admin-toolbar-btn" data-target="notice-content" data-type="italic">기울임</button>
-                <button type="button" class="admin-toolbar-btn" data-target="notice-content" data-type="list">리스트</button>
-                <button type="button" class="admin-toolbar-btn" data-target="notice-content" data-type="link">링크</button>
-                <button type="button" class="admin-toolbar-btn" data-target="notice-content" data-type="hr">구분선</button>
-            </div>
-            <textarea id="notice-content" class="notice-textarea" placeholder="공지 내용을 입력하세요..."></textarea>
-            
-            <h3 style="font-size:1rem; margin-top:1.5rem; margin-bottom:0.3rem;">최근 소식</h3>
-            <div class="admin-toolbar">
-                <button type="button" class="admin-toolbar-btn" data-target="news-content" data-type="bold">굵게</button>
-                <button type="button" class="admin-toolbar-btn" data-target="news-content" data-type="italic">기울임</button>
-                <button type="button" class="admin-toolbar-btn" data-target="news-content" data-type="list">리스트</button>
-                <button type="button" class="admin-toolbar-btn" data-target="news-content" data-type="link">링크</button>
-                <button type="button" class="admin-toolbar-btn" data-target="news-content" data-type="hr">구분선</button>
-            </div>
-            <textarea id="news-content" class="notice-textarea" placeholder="최근 소식을 입력하세요..."></textarea>
-            
-            <h3 style="font-size:1rem; margin-top:1.5rem; margin-bottom:0.3rem;">가이드</h3>
-            <div class="admin-toolbar">
-                <button type="button" class="admin-toolbar-btn" data-target="guide-content" data-type="bold">굵게</button>
-                <button type="button" class="admin-toolbar-btn" data-target="guide-content" data-type="italic">기울임</button>
-                <button type="button" class="admin-toolbar-btn" data-target="guide-content" data-type="list">리스트</button>
-                <button type="button" class="admin-toolbar-btn" data-target="guide-content" data-type="link">링크</button>
-                <button type="button" class="admin-toolbar-btn" data-target="guide-content" data-type="hr">구분선</button>
-            </div>
-            <textarea id="guide-content" class="notice-textarea" placeholder="가이드 내용을 입력하세요..."></textarea>
-            
-            <br>
-            <button class="notice-save-btn" onclick="window.saveNotice()">저장하기</button>
-            <p id="notice-status" style="margin-top:0.5rem; font-size:0.85rem; color:#666;"></p>
-        </div>
-
     </main>
 
     <script type="module" src="admin.js?v=3"></script>
