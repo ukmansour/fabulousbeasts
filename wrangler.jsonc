@@ -15,7 +15,7 @@
   "r2_buckets": [
     {
       "binding": "BUCKET",
-      "bucket_name": "fabulousbeasts-media"
+      "bucket_name": "fabulousbeasts2"
     }
   ]
 }
