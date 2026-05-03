@@ -1,5 +1,5 @@
-import { db, auth, storage } from './firebase-config.js';
-import { doc, getDoc, setDoc, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { db, auth, storage, getDocSafe } from './firebase-config.js';
+import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS, CATEGORIES } from './data.js';
@@ -26,16 +26,15 @@ const MAX_SIZE_MB = 25;
 
 onAuthStateChanged(auth, async (user) => {
     currentUser = user;
-    userRole = 'member'; // 초기화
+    userRole = 'member';
     
     if (user) {
-        // [중요] 마스터 관리자 계정은 즉시 admin 권한 부여
         if (user.email === "hodu@youshouyan.wiki") {
             userRole = 'admin';
         }
 
         try {
-            const userSnap = await getDoc(doc(db, "users", user.uid));
+            const userSnap = await getDocSafe(doc(db, "users", user.uid));
             if (userSnap.exists()) {
                 const dbRole = userSnap.data().role || 'member';
                 if (dbRole === 'admin') userRole = 'admin';
@@ -59,7 +58,6 @@ function checkPermission() {
             uploadMsg.style.color = "red";
             saveBtn.disabled = true;
             saveBtn.title = "권한이 없습니다.";
-            // 모든 입력 필드 비활성화
             form.querySelectorAll('input, textarea, button, select').forEach(el => {
                 if (el.id !== 'global-search') el.disabled = true;
             });
@@ -69,7 +67,6 @@ function checkPermission() {
             saveBtn.disabled = true;
         }
     } else {
-        // 관리자인 경우: UI 활성화 및 메시지 원상복구
         if (uploadMsg.textContent.includes("🔒")) {
             uploadMsg.textContent = "이미지 업로드 (인포박스용)";
             uploadMsg.style.color = "inherit";
@@ -133,34 +130,27 @@ async function loadInitialData() {
         const baseData = CHARACTERS.find(c => c.id === charId) || {};
         const docRef = doc(db, "characters", charId);
         
-        onSnapshot(docRef, (snap) => {
-            if (snap.exists()) {
-                const dbData = snap.data();
-                console.log("Edit data received from Firestore:", dbData);
-                const data = { ...baseData, ...dbData };
-                fillForm(data);
-            } else {
-                // [폴백] 인코딩된 ID로도 시도
-                const rawId = location.hash.substring(1);
-                if (rawId !== charId) {
-                    console.log("Trying Edit fallback with raw ID:", rawId);
-                    getDoc(doc(db, "characters", rawId)).then(fallbackSnap => {
-                        if (fallbackSnap.exists()) {
-                            fillForm({ ...baseData, ...fallbackSnap.data() });
-                        } else {
-                            console.log("No document found for Edit (Decoded & Raw)");
-                            fillForm(baseData);
-                        }
-                    });
+        // onSnapshot 대신 getDocSafe 사용으로 읽기 최적화
+        const snap = await getDocSafe(docRef);
+        if (snap.exists()) {
+            const dbData = snap.data();
+            console.log("Edit data received from Firestore:", dbData);
+            const data = { ...baseData, ...dbData };
+            fillForm(data);
+        } else {
+            // 폴백 처리
+            const rawId = location.hash.substring(1);
+            if (rawId !== charId) {
+                const fallbackSnap = await getDocSafe(doc(db, "characters", rawId));
+                if (fallbackSnap.exists()) {
+                    fillForm({ ...baseData, ...fallbackSnap.data() });
                 } else {
-                    console.log("No document found for Edit:", charId);
                     fillForm(baseData);
                 }
+            } else {
+                fillForm(baseData);
             }
-        }, (error) => {
-            console.error("Edit load snapshot error:", error);
-            alert("편집 데이터를 불러오는데 실패했습니다: " + error.message);
-        });
+        }
     } catch (err) { 
         console.error("LoadInitialData error:", err); 
         alert("편집기 초기화 실패: " + err.message);
@@ -168,21 +158,31 @@ async function loadInitialData() {
 }
 
 function fillForm(data) {
-    document.getElementById('edit-page-title').textContent = `${data.name || charId} 문서 편집`;
-    document.getElementById('edit-name').value = data.name || charId;
-    if (categorySelect && data.category) categorySelect.value = data.category;
+    const titleEl = document.getElementById('edit-page-title');
+    if (titleEl) titleEl.textContent = `${data.name || charId} 문서 편집`;
     
-    editor.value = data.details || '';
-    document.getElementById('info-species').value = data.species || '';
-    document.getElementById('info-nation').value = data.nation || '';
-    document.getElementById('info-alias').value = data.alias || '';
-    document.getElementById('info-birthday').value = data.birthday || '';
-    document.getElementById('image-url').value = data.image || '';
+    const nameInput = document.getElementById('edit-name');
+    if (nameInput) nameInput.value = data.name || charId;
+    
+    if (categorySelect && data.category) categorySelect.value = data.category;
+    if (editor) editor.value = data.details || '';
+    
+    const speciesInput = document.getElementById('info-species');
+    const nationInput = document.getElementById('info-nation');
+    const aliasInput = document.getElementById('info-alias');
+    const birthdayInput = document.getElementById('info-birthday');
+    const urlInput = document.getElementById('image-url');
 
-    if (data.image) {
+    if (speciesInput) speciesInput.value = data.species || '';
+    if (nationInput) nationInput.value = data.nation || '';
+    if (aliasInput) aliasInput.value = data.alias || '';
+    if (birthdayInput) birthdayInput.value = data.birthday || '';
+    if (urlInput) urlInput.value = data.image || '';
+
+    if (data.image && previewImg) {
         previewImg.src = data.image;
         previewImg.style.display = 'block';
-        uploadMsg.style.display = 'none';
+        if (uploadMsg) uploadMsg.style.display = 'none';
     }
 
     if (data.gallery && Array.isArray(data.gallery)) {
@@ -208,105 +208,76 @@ window.removeGalleryImg = (idx) => {
     }
 };
 
-dropZone.onclick = () => {
-    if (saveBtn.disabled) {
-        if (!currentUser) {
-            alert("로그인이 필요합니다.");
-            location.href = 'auth.html';
-        } else if (userRole !== 'admin') {
-            alert("편집 권한(관리자)이 없습니다.");
-        } else {
-            alert("페이지를 불러오는 중입니다. 잠시만 기다려주세요.");
+if (dropZone) {
+    dropZone.onclick = () => {
+        if (saveBtn.disabled) {
+            if (!currentUser) {
+                alert("로그인이 필요합니다.");
+                location.href = 'auth.html';
+            } else if (userRole !== 'admin') {
+                alert("편집 권한(관리자)이 없습니다.");
+            } else {
+                alert("페이지를 불러오는 중입니다. 잠시만 기다려주세요.");
+            }
+            return;
         }
-        return;
-    }
-    imageInput.click();
-};
+        imageInput.click();
+    };
+}
 
-imageInput.onchange = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    
-    // 권한 확인 및 상태 체크
-    if (userRole !== 'admin') {
-        alert("이미지를 업로드할 권한이 없습니다.");
-        return;
-    }
-    
-    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
-        alert(`파일 용량이 너무 큽니다. ${MAX_SIZE_MB}MB 이하만 가능합니다.`);
-        return;
-    }
-    
-    if (!charId) { alert("캐릭터 ID가 유효하지 않습니다."); return; }
-    if (!currentUser) { alert("로그인이 필요합니다."); location.href = 'auth.html'; return; }
+if (imageInput) {
+    imageInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (userRole !== 'admin') { alert("이미지를 업로드할 권한이 없습니다."); return; }
+        if (file.size > MAX_SIZE_MB * 1024 * 1024) { alert(`파일 용량이 너무 큽니다. ${MAX_SIZE_MB}MB 이하만 가능합니다.`); return; }
 
-    try {
-        uploadStatus.style.display = 'block';
-        uploadStatus.textContent = '이미지 압축 중...';
-        saveBtn.disabled = true;
-        saveBtn.textContent = '업로드 중...';
+        try {
+            uploadStatus.style.display = 'block';
+            uploadStatus.textContent = '이미지 압축 중...';
+            saveBtn.disabled = true;
+            saveBtn.textContent = '업로드 중...';
 
-        const compressedFile = await compressImage(file);
-        console.log("File prepared for upload:", compressedFile.name, compressedFile.size);
+            const compressedFile = await compressImage(file);
+            const fileName = file.name || 'image.jpg';
+            const safeFileName = fileName.replace(/[^a-z0-9.]/gi, '_') || `img_${Date.now()}.jpg`;
+            const uploadPath = `characters/${charId}/${Date.now()}_${safeFileName}`;
+            
+            const storageRef = ref(storage, uploadPath);
+            const uploadTask = uploadBytesResumable(storageRef, compressedFile);
 
-        const fileName = file.name || 'image.jpg';
-        const safeFileName = fileName.replace(/[^a-z0-9.]/gi, '_') || `img_${Date.now()}.jpg`;
-        const uploadPath = `characters/${charId}/${Date.now()}_${safeFileName}`;
-        console.log("Uploading to path:", uploadPath);
-        
-        const storageRef = ref(storage, uploadPath);
-        
-        uploadStatus.textContent = '업로드 시작...';
-        const uploadTask = uploadBytesResumable(storageRef, compressedFile);
-
-        uploadTask.on('state_changed', 
-            (snapshot) => {
-                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                uploadStatus.textContent = `업로드 중... (${Math.round(progress)}%)`;
-            }, 
-            (error) => {
-                console.error("Upload error:", error);
-                alert("업로드 실패: " + error.message);
-                uploadStatus.textContent = '업로드 실패';
-                uploadStatus.style.color = 'red';
-                saveBtn.disabled = false;
-                saveBtn.textContent = '저장하기';
-                checkPermission();
-            }, 
-            async () => {
-                try {
+            uploadTask.on('state_changed', 
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    uploadStatus.textContent = `업로드 중... (${Math.round(progress)}%)`;
+                }, 
+                (error) => {
+                    alert("업로드 실패: " + error.message);
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '저장하기';
+                    checkPermission();
+                }, 
+                async () => {
                     const url = await getDownloadURL(uploadTask.snapshot.ref);
                     document.getElementById('image-url').value = url;
                     previewImg.src = url;
                     previewImg.style.display = 'block';
                     uploadStatus.textContent = '업로드 완료!';
                     uploadStatus.style.color = 'green';
-                    
-                    // 3초 후 상태 메시지 숨김
-                    setTimeout(() => {
-                        uploadStatus.style.display = 'none';
-                        uploadStatus.style.color = 'var(--primary-color)';
-                    }, 3000);
-                    
+                    setTimeout(() => { uploadStatus.style.display = 'none'; }, 3000);
                     saveBtn.disabled = false;
                     saveBtn.textContent = '저장하기';
                     checkPermission();
-                } catch (urlErr) {
-                    alert("URL 가져오기 실패: " + urlErr.message);
-                    saveBtn.disabled = false;
-                    saveBtn.textContent = '저장하기';
                 }
-            }
-        );
-    } catch (err) {
-        console.error("Compression/General error:", err);
-        alert("에러 발생: " + err.message);
-        saveBtn.disabled = false;
-        saveBtn.textContent = '저장하기';
-        checkPermission();
-    }
-};
+            );
+        } catch (err) {
+            alert("에러 발생: " + err.message);
+            saveBtn.disabled = false;
+            saveBtn.textContent = '저장하기';
+            checkPermission();
+        }
+    };
+}
 
 // 갤러리 업로드 처리
 if (galleryDropZone) {
@@ -319,11 +290,7 @@ if (galleryInput) {
     galleryInput.onchange = async (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
-        
-        if (userRole !== 'admin') {
-            alert("관리자만 사진을 추가할 수 있습니다.");
-            return;
-        }
+        if (userRole !== 'admin') { alert("관리자만 사진을 추가할 수 있습니다."); return; }
 
         saveBtn.disabled = true;
         saveBtn.textContent = '사진 업로드 중...';
@@ -334,36 +301,22 @@ if (galleryInput) {
                 const safeName = file.name.replace(/[^a-z0-9.]/gi, '_');
                 const path = `characters/${charId}/gallery/${Date.now()}_${safeName}`;
                 const storageRef = ref(storage, path);
-                
                 const uploadTask = await uploadBytesResumable(storageRef, compressed);
                 const url = await getDownloadURL(uploadTask.ref);
                 currentGallery.push(url);
                 renderGalleryPreview();
             } catch (err) {
                 console.error("Gallery upload error:", err);
-                alert(`${file.name} 업로드 실패: ${err.message}`);
             }
         }
-        
         saveBtn.disabled = false;
         saveBtn.textContent = '저장하기';
         checkPermission();
     };
 }
 
-const clearAllBtn = document.getElementById('gallery-clear-all');
-if (clearAllBtn) {
-    clearAllBtn.onclick = () => {
-        if (confirm("갤러리의 모든 사진을 삭제하시겠습니까?")) {
-            currentGallery = [];
-            renderGalleryPreview();
-        }
-    };
-}
-
 async function compressImage(file) {
     return new Promise((resolve) => {
-        console.log("Starting image compression...");
         const img = new Image();
         img.src = URL.createObjectURL(file);
         img.onload = () => {
@@ -379,56 +332,47 @@ async function compressImage(file) {
                 ctx.drawImage(img, 0, 0, width, height);
                 canvas.toBlob((blob) => {
                     URL.revokeObjectURL(img.src);
-                    if (blob) {
-                        console.log("Compression successful");
-                        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                    } else {
-                        console.warn("Canvas toBlob returned null, using original file");
-                        resolve(file);
-                    }
+                    resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file);
                 }, 'image/jpeg', 0.8);
             } catch (e) {
-                console.error("Compression error:", e);
                 URL.revokeObjectURL(img.src);
                 resolve(file);
             }
         };
-        img.onerror = (e) => { 
-            console.error("Image load error for compression:", e);
-            URL.revokeObjectURL(img.src); 
-            resolve(file); 
-        };
+        img.onerror = () => { URL.revokeObjectURL(img.src); resolve(file); };
     });
 }
 
-form.onsubmit = async (e) => {
-    e.preventDefault();
-    if (!currentUser || saveBtn.disabled) return;
-    
-    saveBtn.disabled = true;
-    saveBtn.textContent = '저장 중...';
-    const updatedData = {
-        name: document.getElementById('edit-name').value,
-        category: categorySelect ? categorySelect.value : '기타',
-        details: editor.value,
-        species: document.getElementById('info-species').value,
-        nation: document.getElementById('info-nation').value,
-        alias: document.getElementById('info-alias').value,
-        birthday: document.getElementById('info-birthday').value,
-        image: document.getElementById('image-url').value,
-        gallery: currentGallery, // 갤러리 추가
-        updatedAt: serverTimestamp(),
-        updatedBy: currentUser.displayName || '익명'
+if (form) {
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        if (!currentUser || saveBtn.disabled) return;
+        
+        saveBtn.disabled = true;
+        saveBtn.textContent = '저장 중...';
+        const updatedData = {
+            name: document.getElementById('edit-name').value,
+            category: categorySelect ? categorySelect.value : '기타',
+            details: editor.value,
+            species: document.getElementById('info-species').value,
+            nation: document.getElementById('info-nation').value,
+            alias: document.getElementById('info-alias').value,
+            birthday: document.getElementById('info-birthday').value,
+            image: document.getElementById('image-url').value,
+            gallery: currentGallery,
+            updatedAt: serverTimestamp(),
+            updatedBy: currentUser.displayName || '익명'
+        };
+        try {
+            await setDoc(doc(db, "characters", charId), updatedData, { merge: true });
+            location.href = `detail.html#${charId}`;
+        } catch (err) {
+            alert("저장 실패: " + err.message);
+            checkPermission();
+            saveBtn.textContent = '저장하기';
+        }
     };
-    try {
-        await setDoc(doc(db, "characters", charId), updatedData, { merge: true });
-        location.href = `detail.html#${charId}`;
-    } catch (err) {
-        alert("저장 실패: " + err.message);
-        checkPermission();
-        saveBtn.textContent = '저장하기';
-    }
-};
+}
 
 initToolbar();
 loadInitialData();
