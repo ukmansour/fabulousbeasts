@@ -1,6 +1,5 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
-import { db, auth, getDocSafe, getDocsSafe } from './firebase-config.js';
-import { collection, doc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { auth } from './firebase-config.js';
 
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -28,11 +27,9 @@ onAuthStateChanged(auth, async (user) => {
                 isAdmin = cachedRole === 'admin';
             } else {
                 try {
-                    // 세션에 캐시가 없을 때만 딱 한 번 읽기
-                    const userRef = doc(db, "users", user.uid);
-                    const userSnap = await getDocSafe(userRef);
-                    if (userSnap.exists()) {
-                        const userData = userSnap.data();
+                    const roleRes = await fetch(`/user/${user.uid}`);
+                    if (roleRes.ok) {
+                        const userData = await roleRes.json();
                         if (userData.role === 'banned') {
                             alert("⚠️ 귀하의 계정은 차단되었습니다.");
                             document.body.innerHTML = `<div style="padding:100px; text-align:center;"><h1>🚫 차단된 계정입니다.</h1></div>`;
@@ -80,26 +77,9 @@ async function initHome() {
     // loadNotice(); // [읽기 최적화] 공지/소식은 이제 HTML에서 정적으로 관리합니다.
 }
 
+// [읽기 최적화] Firestore 데이터를 더 이상 사용하지 않으므로 fetchFirestoreData 함수를 제거하거나 빈 상태로 둡니다.
 async function fetchFirestoreData() {
-    try {
-        console.log("Fetching Firestore data for home page...");
-        // 한 번에 최대 50개까지만 가져오도록 제한
-        const snap = await getDocsSafe(collection(db, "characters"), 50);
-        const firestoreChars = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log(`Successfully fetched ${firestoreChars.length} characters from Firestore`);
-        
-        firestoreChars.forEach(fChar => {
-            const idx = mergedCharacters.findIndex(c => c.id === fChar.id);
-            if (idx !== -1) {
-                mergedCharacters[idx] = { ...mergedCharacters[idx], ...fChar };
-            } else {
-                mergedCharacters.push(fChar);
-            }
-        });
-        console.log("Firestore data merged successfully");
-    } catch (e) { 
-        console.error("Cloud data load failed:", e); 
-    }
+    console.log("Firestore migration complete. D1 is now the primary data source.");
 }
 
 async function renderRecentChanges() {

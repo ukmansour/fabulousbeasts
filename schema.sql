@@ -18,3 +18,12 @@ CREATE TABLE IF NOT EXISTS wiki_pages (
 -- 인덱스 추가 (카테고리별 검색이나 최신순 정렬 최적화)
 CREATE INDEX IF NOT EXISTS idx_wiki_pages_updated_at ON wiki_pages(updated_at);
 CREATE INDEX IF NOT EXISTS idx_wiki_pages_category ON wiki_pages(category);
+
+-- 사용자 권한 테이블
+CREATE TABLE IF NOT EXISTS users (
+    uid TEXT PRIMARY KEY,
+    role TEXT DEFAULT 'member',
+    nickname TEXT,
+    email TEXT,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
