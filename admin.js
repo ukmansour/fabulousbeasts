@@ -1,4 +1,5 @@
-import { auth } from './firebase-config.js';
+import { db, auth, getDocSafe } from './firebase-config.js';
+import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // 툴바 버튼 이벤트 리스너 설정 (사용자 관리 페이지에서 필요하지 않다면 빈 함수로 두거나 제거)
@@ -41,15 +42,10 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         // [읽기 최적화] 세션 캐시 확인
-        const roleRes = await fetch(`/user/${user.uid}`);
-        if (roleRes.ok) {
-            const userData = await roleRes.json();
-            if (userData.role === 'admin') {
-                sessionStorage.setItem(`role_${user.uid}`, 'admin');
-                renderAdminPage();
-            } else {
-                showRecoveryUI();
-            }
+        const userSnap = await getDocSafe(doc(db, "users", user.uid));
+        if (userSnap.exists() && userSnap.data().role === 'admin') {
+            sessionStorage.setItem(`role_${user.uid}`, 'admin');
+            renderAdminPage();
         } else {
             showRecoveryUI();
         }
@@ -78,19 +74,13 @@ function showRecoveryUI() {
         if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
         try {
-            const res = await fetch('/user/role', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    uid: currentUser.uid,
-                    role: 'admin',
-                    nickname: currentUser.displayName || "관리자",
-                    email: currentUser.email || "",
-                    secret: code
-                })
-            });
-
-            if (!res.ok) throw new Error('권한 수정 실패');
+            await setDoc(doc(db, "users", currentUser.uid), {
+                uid: currentUser.uid,
+                nickname: currentUser.displayName || "관리자",
+                email: currentUser.email || "",
+                role: 'admin',
+                updatedAt: serverTimestamp()
+            }, { merge: true });
             
             sessionStorage.setItem(`role_${currentUser.uid}`, 'admin');
             alert("관리자 등록 완료!");
@@ -143,17 +133,12 @@ window.manualChangeRole = async (newRole) => {
     if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
     try {
-        const res = await fetch('/user/role', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                uid: uid,
-                role: newRole,
-                secret: code
-            })
-        });
-
-        if (!res.ok) throw new Error('권한 수정 실패');
+        const userRef = doc(db, "users", uid);
+        await setDoc(userRef, { 
+            uid: uid,
+            role: newRole,
+            updatedAt: serverTimestamp()
+        }, { merge: true });
         
         alert(`${actionText} 완료!`);
         document.getElementById('target-uid').value = ''; // 입력창 비우기

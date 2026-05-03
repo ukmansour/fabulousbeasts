@@ -1,5 +1,6 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
-import { auth } from './firebase-config.js';
+import { db, auth, getDocSafe } from './firebase-config.js';
+import { doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
@@ -27,9 +28,10 @@ onAuthStateChanged(auth, async (user) => {
                 isAdmin = cachedRole === 'admin';
             } else {
                 try {
-                    const roleRes = await fetch(`/user/${user.uid}`);
-                    if (roleRes.ok) {
-                        const userData = await roleRes.json();
+                    const userRef = doc(db, "users", user.uid);
+                    const userSnap = await getDocSafe(userRef);
+                    if (userSnap.exists()) {
+                        const userData = userSnap.data();
                         if (userData.role === 'banned') {
                             alert("⚠️ 귀하의 계정은 차단되었습니다.");
                             document.body.innerHTML = `<div style="padding:100px; text-align:center;"><h1>🚫 차단된 계정입니다.</h1></div>`;
@@ -38,7 +40,7 @@ onAuthStateChanged(auth, async (user) => {
                         isAdmin = userData.role === 'admin';
                         sessionStorage.setItem(`role_${user.uid}`, userData.role);
                     }
-                } catch (e) { console.error("Role check skipped:", e); }
+                } catch (e) { console.error("Firestore role check error:", e); }
             }
         }
 

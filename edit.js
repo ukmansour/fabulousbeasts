@@ -1,4 +1,5 @@
-import { auth, storage } from './firebase-config.js';
+import { db, auth, storage, getDocSafe } from './firebase-config.js';
+import { doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS, CATEGORIES } from './data.js';
@@ -33,12 +34,12 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         try {
-            const roleRes = await fetch(`/user/${user.uid}`);
-            if (roleRes.ok) {
-                const userData = await roleRes.json();
+            const userSnap = await getDocSafe(doc(db, "users", user.uid));
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
                 if (userData.role === 'admin') userRole = 'admin';
             }
-        } catch (e) { console.error("D1 role check error:", e); }
+        } catch (e) { console.error("Firestore role check error:", e); }
     }
     checkPermission();
 });
