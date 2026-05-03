@@ -69,7 +69,51 @@ export default {
       }
     }
 
+    // 2.5. GET: 데이터베이스 자동 초기화 (사용자 편의 기능)
+    if (request.method === "GET" && path === "/setup-db") {
+      try {
+        const setupQueries = [
+          `CREATE TABLE IF NOT EXISTS wiki_pages (
+            title TEXT PRIMARY KEY,
+            content TEXT NOT NULL,
+            author TEXT,
+            category TEXT,
+            species TEXT,
+            nation TEXT,
+            alias TEXT,
+            birthday TEXT,
+            image TEXT,
+            gallery TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          );`,
+          `CREATE TABLE IF NOT EXISTS wiki_revisions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            content TEXT,
+            author TEXT,
+            edited_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          );`,
+          `CREATE TABLE IF NOT EXISTS users (
+            uid TEXT PRIMARY KEY,
+            role TEXT DEFAULT 'member',
+            nickname TEXT,
+            email TEXT,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          );`
+        ];
+
+        for (const query of setupQueries) {
+          await env.DB.prepare(query).run();
+        }
+
+        return new Response("데이터베이스 테이블 생성 및 초기화가 성공적으로 완료되었습니다. 이제 문서를 저장할 수 있습니다.", { status: 200, headers: corsHeaders });
+      } catch (err) {
+        return new Response(`데이터베이스 초기화 실패: ${err.message}`, { status: 500, headers: corsHeaders });
+      }
+    }
+
     // 3. POST: 문서 저장/수정
+
     if (request.method === "POST" && path === "/wiki") {
       try {
         const data = await request.json();
@@ -84,6 +128,7 @@ export default {
         }
 
         try {
+          // 1. 위키 본문 저장 (UPSERT)
           await env.DB.prepare(`
             INSERT INTO wiki_pages (title, content, author, category, species, nation, alias, birthday, image, gallery, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -99,10 +144,25 @@ export default {
               gallery = excluded.gallery,
               updated_at = CURRENT_TIMESTAMP
           `).bind(
-            title, content, author || "Anonymous", category || "General",
+            title, content, author || "Anonymous", category || "기타",
             species || "", nation || "", alias || "", birthday || "", image || "",
             gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]"
           ).run();
+
+          // 2. 수정 기록 (History) 저장
+          // 테이블이 존재할 때만 에러 없이 넘어가도록 try-catch 처리 (혹시나 setup-db를 안 한 경우 대비)
+          try {
+              await env.DB.prepare(`
+                  INSERT INTO wiki_revisions (title, content, author, edited_at)
+                  VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+              `).bind(title, content, author || "Anonymous").run();
+          } catch (revisionErr) {
+              console.warn("[Worker] Failed to save revision history (maybe table missing):", revisionErr.message);
+          }
+
+          return new Response(JSON.stringify({ success: true, message: "저장 완료" }), {
+            headers: corsHeaders
+          });
         } catch (d1Err) {
           console.error("[Worker] D1 Save Error:", d1Err.message, d1Err.stack);
           return new Response(JSON.stringify({ error: `데이터베이스 저장 오류: ${d1Err.message}` }), { status: 500, headers: corsHeaders });
