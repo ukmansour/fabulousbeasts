@@ -133,9 +133,103 @@ function checkPermission() {
     }
 }
 
+function previewRender(details) {
+    function applyInline(text) {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/__([^_]+)__/g, '<u>$1</u>')
+            .replace(/~~(.*?)~~/g, '<s>$1</s>')
+            .replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+            .replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>')
+            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:100%; border-radius:8px; display:block; margin:12px auto;">')
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+            .replace(/\[\[([^\]]+)\]\]/g, `<a href="detail.html#$1">$1</a>`);
+    }
+    const lines = details.replace(/\r\n/g, '\n').split('\n');
+    let html = '', inP = false, inUl = false, inTable = false, inBq = false;
+    const closeP = () => { if (inP) { html += '</p>'; inP = false; } };
+    const closeUl = () => { if (inUl) { html += '</ul>'; inUl = false; } };
+    const closeTbl = () => { if (inTable) { html += '</tbody></table>'; inTable = false; } };
+    const closeBq = () => { if (inBq) { html += '</blockquote>'; inBq = false; } };
+    const closeAll = () => { closeP(); closeUl(); closeTbl(); closeBq(); };
+    for (const line of lines) {
+        if (/^\[spoiler\]$/i.test(line.trim())) { closeAll(); html += '<details class="wiki-spoiler"><summary>스포일러</summary><div class="spoiler-content">'; continue; }
+        if (/^\[\/spoiler\]$/i.test(line.trim())) { closeAll(); html += '</div></details>'; continue; }
+        if (/^\[center\]$/i.test(line.trim())) { closeAll(); html += '<div style="text-align:center">'; continue; }
+        if (/^\[\/center\]$/i.test(line.trim())) { closeAll(); html += '</div>'; continue; }
+        if (/^\[note\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-note">📌 <div>'; continue; }
+        if (/^\[\/note\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
+        if (/^\[warn\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-warn">⚠️ <div>'; continue; }
+        if (/^\[\/warn\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
+        if (line.trim() === '') { closeAll(); continue; }
+        if (line.startsWith('## ')) { closeAll(); html += `<h2>${applyInline(line.slice(3))}</h2>`; continue; }
+        if (line.startsWith('### ')) { closeAll(); html += `<h3>${applyInline(line.slice(4))}</h3>`; continue; }
+        if (line === '---') { closeAll(); html += '<hr>'; continue; }
+        if (line.startsWith('> ')) { closeP(); closeUl(); closeTbl(); if (!inBq) { html += '<blockquote class="wiki-quote">'; inBq = true; } else html += '<br>'; html += applyInline(line.slice(2)); continue; }
+        if (line.startsWith('|') && line.endsWith('|')) {
+            closeP(); closeUl(); closeBq();
+            const cells = line.slice(1,-1).split('|');
+            if (cells.every(c => /^[-:]+$/.test(c.trim()))) continue;
+            if (!inTable) { html += '<table class="wiki-table"><thead><tr>'; cells.forEach(c => { html += `<th>${applyInline(c.trim())}</th>`; }); html += '</tr></thead><tbody>'; inTable = true; }
+            else { html += '<tr>'; cells.forEach(c => { html += `<td>${applyInline(c.trim())}</td>`; }); html += '</tr>'; }
+            continue;
+        }
+        if (line.startsWith('* ')) { closeP(); closeTbl(); closeBq(); if (!inUl) { html += '<ul>'; inUl = true; } html += `<li>${applyInline(line.slice(2))}</li>`; continue; }
+        closeUl(); closeTbl(); closeBq();
+        if (!inP) { html += '<p>'; inP = true; html += applyInline(line); } else { html += '<br>' + applyInline(line); }
+    }
+    closeP(); closeUl(); closeTbl(); closeBq();
+    return html;
+}
+
 function initToolbar() {
     if (!editor) return;
-    document.querySelectorAll('.toolbar-btn').forEach(btn => {
+
+    // 색상 팔레트 토글
+    const colorBtn = document.getElementById('color-btn');
+    const colorPalette = document.getElementById('color-palette');
+    if (colorBtn && colorPalette) {
+        colorBtn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); colorPalette.classList.toggle('open'); };
+        colorPalette.querySelectorAll('.color-swatch').forEach(swatch => {
+            swatch.onclick = () => {
+                const color = swatch.dataset.color;
+                const start = editor.selectionStart, end = editor.selectionEnd;
+                const selected = editor.value.substring(start, end) || '텍스트';
+                const replacement = `[color=${color}]${selected}[/color]`;
+                editor.value = editor.value.substring(0, start) + replacement + editor.value.substring(end);
+                editor.focus();
+                colorPalette.classList.remove('open');
+            };
+        });
+        document.addEventListener('click', (e) => { if (!colorBtn.contains(e.target) && !colorPalette.contains(e.target)) colorPalette.classList.remove('open'); });
+    }
+
+    // 미리보기 모달
+    const previewBtn = document.getElementById('preview-btn');
+    const previewModal = document.getElementById('preview-modal');
+    const previewClose = document.getElementById('preview-close');
+    const previewContent = document.getElementById('preview-content');
+    if (previewBtn && previewModal) {
+        previewBtn.onclick = (e) => {
+            e.preventDefault();
+            previewContent.innerHTML = previewRender(editor.value);
+            previewModal.classList.add('active');
+        };
+        previewClose.onclick = () => previewModal.classList.remove('active');
+        previewModal.onclick = (e) => { if (e.target === previewModal) previewModal.classList.remove('active'); };
+    }
+
+    // [[ 내부링크 자동완성 (간단 버전)
+    editor.addEventListener('input', () => {
+        const pos = editor.selectionStart;
+        const before = editor.value.substring(0, pos);
+        if (before.endsWith('[[')) {
+            // 힌트 표시 (향후 확장 가능)
+        }
+    });
+
+    // 일반 툴바 버튼
+    document.querySelectorAll('.toolbar-btn[data-type]').forEach(btn => {
         btn.onclick = (e) => {
             e.preventDefault();
             if (saveBtn.disabled) return;
@@ -143,27 +237,36 @@ function initToolbar() {
             const start = editor.selectionStart;
             const end = editor.selectionEnd;
             const text = editor.value;
-            const selectedText = text.substring(start, end);
+            const sel = text.substring(start, end);
             let replacement = '';
 
             switch (type) {
-                case 'h2': replacement = `\n## ${selectedText || '제목'}\n`; break;
-                case 'h3': replacement = `\n### ${selectedText || '소제목'}\n`; break;
-                case 'bold': replacement = `**${selectedText || '굵은글씨'}**`; break;
-                case 'italic': replacement = `*${selectedText || '기울임'}*`; break;
-                case 'link': replacement = `[${selectedText || '링크이름'}](주소)`; break;
-                case 'image': replacement = `![${selectedText || '설명'}](이미지주소)`; break;
-                case 'list': replacement = `\n* ${selectedText || '항목'}`; break;
-                case 'hr': replacement = `\n---\n`; break;
+                case 'h2':        replacement = `\n## ${sel || '제목'}\n`; break;
+                case 'h3':        replacement = `\n### ${sel || '소제목'}\n`; break;
+                case 'bold':      replacement = `**${sel || '굵은글씨'}**`; break;
+                case 'italic':    replacement = `*${sel || '기울임'}*`; break;
+                case 'underline': replacement = `__${sel || '밑줄'}__`; break;
+                case 'strike':    replacement = `~~${sel || '취소선'}~~`; break;
+                case 'link':      replacement = `[${sel || '링크이름'}](주소)`; break;
+                case 'ilink':     replacement = `[[${sel || '캐릭터명'}]]`; break;
+                case 'image':     replacement = `![${sel || '설명'}](이미지주소)`; break;
+                case 'list':      replacement = `\n* ${sel || '항목'}`; break;
+                case 'hr':        replacement = `\n---\n`; break;
+                case 'quote':     replacement = `\n> ${sel || '인용할 내용'}\n`; break;
+                case 'center':    replacement = `\n[center]\n${sel || '가운데 정렬 내용'}\n[/center]\n`; break;
+                case 'spoiler':   replacement = `\n[spoiler]\n${sel || '숨길 내용'}\n[/spoiler]\n`; break;
+                case 'note':      replacement = `\n[note]\n${sel || '메모 내용'}\n[/note]\n`; break;
+                case 'warn':      replacement = `\n[warn]\n${sel || '경고 내용'}\n[/warn]\n`; break;
+                case 'table':
+                    replacement = `\n|항목1|항목2|항목3|\n|---|---|---|\n|내용1|내용2|내용3|\n`;
+                    break;
             }
+            if (!replacement) return;
 
             editor.focus();
-            const before = text.substring(0, start);
-            const after = text.substring(end);
-            editor.value = before + replacement + after;
-            
-            const newCursorPos = start + replacement.length;
-            editor.setSelectionRange(newCursorPos, newCursorPos);
+            editor.value = text.substring(0, start) + replacement + text.substring(end);
+            const newPos = start + replacement.length;
+            editor.setSelectionRange(newPos, newPos);
         };
     });
 }

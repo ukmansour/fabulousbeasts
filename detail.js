@@ -255,79 +255,91 @@ function renderInfobox(data) {
 function renderContent(details) {
     if (!contentArea || isGalleryPage) return;
 
-    // 인라인 마크다운 적용 함수
     function applyInline(text) {
         return text
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/__([^_]+)__/g, '<u>$1</u>')
+            .replace(/~~(.*?)~~/g, '<s>$1</s>')
             .replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+            .replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>')
             .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:500px; border-radius:8px; display:block; margin:20px auto;">')
-            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+            .replace(/\[\[([^\]]+)\]\]/g, '<a href="detail.html#$1">$1</a>');
     }
 
     const lines = details.replace(/\r\n/g, '\n').split('\n');
-    let html = '';
-    let inParagraph = false;
-    let inList = false;
-
-    function closeParagraph() {
-        if (inParagraph) { html += '</p>'; inParagraph = false; }
-    }
-    function closeList() {
-        if (inList) { html += '</ul>'; inList = false; }
-    }
+    let html = '', inP = false, inUl = false, inTable = false, inBq = false;
+    const closeP   = () => { if (inP)     { html += '</p>';              inP     = false; } };
+    const closeUl  = () => { if (inUl)    { html += '</ul>';             inUl    = false; } };
+    const closeTbl = () => { if (inTable) { html += '</tbody></table>';  inTable = false; } };
+    const closeBq  = () => { if (inBq)    { html += '</blockquote>';     inBq    = false; } };
+    const closeAll = () => { closeP(); closeUl(); closeTbl(); closeBq(); };
 
     for (const line of lines) {
-        // 빈 줄 → 단락 종료 (시각적 여백)
-        if (line.trim() === '') {
-            closeParagraph();
-            closeList();
-            continue;
-        }
+        // 블록 태그 처리
+        if (/^\[spoiler\]$/i.test(line.trim())) { closeAll(); html += '<details class="wiki-spoiler"><summary>스포일러 (클릭하여 펼치기)</summary><div class="spoiler-content">'; continue; }
+        if (/^\[\/spoiler\]$/i.test(line.trim())) { closeAll(); html += '</div></details>'; continue; }
+        if (/^\[center\]$/i.test(line.trim())) { closeAll(); html += '<div style="text-align:center">'; continue; }
+        if (/^\[\/center\]$/i.test(line.trim())) { closeAll(); html += '</div>'; continue; }
+        if (/^\[note\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-note">📌 <div>'; continue; }
+        if (/^\[\/note\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
+        if (/^\[warn\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-warn">⚠️ <div>'; continue; }
+        if (/^\[\/warn\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
+
+        // 빈 줄 → 단락 종료
+        if (line.trim() === '') { closeAll(); continue; }
 
         // 제목
-        if (line.startsWith('## ')) {
-            closeParagraph(); closeList();
-            html += `<h2>${applyInline(line.slice(3))}</h2>`;
-            continue;
-        }
-        if (line.startsWith('### ')) {
-            closeParagraph(); closeList();
-            html += `<h3>${applyInline(line.slice(4))}</h3>`;
+        if (line.startsWith('## '))  { closeAll(); html += `<h2>${applyInline(line.slice(3))}</h2>`; continue; }
+        if (line.startsWith('### ')) { closeAll(); html += `<h3>${applyInline(line.slice(4))}</h3>`; continue; }
+
+        // 구분선
+        if (line === '---') { closeAll(); html += '<hr>'; continue; }
+
+        // 인용구
+        if (line.startsWith('> ')) {
+            closeP(); closeUl(); closeTbl();
+            if (!inBq) { html += '<blockquote class="wiki-quote">'; inBq = true; } else html += '<br>';
+            html += applyInline(line.slice(2));
             continue;
         }
 
-        // 구분선
-        if (line === '---') {
-            closeParagraph(); closeList();
-            html += '<hr>';
+        // 표
+        if (line.startsWith('|') && line.endsWith('|')) {
+            closeP(); closeUl(); closeBq();
+            const cells = line.slice(1, -1).split('|');
+            if (cells.every(c => /^[-:]+$/.test(c.trim()))) continue; // 구분 행 무시
+            if (!inTable) {
+                html += '<table class="wiki-table"><thead><tr>';
+                cells.forEach(c => { html += `<th>${applyInline(c.trim())}</th>`; });
+                html += '</tr></thead><tbody>';
+                inTable = true;
+            } else {
+                html += '<tr>';
+                cells.forEach(c => { html += `<td>${applyInline(c.trim())}</td>`; });
+                html += '</tr>';
+            }
             continue;
         }
 
         // 리스트
         if (line.startsWith('* ')) {
-            closeParagraph();
-            if (!inList) { html += '<ul>'; inList = true; }
+            closeP(); closeTbl(); closeBq();
+            if (!inUl) { html += '<ul>'; inUl = true; }
             html += `<li>${applyInline(line.slice(2))}</li>`;
             continue;
         }
 
-        // 일반 텍스트 → 단락 누적 (줄바꿈은 <br>)
-        closeList();
-        if (!inParagraph) {
-            html += '<p>';
-            inParagraph = true;
-            html += applyInline(line);
-        } else {
-            html += '<br>' + applyInline(line);
-        }
+        // 일반 텍스트
+        closeUl(); closeTbl(); closeBq();
+        if (!inP) { html += '<p>'; inP = true; html += applyInline(line); }
+        else { html += '<br>' + applyInline(line); }
     }
 
-    // 마무리
-    closeParagraph();
-    closeList();
-
+    closeP(); closeUl(); closeTbl(); closeBq();
     contentArea.innerHTML = html;
     generateTOC();
+
 }
 
 function generateTOC() {

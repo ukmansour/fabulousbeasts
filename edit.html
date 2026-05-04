@@ -95,14 +95,54 @@
                     <div class="field-group">
                         <label class="section-title">본문 내용</label>
                         <div class="editor-toolbar">
+                            <!-- 제목 -->
                             <button type="button" class="toolbar-btn" data-type="h2">제목</button>
                             <button type="button" class="toolbar-btn" data-type="h3">소제목</button>
-                            <button type="button" class="toolbar-btn" data-type="bold">굵게</button>
-                            <button type="button" class="toolbar-btn" data-type="italic">기울임</button>
+                            <span class="toolbar-sep"></span>
+                            <!-- 서식 -->
+                            <button type="button" class="toolbar-btn" data-type="bold"><strong>B</strong></button>
+                            <button type="button" class="toolbar-btn" data-type="italic"><em>I</em></button>
+                            <button type="button" class="toolbar-btn" data-type="underline" style="text-decoration:underline;">U</button>
+                            <button type="button" class="toolbar-btn" data-type="strike" style="text-decoration:line-through;">S</button>
+                            <span class="toolbar-sep"></span>
+                            <!-- 색상 -->
+                            <div class="color-picker-wrap">
+                                <button type="button" class="toolbar-btn" id="color-btn">🎨색상</button>
+                                <div class="color-palette" id="color-palette">
+                                    <div class="color-swatch" data-color="#e03131" style="background:#e03131" title="빨강"></div>
+                                    <div class="color-swatch" data-color="#f08c00" style="background:#f08c00" title="주황"></div>
+                                    <div class="color-swatch" data-color="#ffd700" style="background:#ffd700" title="노랑"></div>
+                                    <div class="color-swatch" data-color="#2f9e44" style="background:#2f9e44" title="초록"></div>
+                                    <div class="color-swatch" data-color="#1971c2" style="background:#1971c2" title="파랑"></div>
+                                    <div class="color-swatch" data-color="#6741d9" style="background:#6741d9" title="보라"></div>
+                                    <div class="color-swatch" data-color="#e64980" style="background:#e64980" title="분홍"></div>
+                                    <div class="color-swatch" data-color="#00a0e9" style="background:#00a0e9" title="하늘"></div>
+                                    <div class="color-swatch" data-color="#868e96" style="background:#868e96" title="회색"></div>
+                                    <div class="color-swatch" data-color="#212529" style="background:#212529" title="검정"></div>
+                                    <div class="color-swatch" data-color="#ffffff" style="background:#fff; border:1px solid #ccc" title="흰색"></div>
+                                    <div class="color-swatch" data-color="#a61e4d" style="background:#a61e4d" title="와인"></div>
+                                </div>
+                            </div>
+                            <span class="toolbar-sep"></span>
+                            <!-- 정렬 / 인용 -->
+                            <button type="button" class="toolbar-btn" data-type="center">가운데</button>
+                            <button type="button" class="toolbar-btn" data-type="quote">인용구</button>
+                            <span class="toolbar-sep"></span>
+                            <!-- 삽입 -->
                             <button type="button" class="toolbar-btn" data-type="link">링크</button>
+                            <button type="button" class="toolbar-btn" data-type="ilink">[[내부링크]]</button>
                             <button type="button" class="toolbar-btn" data-type="image">이미지</button>
                             <button type="button" class="toolbar-btn" data-type="list">리스트</button>
                             <button type="button" class="toolbar-btn" data-type="hr">구분선</button>
+                            <button type="button" class="toolbar-btn" data-type="table">표</button>
+                            <span class="toolbar-sep"></span>
+                            <!-- 특수 블록 -->
+                            <button type="button" class="toolbar-btn" data-type="spoiler">접기</button>
+                            <button type="button" class="toolbar-btn" data-type="note" style="color:#b7950b;">📌메모</button>
+                            <button type="button" class="toolbar-btn" data-type="warn" style="color:#c0392b;">⚠경고</button>
+                            <span class="toolbar-sep"></span>
+                            <!-- 미리보기 -->
+                            <button type="button" id="preview-btn" class="toolbar-btn" style="background:var(--primary-color); color:white; margin-left:auto;">미리보기</button>
                         </div>
                         <textarea id="edit-content" class="field-textarea" placeholder="이곳에 내용을 입력하세요. 위 문법 버튼을 사용해 꾸밀 수 있습니다."></textarea>
                     </div>
@@ -110,15 +150,18 @@
                     <div class="guide-box">
                         <h4>💡 작성 가이드</h4>
                         <ul>
-                            <li><span class="syntax">## 제목</span> : 가장 큰 제목 섹션을 만듭니다.</li>
-                            <li><span class="syntax">### 소제목</span> : 하위 섹션을 만듭니다.</li>
-                            <li><span class="syntax">**텍스트**</span> : 글자를 <strong>굵게</strong> 표시합니다.</li>
-                            <li><span class="syntax">*텍스트*</span> : 글자를 <em>기울여서</em> 표시합니다.</li>
-                            <li><span class="syntax">[링크이름](주소)</span> : 외부 사이트나 내부 문서를 연결합니다.</li>
-                            <li><span class="syntax">![설명](이미지주소)</span> : 본문에 이미지를 삽입합니다.</li>
-                            <li><span class="syntax">* 항목</span> : 앞에 별표를 붙이면 리스트가 됩니다.</li>
+                            <li><span class="syntax">## 제목</span> / <span class="syntax">### 소제목</span></li>
+                            <li><span class="syntax">**굵게**</span> / <span class="syntax">*기울임*</span> / <span class="syntax">__밑줄__</span> / <span class="syntax">~~취소선~~</span></li>
+                            <li><span class="syntax">[color=#e03131]텍스트[/color]</span> : 색상 지정</li>
+                            <li><span class="syntax"> [링크이름](주소)</span> / <span class="syntax">[[캐릭터명]]</span> : 내부 링크</li>
+                            <li><span class="syntax">> 텍스트</span> : 인용구</li>
+                            <li><span class="syntax">* 항목</span> : 리스트 / <span class="syntax">---</span> : 구분선</li>
+                            <li><span class="syntax">|이름|나이|</span> 형식으로 표 작성 (두 번째 줄: |---|---|)</li>
+                            <li><span class="syntax">[spoiler] 내용 [/spoiler]</span> : 접기/펼치기</li>
+                            <li><span class="syntax">[center] 내용 [/center]</span> : 가운데 정렬</li>
+                            <li><span class="syntax">[note] 내용 [/note]</span> / <span class="syntax">[warn] 내용 [/warn]</span></li>
                         </ul>
-                        <p style="margin-top:0.5rem; color:#666;">* 툴바의 버튼을 클릭하면 문법 기호가 자동으로 삽입됩니다.</p>
+                        <p style="margin-top:0.5rem; color:#666;">* 툴바의 버튼을 클릭하면 자동으로 삽입됩니다.</p>
                     </div>
                 </div>
 
@@ -188,6 +231,14 @@
         </form>
     </div>
 
+    <!-- 미리보기 모달 -->
+    <div class="preview-modal" id="preview-modal">
+        <div class="preview-modal-inner wiki-content">
+            <span class="preview-modal-close" id="preview-close">✕</span>
+            <h2 style="margin-bottom:1rem; border-bottom:1px solid #eee; padding-bottom:0.5rem;">미리보기</h2>
+            <div id="preview-content"></div>
+        </div>
+    </div>
     <script type="module" src="edit.js"></script>
 </body>
 </html>
