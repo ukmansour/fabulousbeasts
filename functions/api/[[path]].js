@@ -56,7 +56,8 @@ export async function onRequest(context) {
     if (request.method === "GET" && apiPath.startsWith("/wiki/") && apiPath.endsWith("/revisions")) {
         const title = decodeURIComponent(apiPath.replace("/wiki/", "").replace("/revisions", ""));
         try {
-            const { results } = await env.DB.prepare("SELECT id, author, strftime('%Y-%m-%dT%H:%M:%SZ', created_at) as created_at FROM wiki_revisions WHERE title = ? ORDER BY created_at DESC").bind(title).all();
+            // [수정] schema.sql에 정의된 컬럼명은 edited_at 입니다.
+            const { results } = await env.DB.prepare("SELECT id, author, strftime('%Y-%m-%dT%H:%M:%SZ', edited_at) as edited_at FROM wiki_revisions WHERE title = ? ORDER BY edited_at DESC").bind(title).all();
             return new Response(JSON.stringify(results), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });

@@ -250,7 +250,7 @@ function initToolbar() {
 
                 historyList.innerHTML = revisions.map(r => `
                     <div class="autocomplete-item history-item" data-id="${r.id}" style="justify-content:space-between; border-bottom:1px solid #eee;">
-                        <span><strong>${r.author}</strong> | ${new Date(r.created_at).toLocaleString('ko-KR')}</span>
+                        <span><strong>${r.author}</strong> | ${new Date(r.edited_at).toLocaleString('ko-KR')}</span>
                         <button type="button" class="toolbar-btn" style="padding:2px 8px; font-size:11px;">보기</button>
                     </div>
                 `).join('');
