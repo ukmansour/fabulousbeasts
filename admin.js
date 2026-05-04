@@ -105,8 +105,10 @@ function showRecoveryUI() {
                 body: JSON.stringify({
                     uid: currentUser.uid,
                     role: 'admin',
+                    name: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "ADMIN"),
                     nickname: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "ADMIN"),
                     email: currentUser.email || "",
+                    isBanned: false,
                     secret: code
                 })
             });
@@ -163,13 +165,13 @@ async function renderAdminPage() {
                 roleText = '관리자';
                 roleColor = '#d97706';
                 roleBg = '#fffbeb';
-            } else if (u.role === 'banned') {
+            } else if (u.role === 'banned' || u.isBanned === true) {
                 roleText = '차단';
                 roleColor = '#dc2626';
                 roleBg = '#fef2f2';
             }
 
-            const displayName = u.nickname || (u.email ? u.email.split('@')[0] : '알 수 없음');
+            const displayName = u.name || u.nickname || (u.email ? u.email.split('@')[0] : '알 수 없음');
 
             html += `
                 <div style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1rem; ${index !== users.length - 1 ? 'border-bottom:1px solid #ccc;' : ''} transition:background 0.1s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
@@ -289,10 +291,17 @@ window.changeUserRole = async (uid, newRole) => {
     }
 
     try {
+        // Firestore 업데이트 (isBanned 필드 포함)
+        await setDoc(doc(db, "users", uid), {
+            role: newRole,
+            isBanned: newRole === 'banned',
+            updatedAt: serverTimestamp()
+        }, { merge: true });
+
         const res = await fetch('/api/user/role', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ uid, role: newRole, secret: code })
+            body: JSON.stringify({ uid, role: newRole, isBanned: newRole === 'banned', secret: code })
         });
         
         if (!res.ok) throw new Error('서버 요청 실패');

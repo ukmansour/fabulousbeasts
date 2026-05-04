@@ -100,12 +100,13 @@ authForm.addEventListener('submit', async (e) => {
             // 4. Firestore 및 Cloudflare D1 데이터베이스에 유저 정보 동기화 (동시 진행)
             try {
                 await Promise.all([
-                    // Firestore 저장
+                    // Firestore 저장 (요청하신 표준 필드 사용)
                     setDoc(doc(db, "users", user.uid), {
                         uid: user.uid,
-                        nickname: nickname,
                         email: signupEmail,
+                        name: nickname, // 'nickname'을 'name' 필드로 저장
                         role: 'member',
+                        isBanned: false,
                         createdAt: serverTimestamp(),
                         updatedAt: serverTimestamp()
                     }),
@@ -115,9 +116,10 @@ authForm.addEventListener('submit', async (e) => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             uid: user.uid,
-                            nickname: nickname,
+                            nickname: nickname, // D1 API 호환성을 위해 유지
                             email: signupEmail,
                             role: 'member',
+                            isBanned: false,
                             secret: '9889'
                         })
                     })
@@ -125,12 +127,9 @@ authForm.addEventListener('submit', async (e) => {
                 console.log("User successfully synchronized to Firestore and D1.");
             } catch (syncError) {
                 console.error("Synchronization failed:", syncError);
-                // 한쪽이 실패하더라도 일단 가입은 된 상태이므로 진행하거나 에러를 알림
             }
 
-            console.log("User successfully created in Auth, Firestore, and D1.");
             alert(`${nickname}님, 가입이 완료되었습니다!`);
-
             window.location.href = 'index.html';
         }
     } catch (error) {
