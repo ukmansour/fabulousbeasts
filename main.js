@@ -83,45 +83,62 @@ async function syncHomepageImages() {
         const images = await response.json();
         
         // 1. mergedCharacters 업데이트 (검색 결과 반영용)
+        // 기존 CHARACTERS와 D1 데이터를 병합하여 전체 목록을 최신화합니다.
+        const dbMap = new Map();
+        images.forEach(item => dbMap.set(item.title, item));
+
+        mergedCharacters = CHARACTERS.map(c => {
+            const dbItem = dbMap.get(c.id);
+            if (dbItem) {
+                return {
+                    ...c,
+                    name: dbItem.name || c.name,
+                    image: dbItem.image || c.image,
+                    category: dbItem.category || c.category
+                };
+            }
+            return c;
+        });
+
+        // D1에만 있는 새로운 캐릭터들도 검색 목록에 추가
         images.forEach(item => {
-            const index = mergedCharacters.findIndex(c => c.id === item.title);
-            if (index !== -1) {
-                mergedCharacters[index].name = item.name || mergedCharacters[index].name;
-                mergedCharacters[index].image = item.image || mergedCharacters[index].image;
-            } else {
-                // 새로운 캐릭터가 DB에만 있는 경우 (검색에 포함시키기 위해)
+            if (!CHARACTERS.find(c => c.id === item.title)) {
                 mergedCharacters.push({
                     id: item.title,
                     name: item.name || item.title,
                     image: item.image,
-                    category: '기타'
+                    category: item.category || '기타'
                 });
             }
         });
 
-        // 2. 홈페이지 내 모든 캐릭터 카드(char-card-mini)를 찾아 이미지를 교체합니다.
-        const cards = document.querySelectorAll('.char-card-mini');
-        cards.forEach(card => {
-            const link = card.getAttribute('href') || "";
-            // 정확한 ID 매칭을 위해 해시(#) 이후의 문자열을 확인합니다.
-            const cardId = link.split('#').pop();
+        // 2. 전체 목록(char-grid) 동적 렌더링
+        const container = document.getElementById('char-grid');
+        if (container) {
+            const html = CATEGORIES.map(cat => {
+                const catChars = mergedCharacters.filter(c => c.category === cat);
+                if (catChars.length === 0) return '';
+                
+                return `
+                    <div class="category-section" style="margin-top:2.5rem;">
+                        <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">${cat}</h3>
+                        <div class="char-grid-portal">
+                            ${catChars.map(c => `
+                                <a href="detail.html#${c.id}" class="char-card-mini">
+                                    <img src="${c.image || 'https://via.placeholder.com/150'}" alt="${c.name || c.id}">
+                                    <span>${c.name || c.id}</span>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>`;
+            }).join('');
             
-            const item = images.find(img => img.title === cardId);
-            if (item) {
-                // 이미지 교체
-                const img = card.querySelector('img');
-                if (img && item.image && img.src !== item.image) {
-                    img.src = item.image;
-                }
-                // 이름 교체
-                const span = card.querySelector('span');
-                if (span && item.name && span.textContent !== item.name) {
-                    span.textContent = item.name;
-                }
-            }
-        });
+            container.innerHTML = html || '<div style="padding:50px; text-align:center; color:#999;">등록된 캐릭터가 없습니다.</div>';
+        }
     } catch (e) {
-        console.warn("Homepage image sync failed:", e);
+        console.warn("Homepage dynamic render failed:", e);
+        const container = document.getElementById('char-grid');
+        if (container) container.innerHTML = '<div style="padding:50px; text-align:center; color:#ff4d4f;">데이터를 불러오는 중 오류가 발생했습니다.</div>';
     }
 }
 
