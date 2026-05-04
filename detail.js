@@ -117,6 +117,11 @@ async function loadDetail() {
                 console.log("D1 data received:", dbData);
                 
                 const dbName = dbData.name || (baseData.name !== charId ? baseData.name : "");
+                let utcSeconds = null;
+                if (dbData.updated_at) {
+                    const utcDateStr = dbData.updated_at.replace(' ', 'T') + (dbData.updated_at.endsWith('Z') ? '' : 'Z');
+                    utcSeconds = Math.floor(new Date(utcDateStr).getTime() / 1000);
+                }
                 const data = { 
                     ...baseData, 
                     name: dbName,
@@ -129,7 +134,8 @@ async function loadDetail() {
                     birthday: dbData.birthday || baseData.birthday,
                     image: dbData.image || baseData.image,
                     gallery: dbData.gallery ? (typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery) : (baseData.gallery || []),
-                    updatedAt: { seconds: Math.floor(new Date(dbData.updated_at).getTime() / 1000) },
+                    customInfo: dbData.custom_info ? (typeof dbData.custom_info === 'string' ? JSON.parse(dbData.custom_info) : dbData.custom_info) : [],
+                    updatedAt: utcSeconds ? { seconds: utcSeconds } : baseData.updatedAt,
                     updatedBy: dbData.author
                 };
                 
@@ -238,6 +244,7 @@ function renderInfobox(data) {
                     ${data.species ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">종족</th><td style="padding:5px; border:1px solid #eee;">${data.species}</td></tr>` : ''}
                     ${data.nation ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">국적</th><td style="padding:5px; border:1px solid #eee;">${data.nation}</td></tr>` : ''}
                     ${data.birthday ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">생일</th><td style="padding:5px; border:1px solid #eee;">${data.birthday}</td></tr>` : ''}
+                    ${data.customInfo && Array.isArray(data.customInfo) ? data.customInfo.map(field => `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">${field.key.replace(/</g, '&lt;')}</th><td style="padding:5px; border:1px solid #eee;">${field.value.replace(/</g, '&lt;')}</td></tr>`).join('') : ''}
                 </table>
                 ${galleryHTML}
             </div>
@@ -308,7 +315,7 @@ async function renderRecentChanges() {
         const results = await response.json();
         
         list.innerHTML = results.map(d => {
-            const date = d.updated_at ? new Date(d.updated_at).toLocaleString('ko-KR') : '-';
+            const date = d.updated_at ? new Date(d.updated_at.replace(' ', 'T') + (d.updated_at.endsWith('Z') ? '' : 'Z')).toLocaleString('ko-KR') : '-';
             return `
                 <div style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">
                     <a href="detail.html#${d.title}" style="font-size:13px; color:var(--text-link); text-decoration:none; font-weight:700;">${d.title}</a>

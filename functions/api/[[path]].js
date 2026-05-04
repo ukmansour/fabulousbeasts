@@ -104,7 +104,7 @@ export async function onRequest(context) {
     if (request.method === "POST" && apiPath === "/wiki") {
         try {
             const data = await request.json();
-            const { title, oldTitle, name, content, author, category, species, nation, alias, birthday, image, gallery } = data;
+            const { title, oldTitle, name, content, author, category, species, nation, alias, birthday, image, gallery, custom_info } = data;
 
             // [추가] 제목(ID) 변경 로직: oldTitle이 있고 title과 다를 경우 D1의 PK를 업데이트합니다.
             if (oldTitle && oldTitle !== title) {
@@ -126,8 +126,8 @@ export async function onRequest(context) {
             }
 
             await env.DB.prepare(`
-                INSERT INTO wiki_pages (title, name, content, author, category, species, nation, alias, birthday, image, gallery, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                INSERT INTO wiki_pages (title, name, content, author, category, species, nation, alias, birthday, image, gallery, custom_info, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                 ON CONFLICT(title) DO UPDATE SET
                   name = excluded.name,
                   content = excluded.content,
@@ -139,11 +139,13 @@ export async function onRequest(context) {
                   birthday = excluded.birthday,
                   image = excluded.image,
                   gallery = excluded.gallery,
+                  custom_info = excluded.custom_info,
                   updated_at = CURRENT_TIMESTAMP
             `).bind(
                 title, name || "", content, author || "Anonymous", category || "기타",
                 species || "", nation || "", alias || "", birthday || "", image || "",
-                gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]"
+                gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]",
+                custom_info ? (typeof custom_info === 'string' ? custom_info : JSON.stringify(custom_info)) : "[]"
             ).run();
 
             // Revision 저장 (선택 사항)

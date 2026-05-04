@@ -192,7 +192,8 @@ async function loadInitialData() {
                     alias: dbData.alias || baseData.alias,
                     birthday: dbData.birthday || baseData.birthday,
                     image: dbData.image || baseData.image,
-                    gallery: dbData.gallery ? (typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery) : (baseData.gallery || [])
+                    gallery: dbData.gallery ? (typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery) : (baseData.gallery || []),
+                    customInfo: dbData.custom_info ? (typeof dbData.custom_info === 'string' ? JSON.parse(dbData.custom_info) : dbData.custom_info) : []
                 };
                 fillForm(data);
             } else {
@@ -245,6 +246,41 @@ function fillForm(data) {
         currentGallery = data.gallery;
         renderGalleryPreview();
     }
+
+    const customContainer = document.getElementById('custom-fields-container');
+    if (customContainer) {
+        customContainer.innerHTML = '';
+        if (data.customInfo && Array.isArray(data.customInfo)) {
+            data.customInfo.forEach(field => {
+                addCustomField(field.key, field.value);
+            });
+        }
+    }
+}
+
+function addCustomField(key = '', value = '') {
+    const container = document.getElementById('custom-fields-container');
+    if (!container) return;
+    
+    const div = document.createElement('div');
+    div.className = 'field-group custom-field-group';
+    div.style.marginBottom = '0.8rem';
+    div.style.display = 'flex';
+    div.style.gap = '0.5rem';
+    
+    div.innerHTML = `
+        <input type="text" class="field-input custom-key" placeholder="항목 이름 (예: 무기)" style="flex: 1; padding: 0.5rem;" value="${key.replace(/"/g, '&quot;')}">
+        <input type="text" class="field-input custom-value" placeholder="내용" style="flex: 2; padding: 0.5rem;" value="${value.replace(/"/g, '&quot;')}">
+        <button type="button" class="remove-custom-btn" style="background: #ff4d4f; color: white; border: none; padding: 0 0.5rem; border-radius: 4px; cursor: pointer;">X</button>
+    `;
+    
+    div.querySelector('.remove-custom-btn').onclick = () => div.remove();
+    container.appendChild(div);
+}
+
+const addCustomBtn = document.getElementById('add-custom-field-btn');
+if (addCustomBtn) {
+    addCustomBtn.onclick = () => addCustomField();
 }
 
 function renderGalleryPreview() {
@@ -397,6 +433,13 @@ if (form) {
 
         // [수정] D1의 title(고유 ID)을 입력한 name과 동일하게 맞춥니다.
         // 이름이 변경되면 데이터베이스의 PK도 함께 업데이트됩니다.
+        const customFields = [];
+        document.querySelectorAll('.custom-field-group').forEach(group => {
+            const k = group.querySelector('.custom-key').value.trim();
+            const v = group.querySelector('.custom-value').value.trim();
+            if (k && v) customFields.push({ key: k, value: v });
+        });
+
         const updatedData = {
             oldTitle: charId, // 현재 문서의 ID (이전 제목)
             title: newName,  // 새로운 ID (새 제목)
@@ -409,7 +452,8 @@ if (form) {
             birthday: document.getElementById('info-birthday').value,
             image: document.getElementById('image-url').value,
             gallery: currentGallery,
-            author: currentUser.displayName || '익명'
+            author: currentUser.displayName || '익명',
+            custom_info: customFields
         };
         try {
             const response = await fetch('/api/wiki', {

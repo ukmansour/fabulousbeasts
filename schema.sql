@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS wiki_pages (
     birthday TEXT,                   -- 생일 (인포박스)
     image TEXT,                      -- 대표 이미지 URL
     gallery TEXT,                    -- 갤러리 이미지 URL 목록 (JSON string: ["url1", "url2"])
+    custom_info TEXT,                -- 커스텀 정보 목록 (JSON string: [{"key": "무기", "value": "검"}])
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP -- 수정 시간
 );
 

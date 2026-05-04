@@ -190,8 +190,8 @@ async function renderRecentChanges() {
             let dateStr = '-';
             if (d.updated_at) {
                 try {
-                    const cleanDate = d.updated_at.replace('Z', '').replace('T', ' ');
-                    const dateObj = new Date(cleanDate);
+                    const utcDateStr = d.updated_at.replace(' ', 'T') + (d.updated_at.endsWith('Z') ? '' : 'Z');
+                    const dateObj = new Date(utcDateStr);
                     dateStr = dateObj.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 } catch(e) { dateStr = d.updated_at; }
             }

@@ -150,3 +150,28 @@ from the D1 database.
 3.  **Wrangler Configuration**:
     *   Bound the D1 database `fabulousbeasts` to the worker as `env.DB`.
     *   Configured both `wrangler.toml` and `wrangler.jsonc` for consistent development environments.
+
+## Timezone Display Fix (Current Update)
+
+**Objective:** Fix an issue where the document modification time retrieved from D1 (UTC) was displayed 9 hours behind local time (KST).
+
+**Changes:**
+1.  **Date Normalization (`detail.js`, `main.js`)**:
+    *   Standardized the SQLite `CURRENT_TIMESTAMP` output (e.g., `YYYY-MM-DD HH:MM:SS`) to a valid ISO 8601 string (`YYYY-MM-DDTHH:MM:SSZ`) before instantiating the JavaScript `Date` object.
+    *   This ensures the browser accurately interprets the date string as UTC instead of implicitly assuming it is already local time.
+    *   When `.toLocaleString('ko-KR')` is invoked, the UTC time is successfully converted to KST (+9 hours), resolving the 9-hour offset issue in both recent changes and document detail views.
+
+## Dynamic Infobox Custom Fields (Current Update)
+
+**Objective:** Allow administrators to dynamically add custom information rows (e.g., "Weapon", "Affiliation") to the character infobox without modifying the source code.
+
+**Changes:**
+1.  **Database Expansion (`schema.sql`, `[[path]].js`)**:
+    *   Added a `custom_info` column (`TEXT` type) to the `wiki_pages` table to store serialized JSON arrays of custom properties.
+    *   Updated the `POST /wiki` Cloudflare Pages function to accept and insert/update the `custom_info` data.
+2.  **Flexible Editor UI (`edit.html`, `edit.js`)**:
+    *   Added a "커스텀 정보" (Custom Info) section to the editor sidebar with a button to dynamically append new key-value input fields.
+    *   Implemented DOM logic to read existing custom properties and populate the inputs when editing a document.
+    *   Form submission logic now packages these dynamic inputs into a `[{key: "...", value: "..."}]` array for storage.
+3.  **Dynamic Rendering (`detail.js`)**:
+    *   Updated the detail page to parse the `custom_info` JSON string from the database and automatically append new rows to the infobox table for each custom field defined.
