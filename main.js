@@ -4,7 +4,7 @@ import { doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestor
 
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-let mergedCharacters = [...CHARACTERS];
+let mergedCharacters = []; // [수정] 초기 상태를 빈 배열로 설정하여 정적 데이터(data.js) 노출을 차단합니다.
 let recentChangesTimer = null;
 
 onAuthStateChanged(auth, async (user) => {
@@ -82,35 +82,14 @@ async function syncHomepageImages() {
         if (!response.ok) return;
         const images = await response.json();
         
-        // 1. mergedCharacters 업데이트 (검색 결과 반영용)
-        // 기존 CHARACTERS와 D1 데이터를 병합하여 전체 목록을 최신화합니다.
-        const dbMap = new Map();
-        images.forEach(item => dbMap.set(item.title, item));
-
-        mergedCharacters = CHARACTERS.map(c => {
-            const dbItem = dbMap.get(c.id);
-            if (dbItem) {
-                return {
-                    ...c,
-                    name: dbItem.name || c.name,
-                    image: dbItem.image || c.image,
-                    category: dbItem.category || c.category
-                };
-            }
-            return c;
-        });
-
-        // D1에만 있는 새로운 캐릭터들도 검색 목록에 추가
-        images.forEach(item => {
-            if (!CHARACTERS.find(c => c.id === item.title)) {
-                mergedCharacters.push({
-                    id: item.title,
-                    name: item.name || item.title,
-                    image: item.image,
-                    category: item.category || '기타'
-                });
-            }
-        });
+        // 1. mergedCharacters 초기화 및 D1 데이터로만 채우기
+        // 이제 정적 파일(data.js)의 데이터는 무시하고 오직 데이터베이스(D1) 정보만 사용합니다.
+        mergedCharacters = images.map(item => ({
+            id: item.title,
+            name: item.name || item.title,
+            image: item.image,
+            category: item.category || '기타'
+        }));
 
         // 2. 전체 목록(char-grid) 동적 렌더링
         const container = document.getElementById('char-grid');
@@ -133,12 +112,12 @@ async function syncHomepageImages() {
                     </div>`;
             }).join('');
             
-            container.innerHTML = html || '<div style="padding:50px; text-align:center; color:#999;">등록된 캐릭터가 없습니다.</div>';
+            container.innerHTML = html || '<div style="padding:50px; text-align:center; color:#999;">데이터베이스에 등록된 캐릭터가 없습니다.</div>';
         }
     } catch (e) {
         console.warn("Homepage dynamic render failed:", e);
         const container = document.getElementById('char-grid');
-        if (container) container.innerHTML = '<div style="padding:50px; text-align:center; color:#ff4d4f;">데이터를 불러오는 중 오류가 발생했습니다.</div>';
+        if (container) container.innerHTML = '<div style="padding:50px; text-align:center; color:#ff4d4f;">데이터베이스 연결 오류가 발생했습니다.</div>';
     }
 }
 
