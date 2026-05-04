@@ -155,23 +155,25 @@ async function renderAdminPage() {
                 roleBg = '#fef2f2';
             }
 
+            const displayName = u.nickname || (u.email ? u.email.split('@')[0] : 'UNKNOWN');
+
             html += `
-                <div style="display:flex; align-items:center; gap:1rem; padding:0.6rem 1rem; ${index !== users.length - 1 ? 'border-bottom:1px solid #f9f9f9;' : ''} transition:background 0.1s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
-                    <div style="flex:1; min-width:0; display:flex; align-items:center; gap:0.8rem;">
-                        <span style="font-size:0.9rem; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px;">${u.nickname || '이름 없음'}</span>
-                        <span style="font-size:0.75rem; color:#999; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;">${u.email || '이메일 없음'}</span>
+                <div style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1rem; ${index !== users.length - 1 ? 'border-bottom:1px solid #ccc;' : ''} transition:background 0.1s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
+                    <div style="flex:1; min-width:0; display:flex; align-items:center; gap:1.2rem;">
+                        <span style="font-size:0.9rem; font-weight:800; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:120px; font-family:monospace;">${displayName}</span>
+                        <span style="font-size:0.8rem; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; font-family:monospace;">${u.email || 'NO EMAIL'}</span>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:0.8rem;">
-                        <span style="background:${roleBg}; color:${roleColor}; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:800; white-space:nowrap;">
+                        <span style="background:${roleBg}; color:${roleColor}; padding:2px 8px; border:1px solid ${roleColor}; font-size:0.7rem; font-weight:800; white-space:nowrap; text-transform:uppercase;">
                             ${roleText}
                         </span>
                         
-                        <select onchange="window.changeUserRole('${u.uid}', this.value)" style="padding:0.25rem 0.4rem; border:1px solid #e5e7eb; border-radius:6px; font-size:0.7rem; background:#fff; cursor:pointer; outline:none; font-weight:600; color:#555; width:90px;">
-                            <option value="">권한 변경</option>
-                            <option value="member">멤버</option>
-                            <option value="admin">관리자</option>
-                            <option value="banned">차단</option>
+                        <select onchange="window.changeUserRole('${u.uid}', this.value)" style="padding:0.3rem 0.6rem; border:1px solid #999; border-radius:0; font-size:0.75rem; background:#fff; cursor:pointer; outline:none; font-weight:700; color:#333; width:110px; font-family:monospace;">
+                            <option value="">CHANGE ROLE</option>
+                            <option value="member">MEMBER</option>
+                            <option value="admin">ADMIN</option>
+                            <option value="banned">BANNED</option>
                         </select>
                     </div>
                 </div>
