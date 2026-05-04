@@ -34,10 +34,16 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
 
 **Changes:**
 1.  **Updated Categories (`characters/index.js`)**:
-    *   Renamed "운남산 언덕" to "채운산 언덕".
-    *   Reordered the `CATEGORIES` array to match the requested order: 메인 캐릭터, 녹인점, 고대, 지옥, 토보서 그룹, 채운산 언덕, 기린, 맹극, 와묘, 신조, 천상, 기타.
-2.  **Dynamic Grid Integration**:
-    *   The homepage grid now automatically uses this new order when rendering category sections from the D1 database.
+- **Cloudflare D1 & R2 연동**: Firestore와 별개로 고성능/저비용 데이터베이스 및 이미지 스토리지를 구축했습니다.
+- **문서 동기화**: 위키 문서의 본문, 인포박스(이름, 사진 등), 갤러리를 D1에 저장하고 실시간으로 불러옵니다.
+- **홈페이지 이미지/이름 동기화**: 위키에서 편집한 내용이 첫 화면의 캐릭터 카드에도 즉시 반영됩니다.
+- **사용자 관리 자동화**: 회원가입 시 자동으로 데이터베이스에 유저 정보를 동기화하여 관리자 탭에서 즉시 확인할 수 있습니다.
+- **편의성 개선**: 상세 페이지 상단에 '🏠 홈으로' 돌아가기 버튼을 추가했습니다.
+
+## [Current Plan] 유저 관리 및 배포 최적화
+1. **D1 사용자 연동**: 가입 시점에 `/api/user/role`을 호출하여 D1 DB에 유저 정보를 즉시 기록합니다.
+2. **배포 자동화**: GitHub Actions를 통해 `main` 브랜치 푸시 시 Cloudflare Pages로 자동 배포되도록 설정했습니다.
+from the D1 database.
     *   Ensures that character search and filtering align with these updated groups.
 
 ## Global Data Synchronization (2026.04.30)
