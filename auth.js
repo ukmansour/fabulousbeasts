@@ -97,31 +97,35 @@ authForm.addEventListener('submit', async (e) => {
             // 3. Firebase Auth 프로필 업데이트
             await updateProfile(user, { displayName: nickname });
 
-            // 4. Firestore 데이터베이스에 유저 정보 저장 (권한 관리를 위해 필수)
-            await setDoc(doc(db, "users", user.uid), {
-                uid: user.uid,
-                nickname: nickname,
-                email: signupEmail,
-                role: 'member',
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            });
-
-            // 5. Cloudflare D1 데이터베이스에도 사용자 정보 동기화 (관리자 탭 표시용)
+            // 4. Firestore 및 Cloudflare D1 데이터베이스에 유저 정보 동기화 (동시 진행)
             try {
-                await fetch('/api/user/role', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                await Promise.all([
+                    // Firestore 저장
+                    setDoc(doc(db, "users", user.uid), {
                         uid: user.uid,
                         nickname: nickname,
                         email: signupEmail,
                         role: 'member',
-                        secret: '9889' // 유저 생성용 보안 코드
+                        createdAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                    }),
+                    // Cloudflare D1 저장 (관리자 탭 표시용)
+                    fetch('/api/user/role', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            uid: user.uid,
+                            nickname: nickname,
+                            email: signupEmail,
+                            role: 'member',
+                            secret: '9889'
+                        })
                     })
-                });
-            } catch (e) {
-                console.error("D1 sync failed:", e);
+                ]);
+                console.log("User successfully synchronized to Firestore and D1.");
+            } catch (syncError) {
+                console.error("Synchronization failed:", syncError);
+                // 한쪽이 실패하더라도 일단 가입은 된 상태이므로 진행하거나 에러를 알림
             }
 
             console.log("User successfully created in Auth, Firestore, and D1.");
