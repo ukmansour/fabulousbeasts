@@ -210,11 +210,14 @@ async function loadInitialData() {
 }
 
 function fillForm(data) {
+    // data.name은 D1에서 가져온 값이거나 없으면 CHARACTERS의 name입니다.
+    const displayName = data.name || charId;
+
     const titleEl = document.getElementById('edit-page-title');
-    if (titleEl) titleEl.textContent = `${data.name || charId} 문서 편집`;
+    if (titleEl) titleEl.textContent = `${displayName} 문서 편집`;
     
     const nameInput = document.getElementById('edit-name');
-    if (nameInput) nameInput.value = data.name || charId;
+    if (nameInput) nameInput.value = displayName;
     
     if (categorySelect && data.category) categorySelect.value = data.category;
     if (editor) editor.value = data.details || '';
