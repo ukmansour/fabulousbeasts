@@ -189,12 +189,11 @@ body {
 @media (max-width: 1024px) {
     .wiki-outer-container { grid-template-columns: 1fr; }
     .wiki-sidebar { display: none; }
-    .recent-changes-inline { display: block; }
 }
 
-/* 넓은 화면에서는 인라인 최근 변경 내역 숨기기 */
+/* 최근 변경 내역 (항상 하단에 표시) */
 .recent-changes-inline {
-    display: none;
+    display: block;
     margin-top: 3rem;
     padding-top: 1.5rem;
     border-top: 2px solid var(--border-color);
