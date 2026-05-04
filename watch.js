@@ -78,7 +78,7 @@ for (let s = 1; s <= 5; s++) {
     }
 }
 
-function renderEpisodes(season) {
+function renderEpisodes(season, autoPlayFirst = false) {
     epList.innerHTML = '';
     const eps = EPISODES[season] || [];
     eps.forEach((ep, index) => {
@@ -90,34 +90,36 @@ function renderEpisodes(season) {
         item.onclick = () => {
             document.querySelectorAll('.ep-item').forEach(el => el.classList.remove('active'));
             item.classList.add('active');
-            playVideo(ep);
+            playVideo(ep, true); // 클릭 시에는 재생
         };
         epList.appendChild(item);
     });
 
-    // 목록이 렌더링될 때 자동으로 첫 번째 에피소드 비디오를 로드 (클릭 이벤트와 동일한 효과)
+    // 목록이 렌더링될 때 첫 번째 에피소드를 로드만 하고 재생은 하지 않음
     if (eps.length > 0) {
-        playVideo(eps[0]);
+        playVideo(eps[0], autoPlayFirst);
     }
 }
 
-function playVideo(ep) {
+function playVideo(ep, shouldPlay = false) {
     // 사용자가 지정한 정확한 인코딩 형식 적용: 번호 + %ED%99%94 + .mp4
     const videoUrl = `https://media.fabulousbeasts.kr/${ep.num}%ED%99%94.mp4`;
     
-    console.log("재생 요청 URL:", videoUrl);
+    console.log("비디오 로드 URL:", videoUrl);
     
     videoFrame.src = videoUrl;
     videoFrame.load();
     
-    // 재생 시도 (사용자 클릭 이벤트 안이므로 자동 재생 차단에 걸리지 않음)
-    videoFrame.play().catch(err => {
-        console.error("재생 실패:", err);
-    });
+    // shouldPlay가 true일 때만(사용자 클릭 등) 재생 시도
+    if (shouldPlay) {
+        videoFrame.play().catch(err => {
+            console.error("재생 실패:", err);
+        });
+    }
 
     displayTitle.textContent = ep.title;
     displayDesc.textContent = `${ep.num}화 에피소드입니다. 즐겁게 감상하세요.`;
 }
 
-seasonSelect.onchange = (e) => renderEpisodes(e.target.value);
-renderEpisodes("1");
+seasonSelect.onchange = (e) => renderEpisodes(e.target.value, true); // 시즌 변경 시에는 첫 화 자동 재생
+renderEpisodes("1", false); // 초기 로드 시에는 재생하지 않음
