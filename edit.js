@@ -495,7 +495,11 @@ function addCustomField(key = '', value = '') {
         <button type="button" class="remove-custom-btn" style="background: #ff4d4f; color: white; border: none; padding: 0 0.5rem; border-radius: 4px; cursor: pointer;">X</button>
     `;
     
-    div.querySelector('.remove-custom-btn').onclick = () => div.remove();
+    div.querySelector('.remove-custom-btn').onclick = () => {
+        if (confirm("정말로 이 항목을 지우시겠습니까?")) {
+            div.remove();
+        }
+    };
     container.appendChild(div);
 }
 
