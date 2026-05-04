@@ -11,6 +11,21 @@ onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
     if (!info) return;
     if (user) {
+        // [신규] 로그인한 유저 정보를 D1에 실시간 동기화 (Auth -> D1)
+        try {
+            fetch('/api/user/role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    uid: user.uid,
+                    nickname: user.displayName || user.email?.split('@')[0] || "유저",
+                    email: user.email || "",
+                    role: 'member', // 기존 역할이 있으면 D1에서 무시되거나 UPSERT됨
+                    secret: 'SYNC_ONLY' // API에서 특수 처리하거나 무시 가능
+                })
+            });
+        } catch (e) { console.warn("User sync failed:", e); }
+
         let isAdmin = false;
         
         // [읽기 최적화] 기본적으로 Auth의 displayName 사용

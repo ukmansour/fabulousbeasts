@@ -108,21 +108,23 @@ async function renderAdminPage() {
     if (!contentArea) return;
     contentArea.innerHTML = `
         <div style="display:flex; justify-content:center; padding:2rem;">
-            <div class="loading-spinner" style="border: 2px solid #f3f3f3; border-top: 2px solid var(--primary-color); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite;"></div>
+            <div class="loading-spinner" style="border: 2px solid #f3f3f3; border-top: 3px solid var(--primary-color); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite;"></div>
         </div>
         <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
     `;
     
     try {
-        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
-        const usersSnapshot = await getDocs(collection(db, "users"));
-        const users = [];
-        usersSnapshot.forEach(docSnap => {
-            users.push({ id: docSnap.id, ...docSnap.data() });
-        });
+        // [수정] Firestore가 아닌 D1 API에서 유저 목록을 가져옵니다.
+        const response = await fetch('/api/users');
+        if (!response.ok) throw new Error('D1 사용자 목록 로드 실패');
+        const users = await response.json();
 
         if (users.length === 0) {
-            contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:#999; font-size:0.85rem;">가입한 회원이 없습니다.</div>`;
+            contentArea.innerHTML = `
+                <div style="text-align:center; padding:3rem; color:#999;">
+                    <p style="font-size:0.85rem; margin-bottom:1.5rem;">데이터베이스(D1)에 가입한 회원이 없습니다.</p>
+                    <button onclick="window.importFirestoreUsers()" style="padding:0.6rem 1.2rem; background:#f3f4f6; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8rem;">기존 Firestore 유저 불러오기</button>
+                </div>`;
             return;
         }
 
@@ -130,6 +132,7 @@ async function renderAdminPage() {
             <div style="max-width:800px; margin:0 auto; padding:0.5rem; background:white; border:1px solid #eee; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; border-bottom:1px solid #f5f5f5;">
                     <h2 style="font-size:1.1rem; font-weight:900; color:#111; margin:0;">사용자 관리 <span style="font-size:0.8rem; color:#999; font-weight:400; margin-left:5px;">(${users.length})</span></h2>
+                    <button onclick="window.importFirestoreUsers()" style="font-size:0.75rem; color:var(--primary-color); background:none; border:none; cursor:pointer; font-weight:700;">🔄 Firestore 유저 동기화</button>
                 </div>
                 
                 <div style="display:flex; flex-direction:column;">
@@ -162,7 +165,7 @@ async function renderAdminPage() {
                             ${roleText}
                         </span>
                         
-                        <select onchange="window.changeUserRole('${u.id}', this.value)" style="padding:0.25rem 0.4rem; border:1px solid #e5e7eb; border-radius:8px; font-size:0.75rem; background:#fff; cursor:pointer; outline:none; font-weight:600; color:#555; width:90px;">
+                        <select onchange="window.changeUserRole('${u.uid}', this.value)" style="padding:0.25rem 0.4rem; border:1px solid #e5e7eb; border-radius:6px; font-size:0.7rem; background:#fff; cursor:pointer; outline:none; font-weight:600; color:#555; width:90px;">
                             <option value="">권한 변경</option>
                             <option value="member">멤버</option>
                             <option value="admin">관리자</option>
@@ -184,6 +187,41 @@ async function renderAdminPage() {
         contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:#dc2626; font-size:0.85rem;">오류: ${e.message}</div>`;
     }
 }
+
+// [추가] Firestore의 유저 데이터를 D1으로 동기화하는 함수
+window.importFirestoreUsers = async () => {
+    const code = prompt("데이터 동기화를 위한 보안 코드를 입력하세요:");
+    if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
+
+    if (!confirm("Firestore에 저장된 사용자들을 D1 데이터베이스로 가져오시겠습니까?")) return;
+
+    try {
+        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+        const snapshot = await getDocs(collection(db, "users"));
+        
+        let count = 0;
+        for (const docSnap of snapshot.docs) {
+            const u = docSnap.data();
+            await fetch('/api/user/role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    uid: u.uid,
+                    role: u.role || 'member',
+                    nickname: u.nickname || '',
+                    email: u.email || '',
+                    secret: '9889'
+                })
+            });
+            count++;
+        }
+        
+        alert(`${count}명의 사용자를 성공적으로 동기화했습니다!`);
+        renderAdminPage();
+    } catch (e) {
+        alert("동기화 실패: " + e.message);
+    }
+};
 
 // [추가] 문서 관리(Wiki) 탭 렌더링
 function renderWikiAdminPage() {
@@ -257,4 +295,3 @@ window.changeUserRole = async (uid, newRole) => {
 };
 
 initAdminToolbars();
-

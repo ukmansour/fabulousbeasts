@@ -142,6 +142,15 @@ export async function onRequest(context) {
     }
 
     // 4. User Role 관련
+    if (request.method === "GET" && apiPath === "/users") {
+        try {
+            const { results } = await env.DB.prepare("SELECT * FROM users ORDER BY updated_at DESC").all();
+            return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
     if (request.method === "GET" && apiPath.startsWith("/user/")) {
         const uid = apiPath.split("/").pop();
         const result = await env.DB.prepare("SELECT role FROM users WHERE uid = ?").bind(uid).first();
@@ -149,14 +158,35 @@ export async function onRequest(context) {
     }
 
     if (request.method === "POST" && apiPath === "/user/role") {
-        const { uid, role, nickname, email, secret } = await request.json();
-        if (secret !== "9889") return new Response("Unauthorized", { status: 401 });
-        await env.DB.prepare(`
-            INSERT INTO users (uid, role, nickname, email, updated_at)
-            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
-            ON CONFLICT(uid) DO UPDATE SET role = excluded.role, nickname = excluded.nickname, email = excluded.email, updated_at = CURRENT_TIMESTAMP
-        `).bind(uid, role, nickname || "", email || "").run();
-        return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        try {
+            const { uid, role, nickname, email, secret } = await request.json();
+            
+            // 보안 코드(9889)가 있는 경우에만 권한(role)을 수정할 수 있습니다.
+            if (secret === "9889") {
+                await env.DB.prepare(`
+                    INSERT INTO users (uid, role, nickname, email, updated_at)
+                    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(uid) DO UPDATE SET 
+                        role = excluded.role, 
+                        nickname = excluded.nickname, 
+                        email = excluded.email, 
+                        updated_at = CURRENT_TIMESTAMP
+                `).bind(uid, role || "member", nickname || "", email || "").run();
+            } else {
+                // 보안 코드가 없는 경우 (단순 동기화), 기존 권한을 유지하며 정보만 업데이트합니다.
+                await env.DB.prepare(`
+                    INSERT INTO users (uid, role, nickname, email, updated_at)
+                    VALUES (?, 'member', ?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(uid) DO UPDATE SET 
+                        nickname = excluded.nickname, 
+                        email = excluded.email, 
+                        updated_at = CURRENT_TIMESTAMP
+                `).bind(uid, nickname || "", email || "").run();
+            }
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
     }
 
     return new Response(JSON.stringify({ error: `Not Found: ${path}` }), { status: 404, headers: corsHeaders });
