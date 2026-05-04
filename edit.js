@@ -278,10 +278,8 @@ function addCustomField(key = '', value = '') {
     container.appendChild(div);
 }
 
-const addCustomBtn = document.getElementById('add-custom-field-btn');
-if (addCustomBtn) {
-    addCustomBtn.onclick = () => addCustomField();
-}
+// addCustomField을 전역에서 접근 가능하도록 설정
+window.addCustomField = addCustomField;
 
 function renderGalleryPreview() {
     if (!galleryPreviewList) return;
