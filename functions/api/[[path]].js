@@ -78,12 +78,13 @@ export async function onRequest(context) {
     if (request.method === "POST" && apiPath === "/wiki") {
         try {
             const data = await request.json();
-            const { title, content, author, category, species, nation, alias, birthday, image, gallery } = data;
+            const { title, name, content, author, category, species, nation, alias, birthday, image, gallery } = data;
 
             await env.DB.prepare(`
-                INSERT INTO wiki_pages (title, content, author, category, species, nation, alias, birthday, image, gallery, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                INSERT INTO wiki_pages (title, name, content, author, category, species, nation, alias, birthday, image, gallery, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                 ON CONFLICT(title) DO UPDATE SET
+                  name = excluded.name,
                   content = excluded.content,
                   author = excluded.author,
                   category = excluded.category,
@@ -95,7 +96,7 @@ export async function onRequest(context) {
                   gallery = excluded.gallery,
                   updated_at = CURRENT_TIMESTAMP
             `).bind(
-                title, content, author || "Anonymous", category || "기타",
+                title, name || title, content, author || "Anonymous", category || "기타",
                 species || "", nation || "", alias || "", birthday || "", image || "",
                 gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]"
             ).run();

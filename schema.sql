@@ -3,6 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS wiki_pages (
     title TEXT PRIMARY KEY,           -- 문서 제목 (Firestore의 doc ID)
+    name TEXT,                       -- 표시 이름 (인포박스 상단)
     content TEXT NOT NULL,           -- 본문 내용 (Markdown)
     author TEXT,                     -- 작성자/수정자
     category TEXT,                   -- 카테고리
