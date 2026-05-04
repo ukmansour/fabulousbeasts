@@ -28,8 +28,8 @@ onAuthStateChanged(auth, async (user) => {
 
         let isAdmin = false;
         
-        // [읽기 최적화] 기본적으로 Auth의 displayName 사용
-        const nickname = user.displayName || user.email?.split('@')[0] || "유저";
+        // [방어 코드] 이름이 없으면 익명 표시
+        const nickname = user.displayName || user.email?.split('@')[0] || "익명";
         
         // [어드민 체크 최적화] 마스터 계정은 DB 읽기 없이 즉시 관리자 부여
         const isSupremeAdmin = user.email === "hodu@youshouyan.wiki";
@@ -47,11 +47,20 @@ onAuthStateChanged(auth, async (user) => {
                     const userSnap = await getDocSafe(userRef);
                     if (userSnap.exists()) {
                         const userData = userSnap.data();
-                        if (userData.role === 'banned') {
-                            alert("⚠️ 귀하의 계정은 차단되었습니다.");
-                            document.body.innerHTML = `<div style="padding:100px; text-align:center;"><h1>🚫 차단된 계정입니다.</h1></div>`;
+                        
+                        // [보안] 차단 상태 실시간 확인
+                        if (userData.isBanned === true) {
+                            alert("⚠️ 차단된 계정입니다. 관리자에게 문의하세요.");
+                            signOut(auth);
+                            document.body.innerHTML = `<div style="padding:100px; text-align:center; font-family:sans-serif;">
+                                <h1 style="font-size:3rem;">🚫</h1>
+                                <h2>접속이 차단되었습니다</h2>
+                                <p style="color:#666;">해당 계정은 시스템에 의해 이용이 제한되었습니다.</p>
+                                <a href="auth.html" style="color:var(--text-link); text-decoration:none; font-weight:bold;">다른 계정으로 로그인</a>
+                            </div>`;
                             return;
                         }
+                        
                         isAdmin = userData.role === 'admin';
                         sessionStorage.setItem(`role_${user.uid}`, userData.role);
                     }

@@ -104,7 +104,7 @@ authForm.addEventListener('submit', async (e) => {
                     setDoc(doc(db, "users", user.uid), {
                         uid: user.uid,
                         email: signupEmail,
-                        name: nickname, // 'nickname'을 'name' 필드로 저장
+                        name: nickname || "이름 없음", // 방어 코드: 이름이 없으면 '이름 없음'으로 저장
                         role: 'member',
                         isBanned: false,
                         createdAt: serverTimestamp(),

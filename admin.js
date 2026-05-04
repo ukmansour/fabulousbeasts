@@ -1,5 +1,13 @@
-import { db, auth, getDocSafe } from './firebase-config.js';
-import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { db, auth } from './firebase-config.js';
+import { 
+    doc, 
+    updateDoc, 
+    serverTimestamp, 
+    collection, 
+    onSnapshot, 
+    query, 
+    orderBy 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // 툴바 버튼 이벤트 리스너 설정 (사용자 관리 페이지에서 필요하지 않다면 빈 함수로 두거나 제거)
@@ -89,59 +97,64 @@ function showRecoveryUI() {
         if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
         try {
-            // 1. Firestore 업데이트 (기존 방식 유지)
-            await setDoc(doc(db, "users", currentUser.uid), {
+            // 1. Firestore 업데이트 (updateDoc이 아닌 첫 생성이므로 setDoc 사용 가능하지만 여기서는 merge 권장)
+            const userRef = doc(db, "users", currentUser.uid);
+            await setDoc(userRef, {
                 uid: currentUser.uid,
-                nickname: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "ADMIN"),
+                name: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "익명"),
                 email: currentUser.email || "",
                 role: 'admin',
+                isBanned: false,
                 updatedAt: serverTimestamp()
             }, { merge: true });
             
-            // 2. Cloudflare D1 업데이트 (실제 데이터 소스)
+            // 2. Cloudflare D1 업데이트
             await fetch('/api/user/role', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     uid: currentUser.uid,
                     role: 'admin',
-                    name: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "ADMIN"),
-                    nickname: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "ADMIN"),
+                    name: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "익명"),
                     email: currentUser.email || "",
                     isBanned: false,
                     secret: code
                 })
             });
 
-            sessionStorage.setItem(`role_${currentUser.uid}`, 'admin');
-            alert("ADMIN PRIVILEGES ACTIVATED!");
+            alert("관리자 권한이 활성화되었습니다!");
             location.reload();
         } catch (e) {
-            alert("등록 실패: " + e.message);
+            alert("활성화 실패: " + e.message);
         }
     };
 }
 
+let unsubscribeUsers = null;
+
 async function renderAdminPage() {
     if (!contentArea) return;
+    
+    // 이전 리스너가 있다면 해제
+    if (unsubscribeUsers) unsubscribeUsers();
+
     contentArea.innerHTML = `
         <div style="display:flex; justify-content:center; padding:2rem;">
-            <div class="loading-spinner" style="border: 2px solid #f3f3f3; border-top: 3px solid var(--primary-color); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite;"></div>
+            <div class="loading-spinner" style="border: 2px solid #f3f3f3; border-top: 3px solid #333; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite;"></div>
         </div>
-        <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
     `;
     
-    try {
-        // [수정] Firestore가 아닌 D1 API에서 유저 목록을 가져옵니다.
-        const response = await fetch('/api/users');
-        if (!response.ok) throw new Error('D1 사용자 목록 로드 실패');
-        const users = await response.json();
+    // [실시간 업데이트] Firestore users 컬렉션을 감시합니다.
+    const q = query(collection(db, "users"), orderBy("updatedAt", "desc"));
+    
+    unsubscribeUsers = onSnapshot(q, (snapshot) => {
+        const users = [];
+        snapshot.forEach(doc => users.push(doc.data()));
 
         if (users.length === 0) {
             contentArea.innerHTML = `
                 <div style="text-align:center; padding:3rem; color:#999;">
-                    <p style="font-size:0.85rem; margin-bottom:1.5rem;">데이터베이스(D1)에 가입한 회원이 없습니다.</p>
-                    <button onclick="window.importFirestoreUsers()" style="padding:0.6rem 1.2rem; background:#f3f4f6; border:1px solid #ddd; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8rem;">기존 Firestore 유저 불러오기</button>
+                    <p style="font-size:0.85rem; margin-bottom:1.5rem;">가입한 회원이 없습니다.</p>
                 </div>`;
             return;
         }
@@ -150,7 +163,7 @@ async function renderAdminPage() {
             <div style="max-width:900px; margin:0 auto; padding:0; background:white; border:1px solid #ccc;">
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; background:#f0f0f0; border-bottom:1px solid #ccc;">
                     <h2 style="font-size:1rem; font-weight:900; color:#111; margin:0;">사용자 관리 (${users.length})</h2>
-                    <button onclick="window.importFirestoreUsers()" style="font-size:0.75rem; color:#555; background:white; border:1px solid #ccc; padding:2px 8px; cursor:pointer; font-weight:700;">Firestore 유저 동기화</button>
+                    <span style="font-size:0.7rem; color:#666;">실시간 동기화 중</span>
                 </div>
                 
                 <div style="display:flex; flex-direction:column;">
@@ -165,31 +178,32 @@ async function renderAdminPage() {
                 roleText = '관리자';
                 roleColor = '#d97706';
                 roleBg = '#fffbeb';
-            } else if (u.role === 'banned' || u.isBanned === true) {
+            } else if (u.isBanned === true) {
                 roleText = '차단';
                 roleColor = '#dc2626';
                 roleBg = '#fef2f2';
             }
 
-            const displayName = u.name || u.nickname || (u.email ? u.email.split('@')[0] : '알 수 없음');
+            // [방어 코드] 이름이 없으면 익명 표시
+            const displayName = u.name || u.nickname || (u.email ? u.email.split('@')[0] : '익명');
 
             html += `
                 <div style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1rem; ${index !== users.length - 1 ? 'border-bottom:1px solid #ccc;' : ''} transition:background 0.1s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
                     <div style="flex:1; min-width:0; display:flex; align-items:center; gap:1.2rem;">
-                        <span style="font-size:0.9rem; font-weight:800; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:120px; font-family:inherit;">${displayName}</span>
+                        <span style="font-size:0.9rem; font-weight:800; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:120px;">${displayName}</span>
                         <span style="font-size:0.8rem; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; font-family:monospace;">${u.email || '이메일 없음'}</span>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:0.8rem;">
-                        <span style="background:${roleBg}; color:${roleColor}; padding:2px 8px; border:1px solid ${roleColor}; font-size:0.7rem; font-weight:800; white-space:nowrap;">
+                        <span style="background:${roleBg}; color:${roleColor}; padding:2px 8px; border:1px solid ${roleColor}; font-size:0.7rem; font-weight:800; white-space:nowrap; text-transform:uppercase;">
                             ${roleText}
                         </span>
                         
                         <select onchange="window.changeUserRole('${u.uid}', this.value)" style="padding:0.3rem 0.6rem; border:1px solid #999; border-radius:0; font-size:0.75rem; background:#fff; cursor:pointer; outline:none; font-weight:700; color:#333; width:110px;">
                             <option value="">권한 변경</option>
-                            <option value="member">일반 멤버</option>
+                            <option value="member">멤버</option>
                             <option value="admin">관리자</option>
-                            <option value="banned">차단</option>
+                            <option value="banned">차단하기</option>
                         </select>
                     </div>
                 </div>
@@ -199,13 +213,13 @@ async function renderAdminPage() {
         html += `
                 </div>
             </div>
-            <p style="text-align:center; font-size:0.7rem; color:#aaa; margin-top:1.5rem;">🔒 관리 권한 변경은 시스템에 즉시 반영됩니다.</p>
+            <p style="text-align:center; font-size:0.7rem; color:#aaa; margin-top:1.5rem;">🔒 관리 권한 변경은 데이터 유실 없이 안전하게 처리됩니다.</p>
         `;
         contentArea.innerHTML = html;
-    } catch (e) {
-        console.error("사용자 목록 불러오기 실패:", e);
-        contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:#dc2626; font-size:0.85rem;">오류: ${e.message}</div>`;
-    }
+    }, (error) => {
+        console.error("Firestore listen failed:", error);
+        contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:red;">권한이 없거나 데이터를 불러올 수 없습니다.</div>`;
+    });
 }
 
 // [추가] Firestore의 유저 데이터를 D1으로 동기화하는 함수
@@ -278,39 +292,33 @@ window.changeUserRole = async (uid, newRole) => {
     if (!newRole) return;
     
     let actionText = newRole === 'admin' ? '관리자로 승격' : newRole === 'banned' ? '차단' : '일반 멤버로 변경';
-    if (!confirm(`해당 사용자를 ${actionText}하시겠습니까?`)) {
-        renderAdminPage(); // select 값 원상복구
-        return;
-    }
+    if (!confirm(`해당 사용자를 ${actionText}하시겠습니까?`)) return;
 
     const code = prompt("보안 코드를 입력하세요:");
-    if (code !== "9889") { 
-        alert("보안 코드가 틀렸습니다."); 
-        renderAdminPage();
-        return; 
-    }
+    if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
     try {
-        // Firestore 업데이트 (isBanned 필드 포함)
-        await setDoc(doc(db, "users", uid), {
+        // [안전한 수정] updateDoc을 사용하여 기존 필드(name, email 등)를 유지하며 특정 필드만 수정합니다.
+        const userRef = doc(db, "users", uid);
+        await updateDoc(userRef, {
             role: newRole,
             isBanned: newRole === 'banned',
             updatedAt: serverTimestamp()
-        }, { merge: true });
+        });
 
+        // Cloudflare D1 동기화
         const res = await fetch('/api/user/role', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ uid, role: newRole, isBanned: newRole === 'banned', secret: code })
         });
         
-        if (!res.ok) throw new Error('서버 요청 실패');
+        if (!res.ok) throw new Error('D1 동기화 실패');
 
         alert(`${actionText} 완료!`);
-        renderAdminPage(); // 성공 시 새로고침
+        // onSnapshot이 실시간으로 화면을 갱신하므로 별도의 render 호출 불필요
     } catch (e) {
         alert("오류 발생: " + e.message);
-        renderAdminPage();
     }
 };
 
