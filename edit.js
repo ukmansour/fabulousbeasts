@@ -335,14 +335,20 @@ function initToolbar() {
         document.querySelectorAll('#autocomplete-list .autocomplete-item').forEach(item => {
             item.onclick = () => {
                 const title = item.dataset.title;
+                const charData = allTitles.find(t => t.title === title);
+                const displayName = charData ? (charData.name || charData.title) : title;
+                
+                // 표시이름과 문서제목이 다를 경우 [[표시이름/문서제목]] 형식으로 삽입
+                const insertText = (displayName !== title) ? `${displayName}/${title}` : title;
+
                 const text = editor.value;
                 const before = text.substring(0, editor.selectionStart);
                 const openIdx = before.lastIndexOf('[[');
                 const after = text.substring(editor.selectionStart);
                 
-                editor.value = text.substring(0, openIdx + 2) + title + ']]' + after;
+                editor.value = text.substring(0, openIdx + 2) + insertText + ']]' + after;
                 editor.focus();
-                const newPos = openIdx + title.length + 4;
+                const newPos = openIdx + insertText.length + 4;
                 editor.setSelectionRange(newPos, newPos);
                 autocompleteList.classList.remove('active');
             };
@@ -369,7 +375,7 @@ function initToolbar() {
                 case 'underline': replacement = `__${sel || '밑줄'}__`; break;
                 case 'strike':    replacement = `~~${sel || '취소선'}~~`; break;
                 case 'link':      replacement = `[${sel || '링크이름'}](주소)`; break;
-                case 'ilink':     replacement = `[[${sel || '캐릭터명'}]]`; break;
+                case 'ilink':     replacement = `[[${sel || '표시이름'}/${sel || '문서제목'}]]`; break;
                 case 'image':     replacement = `![${sel || '설명'}](이미지주소)`; break;
                 case 'list':      replacement = `\n* ${sel || '항목'}`; break;
                 case 'hr':        replacement = `\n---\n`; break;
