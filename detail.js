@@ -244,7 +244,7 @@ function renderInfobox(data) {
                     ${data.species ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">종족</th><td style="padding:5px; border:1px solid #eee;">${data.species}</td></tr>` : ''}
                     ${data.nation ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">국적</th><td style="padding:5px; border:1px solid #eee;">${data.nation}</td></tr>` : ''}
                     ${data.birthday ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">생일</th><td style="padding:5px; border:1px solid #eee;">${data.birthday}</td></tr>` : ''}
-                    ${data.customInfo && Array.isArray(data.customInfo) ? data.customInfo.map(field => `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">${field.key.replace(/</g, '&lt;')}</th><td style="padding:5px; border:1px solid #eee;">${field.value.replace(/</g, '&lt;')}</td></tr>`).join('') : ''}
+                    ${data.customInfo && Array.isArray(data.customInfo) ? data.customInfo.map(field => `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">${field.key.replace(/</g, '&lt;')}</th><td style="padding:5px; border:1px solid #eee;">${applyInline(field.value)}</td></tr>`).join('') : ''}
                 </table>
                 ${galleryHTML}
             </div>
@@ -252,27 +252,28 @@ function renderInfobox(data) {
     `;
 }
 
+function applyInline(text) {
+    if (!text) return '';
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/__([^_]+)__/g, '<u>$1</u>')
+        .replace(/~~(.*?)~~/g, '<s>$1</s>')
+        .replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+        .replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>')
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:500px; border-radius:8px; display:block; margin:20px auto;">')
+        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
+        .replace(/\[\[([^\]]+)\]\]/g, (match, p1) => {
+            const parts = p1.split('/');
+            if (parts.length > 1) {
+                // [변경] [[문서제목/표시이름]] -> parts[0]이 제목, parts[1]이 표시이름
+                return `<a href="detail.html#${encodeURIComponent(parts[0].trim())}">${parts[1].trim()}</a>`;
+            }
+            return `<a href="detail.html#${encodeURIComponent(p1.trim())}">${p1.trim()}</a>`;
+        });
+}
+
 function renderContent(details) {
     if (!contentArea || isGalleryPage) return;
-
-    function applyInline(text) {
-        return text
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/__([^_]+)__/g, '<u>$1</u>')
-            .replace(/~~(.*?)~~/g, '<s>$1</s>')
-            .replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
-            .replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>')
-            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:500px; border-radius:8px; display:block; margin:20px auto;">')
-            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-            .replace(/\[\[([^\]]+)\]\]/g, (match, p1) => {
-                const parts = p1.split('/');
-                if (parts.length > 1) {
-                    // [변경] [[문서제목/표시이름]] -> parts[0]이 제목, parts[1]이 표시이름
-                    return `<a href="detail.html#${encodeURIComponent(parts[0].trim())}">${parts[1].trim()}</a>`;
-                }
-                return `<a href="detail.html#${encodeURIComponent(p1.trim())}">${p1.trim()}</a>`;
-            });
-    }
 
     const lines = details.replace(/\r\n/g, '\n').split('\n');
     let html = '', inP = false, inUl = false, inTable = false, inBq = false;
