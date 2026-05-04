@@ -120,20 +120,20 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
     *   Updates the global `mergedCharacters` array, ensuring that search results always point to the latest character information.
     *   Maintains the performance benefits of static rendering by performing updates asynchronously after the initial load.
 
-## Document Title Renaming (2026.05.04)
+## Document Title & Name Separation (2026.05.04)
 
-**Objective:** Synchronize the document's unique identifier (title) with the character's name in the D1 database when edited.
+**Objective:** Stabilize document identifiers (URLs) while allowing flexible display names in the infobox.
 
 **Changes:**
-1.  **API Support (`functions/api/[[path]].js`)**:
-    *   Added support for an `oldTitle` parameter in the `POST /wiki` endpoint.
-    *   If `oldTitle` differs from the new `title`, the API performs a SQL `UPDATE` on the primary key of the `wiki_pages` table.
-    *   Automatically updates related records in the `wiki_revisions` table to maintain data integrity.
-    *   Includes a check to prevent overwriting existing documents if the new title already exists.
-2.  **Editor Integration (`edit.js`)**:
-    *   Updated the save logic to detect when the name field has been modified.
-    *   Sends both the original ID (`oldTitle`) and the new name (as the new `title`) to the backend.
-    *   On successful save, redirects the user to the updated URL hash (`detail.html#NewName`), ensuring seamless navigation.
+1.  **Stable ID Architecture (`edit.js`)**:
+    *   Modified the save logic to keep the `title` (unique ID) constant as the original `charId`.
+    *   The `name` field now only updates the display name column in D1, without affecting the primary key or the URL hash.
+    *   This prevents "URL breaking" when a character's display name is updated.
+2.  **Infobox Persistence**:
+    *   Fixed a bug where the display name would reset to the internal ID during editing.
+    *   The editor now correctly prioritizes the stored `name` from D1, falling back to static data or the ID only when necessary.
+3.  **API Consistency**:
+    *   Maintained `ON CONFLICT` support in the backend to handle updates based on the stable `title`.
 
 ## Database Migration (Firestore to Cloudflare D1) (2026.05.03)
 
