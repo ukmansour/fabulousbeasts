@@ -210,11 +210,12 @@ async function loadInitialData() {
 }
 
 function fillForm(data) {
-    // data.name은 D1에서 가져온 값이거나 없으면 CHARACTERS의 name입니다.
-    const displayName = data.name || charId;
+    // [수정] DB에 저장된 이름이 있으면 우선 사용하고, 없으면 빈 값으로 둡니다.
+    // (이전에는 ID값이 자동으로 채워져서 원치 않게 ID로 저장되는 문제가 있었습니다)
+    const displayName = data.name || (CHARACTERS.find(c => c.id === charId)?.name) || "";
 
     const titleEl = document.getElementById('edit-page-title');
-    if (titleEl) titleEl.textContent = `${displayName} 문서 편집`;
+    if (titleEl) titleEl.textContent = `${displayName || charId} 문서 편집`;
     
     const nameInput = document.getElementById('edit-name');
     if (nameInput) nameInput.value = displayName;

@@ -116,9 +116,10 @@ async function loadDetail() {
                 const dbData = await response.json();
                 console.log("D1 data received:", dbData);
                 
+                const dbName = dbData.name || (baseData.name !== charId ? baseData.name : "");
                 const data = { 
                     ...baseData, 
-                    name: dbData.name || baseData.name,
+                    name: dbName,
                     details: dbData.content || baseData.details,
                     author: dbData.author || baseData.author,
                     category: dbData.category || baseData.category,

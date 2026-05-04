@@ -125,7 +125,7 @@ export async function onRequest(context) {
                   gallery = excluded.gallery,
                   updated_at = CURRENT_TIMESTAMP
             `).bind(
-                title, name || title, content, author || "Anonymous", category || "기타",
+                title, name || "", content, author || "Anonymous", category || "기타",
                 species || "", nation || "", alias || "", birthday || "", image || "",
                 gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]"
             ).run();
