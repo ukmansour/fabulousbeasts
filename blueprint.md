@@ -109,20 +109,21 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
 4.  **Full Static Content Management**:
     *   Maintains static HTML for global layouts, notices, and guides to eliminate unnecessary database calls for non-character content.
 
-## Document Title & Name Separation (2026.05.04)
+## Document Title & Name Synchronization (2026.05.04)
 
-**Objective:** Stabilize document identifiers (URLs) while allowing flexible display names in the infobox.
+**Objective:** Ensure that the document's unique identifier (title/URL) is always synchronized with the character's display name.
 
 **Changes:**
-1.  **Stable ID Architecture (`edit.js`)**:
-    *   Modified the save logic to keep the `title` (unique ID) constant as the original `charId`.
-    *   The `name` field now only updates the display name column in D1, without affecting the primary key or the URL hash.
-    *   This prevents "URL breaking" when a character's display name is updated.
-2.  **Infobox Persistence**:
-    *   Fixed a bug where the display name would reset to the internal ID during editing.
-    *   The editor now correctly prioritizes the stored `name` from D1, falling back to static data or the ID only when necessary.
-3.  **API Consistency**:
-    *   Maintained `ON CONFLICT` support in the backend to handle updates based on the stable `title`.
+1.  **Synchronized ID Architecture (`edit.js`)**:
+    *   Updated the save logic to set the `title` (unique ID) equal to the `name` provided in the editor.
+    *   This ensures that changing a character's name also updates its URL hash (e.g., `#tianlu` -> `#천록`).
+    *   Redirects the user to the new URL hash upon a successful save.
+2.  **API Renaming Logic (`functions/api/[[path]].js`)**:
+    *   Utilizes the `oldTitle` parameter to perform a SQL `UPDATE` on the primary key in the `wiki_pages` table if the name changes.
+    *   Maintains historical revisions by updating their titles to match the new name.
+3.  **Data Consistency**:
+    *   Prevents empty names from being saved to ensure every document has a valid primary key.
+    *   Includes a check to prevent overwriting existing documents if the new name is already in use by another page.
 
 ## Database Migration (Firestore to Cloudflare D1) (2026.05.03)
 

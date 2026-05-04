@@ -387,12 +387,20 @@ if (form) {
         saveBtn.disabled = true;
         saveBtn.textContent = '저장 중...';
 
-        const newName = document.getElementById('edit-name').value;
-        // [수정] 고유 식별자(title)는 유지하고, 표시 이름(name)만 별도로 저장합니다.
-        // 이를 통해 URL 주소(#ID)가 갑자기 바뀌거나 이름이 ID로 초기화되는 문제를 방지합니다.
+        const newName = document.getElementById('edit-name').value.trim();
+        if (!newName) {
+            alert("캐릭터 이름을 입력해 주세요.");
+            saveBtn.disabled = false;
+            saveBtn.textContent = '저장하기';
+            return;
+        }
+
+        // [수정] D1의 title(고유 ID)을 입력한 name과 동일하게 맞춥니다.
+        // 이름이 변경되면 데이터베이스의 PK도 함께 업데이트됩니다.
         const updatedData = {
-            title: charId, // 고유 ID 유지
-            name: newName, // 표시 이름만 업데이트
+            oldTitle: charId, // 현재 문서의 ID (이전 제목)
+            title: newName,  // 새로운 ID (새 제목)
+            name: newName,   // 표시 이름
             category: categorySelect ? categorySelect.value : '기타',
             content: editor.value,
             species: document.getElementById('info-species').value,
@@ -415,8 +423,8 @@ if (form) {
                 throw new Error(errorData.error || '서버 저장 실패');
             }
             
-            // 기존 주소(#ID)를 유지하며 상세 페이지로 돌아갑니다.
-            location.href = `detail.html#${charId}`;
+            // 이름이 바뀌었을 수 있으므로 새 주소(#이름)로 이동합니다.
+            location.href = `detail.html#${encodeURIComponent(newName)}`;
         } catch (err) {
             alert("저장 실패: " + err.message);
             checkPermission();
