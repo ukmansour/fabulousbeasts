@@ -89,16 +89,30 @@ function showRecoveryUI() {
         if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
         try {
+            // 1. Firestore 업데이트 (기존 방식 유지)
             await setDoc(doc(db, "users", currentUser.uid), {
                 uid: currentUser.uid,
-                nickname: currentUser.displayName || "관리자",
+                nickname: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "ADMIN"),
                 email: currentUser.email || "",
                 role: 'admin',
                 updatedAt: serverTimestamp()
             }, { merge: true });
             
+            // 2. Cloudflare D1 업데이트 (실제 데이터 소스)
+            await fetch('/api/user/role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    uid: currentUser.uid,
+                    role: 'admin',
+                    nickname: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "ADMIN"),
+                    email: currentUser.email || "",
+                    secret: code
+                })
+            });
+
             sessionStorage.setItem(`role_${currentUser.uid}`, 'admin');
-            alert("관리자 등록 완료!");
+            alert("ADMIN PRIVILEGES ACTIVATED!");
             location.reload();
         } catch (e) {
             alert("등록 실패: " + e.message);
@@ -278,7 +292,7 @@ window.changeUserRole = async (uid, newRole) => {
         const res = await fetch('/api/user/role', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ uid, role: newRole })
+            body: JSON.stringify({ uid, role: newRole, secret: code })
         });
         
         if (!res.ok) throw new Error('서버 요청 실패');
