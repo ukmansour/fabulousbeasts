@@ -107,8 +107,8 @@ function showRecoveryUI() {
 async function renderAdminPage() {
     if (!contentArea) return;
     contentArea.innerHTML = `
-        <div style="display:flex; justify-content:center; padding:3rem;">
-            <div class="loading-spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid var(--primary-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;"></div>
+        <div style="display:flex; justify-content:center; padding:2rem;">
+            <div class="loading-spinner" style="border: 2px solid #f3f3f3; border-top: 2px solid var(--primary-color); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite;"></div>
         </div>
         <style>@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }</style>
     `;
@@ -122,60 +122,51 @@ async function renderAdminPage() {
         });
 
         if (users.length === 0) {
-            contentArea.innerHTML = `<div style="text-align:center; padding:3rem; color:var(--text-muted);">가입한 회원이 없습니다.</div>`;
+            contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:#999; font-size:0.85rem;">가입한 회원이 없습니다.</div>`;
             return;
         }
 
         let html = `
-            <div style="max-width:900px; margin:0 auto; padding:1rem;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid #eee;">
-                    <div>
-                        <h2 style="font-size:1.5rem; font-weight:900; color:#111; letter-spacing:-0.02em;">사용자 관리</h2>
-                        <p style="font-size:0.85rem; color:#666; margin-top:0.2rem;">전체 회원 ${users.length}명의 권한을 관리합니다.</p>
-                    </div>
+            <div style="max-width:800px; margin:0 auto; padding:0.5rem; background:white; border:1px solid #eee; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; border-bottom:1px solid #f5f5f5;">
+                    <h2 style="font-size:1.1rem; font-weight:900; color:#111; margin:0;">사용자 관리 <span style="font-size:0.8rem; color:#999; font-weight:400; margin-left:5px;">(${users.length})</span></h2>
                 </div>
                 
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:1.2rem;">
+                <div style="display:flex; flex-direction:column;">
         `;
 
-        users.forEach(u => {
+        users.forEach((u, index) => {
             let roleText = '멤버';
             let roleColor = '#0284c7';
             let roleBg = '#f0f9ff';
-            let roleIcon = '👤';
             
             if (u.role === 'admin') {
                 roleText = '관리자';
                 roleColor = '#d97706';
                 roleBg = '#fffbeb';
-                roleIcon = '🛡️';
             } else if (u.role === 'banned') {
                 roleText = '차단';
                 roleColor = '#dc2626';
                 roleBg = '#fef2f2';
-                roleIcon = '🚫';
             }
 
             html += `
-                <div style="background:white; border:1px solid #f0f0f0; border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; gap:1rem; transition:all 0.2s; box-shadow:0 2px 8px rgba(0,0,0,0.03);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.06)'" onmouseout="this.style.transform='none'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.03)'">
-                    <div style="display:flex; align-items:center; gap:0.8rem;">
-                        <div style="width:40px; height:40px; background:#f5f5f5; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">${roleIcon}</div>
-                        <div style="flex:1; min-width:0;">
-                            <div style="font-weight:800; font-size:1rem; color:#222; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.nickname || '이름 없음'}</div>
-                            <div style="font-size:0.75rem; color:#999; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.email || '이메일 없음'}</div>
-                        </div>
+                <div style="display:flex; align-items:center; gap:1rem; padding:0.6rem 1rem; ${index !== users.length - 1 ? 'border-bottom:1px solid #f9f9f9;' : ''} transition:background 0.1s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background='transparent'">
+                    <div style="flex:1; min-width:0; display:flex; align-items:center; gap:0.8rem;">
+                        <span style="font-size:0.9rem; font-weight:700; color:#333; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:120px;">${u.nickname || '이름 없음'}</span>
+                        <span style="font-size:0.75rem; color:#999; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1;">${u.email || '이메일 없음'}</span>
                     </div>
 
-                    <div style="display:flex; align-items:center; justify-content:space-between; padding-top:0.8rem; border-top:1px solid #f9f9f9;">
-                        <span style="background:${roleBg}; color:${roleColor}; padding:3px 10px; border-radius:6px; font-size:0.7rem; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
+                    <div style="display:flex; align-items:center; gap:0.8rem;">
+                        <span style="background:${roleBg}; color:${roleColor}; padding:2px 6px; border-radius:4px; font-size:0.65rem; font-weight:800; white-space:nowrap;">
                             ${roleText}
                         </span>
                         
-                        <select onchange="window.changeUserRole('${u.id}', this.value)" style="padding:0.4rem 0.6rem; border:1px solid #e5e7eb; border-radius:8px; font-size:0.75rem; background:#fff; cursor:pointer; outline:none; font-weight:600; color:#444;">
+                        <select onchange="window.changeUserRole('${u.id}', this.value)" style="padding:0.25rem 0.4rem; border:1px solid #e5e7eb; border-radius:8px; font-size:0.75rem; background:#fff; cursor:pointer; outline:none; font-weight:600; color:#555; width:90px;">
                             <option value="">권한 변경</option>
-                            <option value="member">일반 멤버</option>
-                            <option value="admin">관리자 승격</option>
-                            <option value="banned">사용 차단</option>
+                            <option value="member">멤버</option>
+                            <option value="admin">관리자</option>
+                            <option value="banned">차단</option>
                         </select>
                     </div>
                 </div>
@@ -184,15 +175,13 @@ async function renderAdminPage() {
 
         html += `
                 </div>
-                <div style="margin-top:3rem; padding:1.5rem; background:#f9fafb; border-radius:12px; text-align:center; font-size:0.75rem; color:#777;">
-                    🛡️ 관리 권한 변경은 시스템에 즉시 반영됩니다. 보안에 유의해 주세요.
-                </div>
             </div>
+            <p style="text-align:center; font-size:0.7rem; color:#aaa; margin-top:1.5rem;">🔒 관리 권한 변경은 시스템에 즉시 반영됩니다.</p>
         `;
         contentArea.innerHTML = html;
     } catch (e) {
         console.error("사용자 목록 불러오기 실패:", e);
-        contentArea.innerHTML = `<div style="text-align:center; padding:3rem; color:#dc2626; font-weight:700;">오류: ${e.message}</div>`;
+        contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:#dc2626; font-size:0.85rem;">오류: ${e.message}</div>`;
     }
 }
 
