@@ -72,14 +72,14 @@ onAuthStateChanged(auth, async (user) => {
 
 function showRecoveryUI() {
     contentArea.innerHTML = `
-        <div style="text-align:center; padding:3rem; background:#fffbe6; border:2px solid #ffe58f; border-radius:8px; max-width:500px; margin:2rem auto;">
-            <h2 style="color:#856404;">관리자 권한 복구</h2>
-            <p style="margin-top:1rem; color:#555;">보안 코드로 현재 계정을 관리자로 등록할 수 있습니다.</p>
-            <input type="password" id="recovery-code" placeholder="보안 코드 입력" 
-                style="margin-top:1.5rem; padding:0.6rem 1rem; border:1px solid #ccc; border-radius:4px; font-size:1rem; width:200px; display:block; margin-left:auto; margin-right:auto;">
+        <div style="text-align:center; padding:3rem; background:#f9f9f9; border:2px solid #555; max-width:500px; margin:2rem auto;">
+            <h2 style="color:#333; text-transform:uppercase; letter-spacing:1px;">ADMIN RECOVERY</h2>
+            <p style="margin-top:1rem; color:#666; font-size:0.9rem;">ENTER SECURITY CODE TO ACTIVATE ADMINISTRATIVE PRIVILEGES.</p>
+            <input type="password" id="recovery-code" placeholder="SECURITY CODE" 
+                style="margin-top:1.5rem; padding:0.6rem 1rem; border:1px solid #ccc; border-radius:0; font-size:1rem; width:200px; display:block; margin-left:auto; margin-right:auto; font-family:monospace; text-align:center;">
             <button id="recovery-btn" 
-                style="margin-top:1rem; padding:0.8rem 2rem; background:#00a0e9; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size:1rem;">
-                관리자로 등록
+                style="margin-top:1rem; padding:0.8rem 2rem; background:#333; color:white; border:none; border-radius:0; font-weight:bold; cursor:pointer; font-size:1rem; text-transform:uppercase;">
+                ACTIVATE
             </button>
         </div>
     `;
@@ -131,10 +131,10 @@ async function renderAdminPage() {
         }
 
         let html = `
-            <div style="max-width:800px; margin:0 auto; padding:0.5rem; background:white; border:1px solid #eee; border-radius:8px; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
-                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; border-bottom:1px solid #f5f5f5;">
-                    <h2 style="font-size:1.1rem; font-weight:900; color:#111; margin:0;">사용자 관리 <span style="font-size:0.8rem; color:#999; font-weight:400; margin-left:5px;">(${users.length})</span></h2>
-                    <button onclick="window.importFirestoreUsers()" style="font-size:0.75rem; color:var(--primary-color); background:none; border:none; cursor:pointer; font-weight:700;">🔄 Firestore 유저 동기화</button>
+            <div style="max-width:900px; margin:0 auto; padding:0; background:white; border:1px solid #ccc;">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; background:#f0f0f0; border-bottom:1px solid #ccc;">
+                    <h2 style="font-size:1rem; font-weight:900; color:#111; margin:0; text-transform:uppercase;">USER MANAGEMENT (${users.length})</h2>
+                    <button onclick="window.importFirestoreUsers()" style="font-size:0.75rem; color:#555; background:white; border:1px solid #ccc; padding:2px 8px; cursor:pointer; font-weight:700;">Sync Firestore</button>
                 </div>
                 
                 <div style="display:flex; flex-direction:column;">
@@ -229,26 +229,19 @@ window.importFirestoreUsers = async () => {
 function renderWikiAdminPage() {
     if (!wikiContentArea) return;
     wikiContentArea.innerHTML = `
-        <div style="max-width:600px; margin:2rem auto; padding:2rem; background:white; border:1px solid #eee; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.05);">
-            <h2 style="font-weight:900; margin-bottom:0.5rem;">새 문서 만들기</h2>
-            <p style="color:#666; font-size:0.85rem; margin-bottom:2rem;">새로운 캐릭터나 설정 문서를 즉시 생성합니다.</p>
+        <div style="max-width:700px; margin:1rem auto; padding:2rem; background:white; border:1px solid #ccc;">
+            <h2 style="font-weight:900; margin-bottom:0.5rem; font-size:1.2rem; text-transform:uppercase;">CREATE DOCUMENT</h2>
+            <p style="color:#666; font-size:0.85rem; margin-bottom:2rem;">Enter an ID to create or edit a document.</p>
             
             <div style="margin-bottom:1.5rem;">
-                <label style="display:block; font-size:0.8rem; font-weight:800; color:#444; margin-bottom:0.5rem;">문서 ID (영문/숫자 권장)</label>
-                <input type="text" id="new-doc-id" placeholder="예: tianlu, nok-호두" 
-                    style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px; font-size:1rem; outline:none; transition:border-color 0.2s;"
-                    onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#ddd'">
+                <label style="display:block; font-size:0.8rem; font-weight:800; color:#444; margin-bottom:0.5rem;">DOCUMENT ID</label>
+                <input type="text" id="new-doc-id" placeholder="e.g., tianlu" 
+                    style="width:100%; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:1rem; outline:none; font-family:monospace;">
             </div>
             
-            <button id="create-doc-btn" style="width:100%; padding:1rem; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:900; cursor:pointer; font-size:1rem; transition:opacity 0.2s;">
-                문서 생성하러 가기
+            <button id="create-doc-btn" style="width:100%; padding:1rem; background:#333; color:white; border:none; border-radius:0; font-weight:900; cursor:pointer; font-size:1rem;">
+                PROCEED TO EDITOR
             </button>
-            
-            <div style="margin-top:2rem; padding:1rem; background:#fff8f0; border-radius:8px; border-left:4px solid #f97316;">
-                <p style="font-size:0.8rem; color:#7c2d12; line-height:1.5;">
-                    💡 <strong>팁:</strong> 생성하려는 문서 ID가 이미 존재할 경우 해당 문서의 편집 화면으로 이동합니다.
-                </p>
-            </div>
         </div>
     `;
 
@@ -309,22 +302,22 @@ async function renderSettingsAdminPage() {
         const settings = await res.json();
 
         settingsArea.innerHTML = `
-            <div style="max-width:800px; margin:0 auto; display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+            <div style="max-width:900px; margin:0 auto; display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
                 <!-- 공지사항 -->
-                <div style="background:white; border:1px solid #eee; border-radius:12px; padding:1.5rem; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
-                    <h3 style="font-weight:900; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">📢 공지사항</h3>
-                    <textarea id="edit-notice" style="width:100%; min-height:300px; padding:0.8rem; border:1px solid #ddd; border-radius:8px; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:inherit;">${settings.notice || ''}</textarea>
+                <div style="background:white; border:1px solid #ccc; padding:1.5rem;">
+                    <h3 style="font-weight:900; margin-bottom:1rem; text-transform:uppercase; font-size:1rem;">ANNOUNCEMENTS</h3>
+                    <textarea id="edit-notice" style="width:100%; min-height:350px; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:monospace;">${settings.notice || ''}</textarea>
                 </div>
 
                 <!-- 최근 소식 -->
-                <div style="background:white; border:1px solid #eee; border-radius:12px; padding:1.5rem; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
-                    <h3 style="font-weight:900; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">🗞️ 최근 소식</h3>
-                    <textarea id="edit-news" style="width:100%; min-height:300px; padding:0.8rem; border:1px solid #ddd; border-radius:8px; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:inherit;">${settings.news || ''}</textarea>
+                <div style="background:white; border:1px solid #ccc; padding:1.5rem;">
+                    <h3 style="font-weight:900; margin-bottom:1rem; text-transform:uppercase; font-size:1rem;">LATEST NEWS</h3>
+                    <textarea id="edit-news" style="width:100%; min-height:350px; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:monospace;">${settings.news || ''}</textarea>
                 </div>
             </div>
             <div style="text-align:center; margin-top:2rem;">
-                <button id="save-settings-btn" style="padding:1rem 4rem; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:900; cursor:pointer; font-size:1.1rem; box-shadow:0 4px 15px rgba(0,160,233,0.3);">설정 저장하기</button>
-                <p style="margin-top:1rem; color:#999; font-size:0.8rem;">* 저장 시 보안 코드가 필요합니다.</p>
+                <button id="save-settings-btn" style="padding:1rem 4rem; background:#333; color:white; border:none; border-radius:0; font-weight:900; cursor:pointer; font-size:1.1rem; text-transform:uppercase;">COMMIT SETTINGS</button>
+                <p style="margin-top:1rem; color:#666; font-size:0.75rem;">Authentication required for persistence.</p>
             </div>
         `;
 
