@@ -182,6 +182,8 @@ function previewRender(details) {
     return html;
 }
 
+let allTitles = []; // 자동완성용 전체 제목 목록
+
 function initToolbar() {
     if (!editor) return;
 
@@ -219,14 +221,127 @@ function initToolbar() {
         previewModal.onclick = (e) => { if (e.target === previewModal) previewModal.classList.remove('active'); };
     }
 
-    // [[ 내부링크 자동완성 (간단 버전)
+    // 히스토리 모달
+    const historyBtn = document.getElementById('history-btn');
+    const historyModal = document.getElementById('history-modal');
+    const historyClose = document.getElementById('history-close');
+    const historyList = document.getElementById('history-list');
+    const historyPreview = document.getElementById('history-preview');
+    const historyPreviewBody = document.getElementById('history-preview-body');
+    const historyRestoreBtn = document.getElementById('history-restore-btn');
+    let selectedRevisionContent = '';
+
+    if (historyBtn && historyModal) {
+        historyBtn.onclick = async (e) => {
+            e.preventDefault();
+            historyModal.classList.add('active');
+            historyList.innerHTML = '<p style="text-align:center; padding:20px;">불러오는 중...</p>';
+            historyPreview.style.display = 'none';
+
+            try {
+                const res = await fetch(`/api/wiki/${encodeURIComponent(charId)}/revisions`);
+                if (!res.ok) throw new Error('히스토리 로드 실패');
+                const revisions = await res.json();
+                
+                if (revisions.length === 0) {
+                    historyList.innerHTML = '<p style="text-align:center; padding:20px;">이력이 없습니다.</p>';
+                    return;
+                }
+
+                historyList.innerHTML = revisions.map(r => `
+                    <div class="autocomplete-item history-item" data-id="${r.id}" style="justify-content:space-between; border-bottom:1px solid #eee;">
+                        <span><strong>${r.author}</strong> | ${new Date(r.created_at).toLocaleString('ko-KR')}</span>
+                        <button type="button" class="toolbar-btn" style="padding:2px 8px; font-size:11px;">보기</button>
+                    </div>
+                `).join('');
+
+                document.querySelectorAll('.history-item').forEach(item => {
+                    item.onclick = async () => {
+                        const revId = item.dataset.id;
+                        historyPreviewBody.innerHTML = '로딩 중...';
+                        historyPreview.style.display = 'block';
+                        const revRes = await fetch(`/api/revision/${revId}`);
+                        const revData = await revRes.json();
+                        selectedRevisionContent = revData.content;
+                        historyPreviewBody.innerText = selectedRevisionContent.substring(0, 500) + (selectedRevisionContent.length > 500 ? '...' : '');
+                    };
+                });
+            } catch (err) {
+                historyList.innerHTML = `<p style="color:red; text-align:center; padding:20px;">오류: ${err.message}</p>`;
+            }
+        };
+        historyClose.onclick = () => historyModal.classList.remove('active');
+        historyRestoreBtn.onclick = () => {
+            if (confirm('정말로 이 버전으로 내용을 덮어쓰시겠습니까?')) {
+                editor.value = selectedRevisionContent;
+                historyModal.classList.remove('active');
+                alert('내용이 복구되었습니다. 저장 버튼을 눌러야 최종 반영됩니다.');
+            }
+        };
+    }
+
+    // [[ 내부링크 자동완성
+    const autocompleteList = document.getElementById('autocomplete-list');
     editor.addEventListener('input', () => {
         const pos = editor.selectionStart;
-        const before = editor.value.substring(0, pos);
-        if (before.endsWith('[[')) {
-            // 힌트 표시 (향후 확장 가능)
+        const text = editor.value;
+        const lastTwo = text.substring(pos - 2, pos);
+        
+        if (lastTwo === '[[') {
+            showAutocomplete('', pos);
+        } else {
+            // [[ 이후에 타이핑 중인지 확인
+            const before = text.substring(0, pos);
+            const openIdx = before.lastIndexOf('[[');
+            const closeIdx = before.lastIndexOf(']]');
+            
+            if (openIdx > closeIdx) {
+                const query = before.substring(openIdx + 2);
+                showAutocomplete(query, pos);
+            } else {
+                autocompleteList.classList.remove('active');
+            }
         }
     });
+
+    function showAutocomplete(query, pos) {
+        const filtered = allTitles.filter(t => 
+            t.title.toLowerCase().includes(query.toLowerCase()) || 
+            (t.name && t.name.toLowerCase().includes(query.toLowerCase()))
+        ).slice(0, 10);
+
+        if (filtered.length === 0) {
+            autocompleteList.classList.remove('active');
+            return;
+        }
+
+        autocompleteList.innerHTML = filtered.map(t => `
+            <div class="autocomplete-item" data-title="${t.title}">
+                ${t.image ? `<img src="${t.image}" alt="">` : '<div style="width:24px;height:24px;background:#eee;"></div>'}
+                <span>${t.name || t.title} (${t.title})</span>
+            </div>
+        `).join('');
+
+        // 위치 계산 (textarea 하단에 고정)
+        autocompleteList.classList.add('active');
+        autocompleteList.style.top = '10px'; // 텍스트에리어 내부에서 상대 위치 잡기가 어려우므로 툴바 아래 고정
+        
+        document.querySelectorAll('#autocomplete-list .autocomplete-item').forEach(item => {
+            item.onclick = () => {
+                const title = item.dataset.title;
+                const text = editor.value;
+                const before = text.substring(0, editor.selectionStart);
+                const openIdx = before.lastIndexOf('[[');
+                const after = text.substring(editor.selectionStart);
+                
+                editor.value = text.substring(0, openIdx + 2) + title + ']]' + after;
+                editor.focus();
+                const newPos = openIdx + title.length + 4;
+                editor.setSelectionRange(newPos, newPos);
+                autocompleteList.classList.remove('active');
+            };
+        });
+    }
 
     // 일반 툴바 버튼
     document.querySelectorAll('.toolbar-btn[data-type]').forEach(btn => {
@@ -272,6 +387,9 @@ function initToolbar() {
 }
 
 async function loadInitialData() {
+    // 자동완성용 데이터 미리 로드
+    fetch('/api/images').then(res => res.json()).then(data => { allTitles = data; }).catch(e => console.error("Titles fetch error:", e));
+
     if (!charId) return;
     initCategorySelect();
     // D1 데이터 로드

@@ -161,17 +161,31 @@ from the D1 database.
     *   This ensures the browser accurately interprets the date string as UTC instead of implicitly assuming it is already local time.
     *   When `.toLocaleString('ko-KR')` is invoked, the UTC time is successfully converted to KST (+9 hours), resolving the 9-hour offset issue in both recent changes and document detail views.
 
-## Dynamic Infobox Custom Fields (Current Update)
+## Mobile Layout & Recent Changes (2026.05.04)
 
-**Objective:** Allow administrators to dynamically add custom information rows (e.g., "Weapon", "Affiliation") to the character infobox without modifying the source code.
+**Objective:** Improve mobile responsiveness by ensuring 'Recent Changes' are visible even when the sidebar is hidden, and fix time display issues.
 
 **Changes:**
-1.  **Database Expansion (`schema.sql`, `[[path]].js`)**:
-    *   Added a `custom_info` column (`TEXT` type) to the `wiki_pages` table to store serialized JSON arrays of custom properties.
-    *   Updated the `POST /wiki` Cloudflare Pages function to accept and insert/update the `custom_info` data.
-2.  **Flexible Editor UI (`edit.html`, `edit.js`)**:
-    *   Added a "커스텀 정보" (Custom Info) section to the editor sidebar with a button to dynamically append new key-value input fields.
-    *   Implemented DOM logic to read existing custom properties and populate the inputs when editing a document.
-    *   Form submission logic now packages these dynamic inputs into a `[{key: "...", value: "..."}]` array for storage.
-3.  **Dynamic Rendering (`detail.js`)**:
-    *   Updated the detail page to parse the `custom_info` JSON string from the database and automatically append new rows to the infobox table for each custom field defined.
+1.  **Responsive Sidebar (`index.html`, `style.css`)**:
+    *   Added an inline 'Recent Changes' section that appears at the bottom of the page on screens narrower than 1024px.
+    *   Ensured consistent styling between the sidebar and inline recent changes lists.
+2.  **Recent Changes Synchronization (`main.js`)**:
+    *   Updated the data fetching logic to populate both the sidebar and the mobile-friendly inline list simultaneously.
+    *   Improved date formatting consistency across all views.
+
+## Rich Editing Features & Modern UI (2026.05.05)
+
+**Objective:** Expand the editing capabilities to support professional wiki elements and provide a better UX with real-time preview and modern styles.
+
+**Changes:**
+1.  **Extended Wiki Syntax (`detail.js`, `edit.js`)**:
+    *   Added support for **Tables**, **Spoilers (Details/Summary)**, **Blockquotes**, **Text Colors**, **Underline**, and **Strikethrough**.
+    *   Implemented special block elements: **[note]** (Note box), **[warn]** (Warning box), and **[center]** (Center alignment).
+    *   Added **Internal Linking** syntax: `[[Character Name]]`.
+2.  **Enhanced Editor UI (`edit.html`, `edit.js`)**:
+    *   Redesigned the toolbar with grouped icons and a **Color Palette** picker.
+    *   Added a **Live Preview Modal** that allows editors to verify content before saving.
+    *   Simplified block styles (Spoilers, Notes, Warnings) to use clean, line-based designs instead of heavy boxes, as per user feedback.
+3.  **Cache Busting & Stability (`detail.html`)**:
+    *   Implemented versioned asset loading (`?v=3`) for `detail.js` and `style.css` to ensure users see the latest rendering logic immediately after deployment.
+    *   Rewrote the rendering engine into a stable **Line-by-Line State Machine** to prevent HTML nesting errors.

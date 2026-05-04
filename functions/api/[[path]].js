@@ -52,6 +52,29 @@ export async function onRequest(context) {
         }
     }
 
+    // 1-1. GET: 특정 문서의 리비전 목록
+    if (request.method === "GET" && apiPath.startsWith("/wiki/") && apiPath.endsWith("/revisions")) {
+        const title = decodeURIComponent(apiPath.replace("/wiki/", "").replace("/revisions", ""));
+        try {
+            const { results } = await env.DB.prepare("SELECT id, author, strftime('%Y-%m-%dT%H:%M:%SZ', created_at) as created_at FROM wiki_revisions WHERE title = ? ORDER BY created_at DESC").bind(title).all();
+            return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 1-2. GET: 특정 리비전 내용 조회
+    if (request.method === "GET" && apiPath.startsWith("/revision/")) {
+        const id = apiPath.split("/").pop();
+        try {
+            const result = await env.DB.prepare("SELECT * FROM wiki_revisions WHERE id = ?").bind(id).first();
+            if (!result) return new Response(JSON.stringify({ error: "Not Found" }), { status: 404, headers: corsHeaders });
+            return new Response(JSON.stringify(result), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
     // 1. GET: 특정 문서 조회
     if (request.method === "GET" && apiPath.startsWith("/wiki/")) {
         const title = decodeURIComponent(apiPath.split("/").pop());

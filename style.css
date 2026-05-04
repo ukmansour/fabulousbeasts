@@ -559,3 +559,37 @@ body {
 
 /* Toolbar groups */
 .toolbar-sep { width: 1px; background: #ccc; margin: 2px 3px; align-self: stretch; display: inline-block; }
+
+/* Autocomplete List */
+.autocomplete-list {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 250px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+}
+.autocomplete-list.active { display: block; }
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover { background: var(--primary-light); }
+.autocomplete-item img {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+    border-radius: 2px;
+}

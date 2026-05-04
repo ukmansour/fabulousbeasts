@@ -142,7 +142,11 @@
                             <button type="button" class="toolbar-btn" data-type="warn" style="color:#c0392b;">⚠경고</button>
                             <span class="toolbar-sep"></span>
                             <!-- 미리보기 -->
-                            <button type="button" id="preview-btn" class="toolbar-btn" style="background:var(--primary-color); color:white; margin-left:auto;">미리보기</button>
+                            <button type="button" id="history-btn" class="toolbar-btn" style="background:#868e96; color:white; margin-left:10px;">히스토리</button>
+                            <button type="button" id="preview-btn" class="toolbar-btn" style="background:var(--primary-color); color:white; margin-left:10px;">미리보기</button>
+                        </div>
+                        <div id="autocomplete-wrap" style="position:relative;">
+                            <div id="autocomplete-list" class="autocomplete-list"></div>
                         </div>
                         <textarea id="edit-content" class="field-textarea" placeholder="이곳에 내용을 입력하세요. 위 문법 버튼을 사용해 꾸밀 수 있습니다."></textarea>
                     </div>
@@ -239,6 +243,22 @@
             <div id="preview-content"></div>
         </div>
     </div>
+    <!-- 히스토리 모달 -->
+    <div class="preview-modal" id="history-modal">
+        <div class="preview-modal-inner">
+            <span class="preview-modal-close" id="history-close">✕</span>
+            <h2 style="margin-bottom:1rem; border-bottom:1px solid #eee; padding-bottom:0.5rem;">편집 이력</h2>
+            <div id="history-list" style="max-height:400px; overflow-y:auto;">
+                <p style="color:#999; text-align:center;">불러오는 중...</p>
+            </div>
+            <div id="history-preview" class="wiki-content" style="margin-top:20px; border-top:2px solid #eee; padding-top:20px; display:none;">
+                <h3 style="font-size:1rem; margin-bottom:10px;">선택한 버전 미리보기</h3>
+                <div id="history-preview-body" style="padding:15px; background:#f9f9f9; border-radius:5px; font-size:0.9rem;"></div>
+                <button type="button" id="history-restore-btn" class="save-btn" style="margin-top:15px; width:100%; background:#2f9e44;">이 버전으로 복구하기</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="edit.js"></script>
 </body>
 </html>
