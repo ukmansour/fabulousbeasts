@@ -192,7 +192,7 @@ async function renderRecentChanges() {
                 try {
                     const utcDateStr = d.updated_at.replace(' ', 'T') + (d.updated_at.endsWith('Z') ? '' : 'Z');
                     const dateObj = new Date(utcDateStr);
-                    dateStr = dateObj.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                    dateStr = dateObj.toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
                 } catch(e) { dateStr = d.updated_at; }
             }
             
