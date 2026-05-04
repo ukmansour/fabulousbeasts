@@ -83,12 +83,33 @@ onAuthStateChanged(auth, async (user) => {
 async function initHome() {
     initSearch();
     renderRecentChanges();
+    loadSettings(); // [신규] 공지사항 및 소식 불러오기
     
     // [신규] 홈페이지의 하드코딩된 이미지들을 D1에 저장된 최신 편집 사진으로 동기화합니다.
     await syncHomepageImages();
     
     // 30초마다 실시간 동기화 유지
     setInterval(syncHomepageImages, 30000);
+}
+
+async function loadSettings() {
+    try {
+        const res = await fetch('/api/settings');
+        if (!res.ok) return;
+        const settings = await res.json();
+        
+        const noticeEl = document.getElementById('home-notice');
+        const newsEl = document.getElementById('home-news');
+        
+        if (noticeEl && settings.notice) {
+            noticeEl.innerHTML = settings.notice.replace(/\n/g, '<br>');
+        }
+        if (newsEl && settings.news) {
+            newsEl.innerHTML = settings.news.replace(/\n/g, '<br>');
+        }
+    } catch (e) {
+        console.warn("Failed to load site settings:", e);
+    }
 }
 
 async function syncHomepageImages() {

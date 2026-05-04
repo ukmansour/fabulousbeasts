@@ -16,6 +16,8 @@ window.addEventListener('adminTabSwitch', (e) => {
     const tabId = e.detail;
     if (tabId === 'wiki') {
         renderWikiAdminPage();
+    } else if (tabId === 'settings') {
+        renderSettingsAdminPage();
     } else {
         renderAdminPage();
     }
@@ -293,5 +295,62 @@ window.changeUserRole = async (uid, newRole) => {
         renderAdminPage();
     }
 };
+
+// [추가] 공지/소식 관리 탭 렌더링
+async function renderSettingsAdminPage() {
+    const settingsArea = document.getElementById('settings-admin-content');
+    if (!settingsArea) return;
+
+    settingsArea.innerHTML = '<div style="text-align:center; padding:2rem;">설정을 불러오는 중...</div>';
+
+    try {
+        const res = await fetch('/api/settings');
+        if (!res.ok) throw new Error('설정 로드 실패');
+        const settings = await res.json();
+
+        settingsArea.innerHTML = `
+            <div style="max-width:800px; margin:0 auto; display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+                <!-- 공지사항 -->
+                <div style="background:white; border:1px solid #eee; border-radius:12px; padding:1.5rem; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                    <h3 style="font-weight:900; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">📢 공지사항</h3>
+                    <textarea id="edit-notice" style="width:100%; min-height:300px; padding:0.8rem; border:1px solid #ddd; border-radius:8px; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:inherit;">${settings.notice || ''}</textarea>
+                </div>
+
+                <!-- 최근 소식 -->
+                <div style="background:white; border:1px solid #eee; border-radius:12px; padding:1.5rem; box-shadow:0 2px 10px rgba(0,0,0,0.02);">
+                    <h3 style="font-weight:900; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">🗞️ 최근 소식</h3>
+                    <textarea id="edit-news" style="width:100%; min-height:300px; padding:0.8rem; border:1px solid #ddd; border-radius:8px; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:inherit;">${settings.news || ''}</textarea>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:2rem;">
+                <button id="save-settings-btn" style="padding:1rem 4rem; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:900; cursor:pointer; font-size:1.1rem; box-shadow:0 4px 15px rgba(0,160,233,0.3);">설정 저장하기</button>
+                <p style="margin-top:1rem; color:#999; font-size:0.8rem;">* 저장 시 보안 코드가 필요합니다.</p>
+            </div>
+        `;
+
+        document.getElementById('save-settings-btn').onclick = async () => {
+            const notice = document.getElementById('edit-notice').value;
+            const news = document.getElementById('edit-news').value;
+            const secret = prompt("보안 코드를 입력하세요:");
+            if (secret !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
+
+            try {
+                const saveRes = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notice, news, secret })
+                });
+
+                if (!saveRes.ok) throw new Error('저장 실패');
+                alert("공지 및 소식이 성공적으로 저장되었습니다!");
+                location.reload();
+            } catch (e) {
+                alert("오류 발생: " + e.message);
+            }
+        };
+    } catch (e) {
+        settingsArea.innerHTML = `<div style="text-align:center; padding:2rem; color:red;">오류: ${e.message}</div>`;
+    }
+}
 
 initAdminToolbars();

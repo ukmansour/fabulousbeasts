@@ -37,3 +37,12 @@ CREATE TABLE IF NOT EXISTS wiki_revisions (
     author TEXT,
     edited_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+-- 사이트 설정 (공지사항, 소식 등)
+CREATE TABLE IF NOT EXISTS site_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+);
+
+-- 기본값 삽입 (중복 방지)
+INSERT OR IGNORE INTO site_settings (key, value) VALUES ('notice', '- 유수언 위키 리뉴얼 오픈!\n- 2026.04.30 베타 버전 출시');
+INSERT OR IGNORE INTO site_settings (key, value) VALUES ('news', '- 신규 캐릭터 추가 준비 중\n- 시스템 최적화 완료');

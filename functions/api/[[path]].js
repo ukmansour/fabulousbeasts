@@ -67,8 +67,21 @@ export async function onRequest(context) {
     // 2. GET: 최근 변경 목록
     if (request.method === "GET" && apiPath === "/recent") {
         try {
-            const { results } = await env.DB.prepare("SELECT title, author, category, updated_at FROM wiki_pages ORDER BY updated_at DESC LIMIT 8").all();
+            // [수정] 날짜 형식을 ISO와 유사하게 변환하여 브라우저 호환성 확보
+            const { results } = await env.DB.prepare("SELECT title, author, category, strftime('%Y-%m-%dT%H:%M:%SZ', updated_at) as updated_at FROM wiki_pages ORDER BY updated_at DESC LIMIT 8").all();
             return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 2-2. GET: 사이트 설정 (공지/소식)
+    if (request.method === "GET" && apiPath === "/settings") {
+        try {
+            const { results } = await env.DB.prepare("SELECT * FROM site_settings").all();
+            const settings = {};
+            results.forEach(r => settings[r.key] = r.value);
+            return new Response(JSON.stringify(settings), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
         }
@@ -183,6 +196,25 @@ export async function onRequest(context) {
                         updated_at = CURRENT_TIMESTAMP
                 `).bind(uid, nickname || "", email || "").run();
             }
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 6. POST: 사이트 설정 저장
+    if (request.method === "POST" && apiPath === "/settings") {
+        try {
+            const { notice, news, secret } = await request.json();
+            if (secret !== "9889") return new Response("Unauthorized", { status: 401 });
+
+            if (notice !== undefined) {
+                await env.DB.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('notice', ?)").bind(notice).run();
+            }
+            if (news !== undefined) {
+                await env.DB.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('news', ?)").bind(news).run();
+            }
+
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
