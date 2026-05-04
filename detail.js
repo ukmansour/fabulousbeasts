@@ -254,47 +254,77 @@ function renderInfobox(data) {
 
 function renderContent(details) {
     if (!contentArea || isGalleryPage) return;
-    
-    // 인라인 마크다운 적용 (줄 단위 처리 전)
+
+    // 인라인 마크다운 적용 함수
     function applyInline(text) {
         return text
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
             .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:500px; border-radius:8px; display:block; margin:20px auto;">')
             .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
     }
 
-    // 연속 빈줄을 하나로 정규화한 뒤, 빈줄 기준으로 단락 분리
-    const paragraphs = details.replace(/\r\n/g, '\n').split(/\n{2,}/);
+    const lines = details.replace(/\r\n/g, '\n').split('\n');
+    let html = '';
+    let inParagraph = false;
+    let inList = false;
 
-    let html = paragraphs.map(block => {
-        const lines = block.split('\n');
+    function closeParagraph() {
+        if (inParagraph) { html += '</p>'; inParagraph = false; }
+    }
+    function closeList() {
+        if (inList) { html += '</ul>'; inList = false; }
+    }
 
-        // 블록 내 첫 줄이 특수 요소인지 체크
-        if (lines[0].startsWith('## ')) return `<h2>${applyInline(lines[0].slice(3))}</h2>`;
-        if (lines[0].startsWith('### ')) return `<h3>${applyInline(lines[0].slice(4))}</h3>`;
-        if (lines[0] === '---') return '<hr>';
-
-        // 리스트 블록
-        if (lines.every(l => l.startsWith('* '))) {
-            const items = lines.map(l => `<li>${applyInline(l.slice(2))}</li>`).join('');
-            return `<ul>${items}</ul>`;
+    for (const line of lines) {
+        // 빈 줄 → 단락 종료 (시각적 여백)
+        if (line.trim() === '') {
+            closeParagraph();
+            closeList();
+            continue;
         }
 
-        // 일반 단락: 줄바꿈 → <br>
-        const content = lines.map(l => {
-            if (l.startsWith('## ')) return `<h2>${applyInline(l.slice(3))}</h2>`;
-            if (l.startsWith('### ')) return `<h3>${applyInline(l.slice(4))}</h3>`;
-            if (l === '---') return '<hr>';
-            if (l.startsWith('* ')) return `<li>${applyInline(l.slice(2))}</li>`;
-            return applyInline(l);
-        }).join('<br>');
+        // 제목
+        if (line.startsWith('## ')) {
+            closeParagraph(); closeList();
+            html += `<h2>${applyInline(line.slice(3))}</h2>`;
+            continue;
+        }
+        if (line.startsWith('### ')) {
+            closeParagraph(); closeList();
+            html += `<h3>${applyInline(line.slice(4))}</h3>`;
+            continue;
+        }
 
-        return `<p>${content}</p>`;
-    }).join('');
+        // 구분선
+        if (line === '---') {
+            closeParagraph(); closeList();
+            html += '<hr>';
+            continue;
+        }
 
-    // 연속 <li> 묶기
-    html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+        // 리스트
+        if (line.startsWith('* ')) {
+            closeParagraph();
+            if (!inList) { html += '<ul>'; inList = true; }
+            html += `<li>${applyInline(line.slice(2))}</li>`;
+            continue;
+        }
+
+        // 일반 텍스트 → 단락 누적 (줄바꿈은 <br>)
+        closeList();
+        if (!inParagraph) {
+            html += '<p>';
+            inParagraph = true;
+            html += applyInline(line);
+        } else {
+            html += '<br>' + applyInline(line);
+        }
+    }
+
+    // 마무리
+    closeParagraph();
+    closeList();
 
     contentArea.innerHTML = html;
     generateTOC();
