@@ -66,17 +66,35 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 async function initHome() {
-    // [읽기 최적화] 모든 캐릭터 데이터가 index.html에 하드코딩되어 있으므로 renderCategoryGrid()를 호출하지 않습니다.
-    // renderCategoryGrid(); 
     initSearch();
-    
-    // 2. [읽기 최적화] 홈 화면 진입 시 Firestore 캐릭터 전체 읽기(getDocs)를 중단합니다.
-    // 사용자가 명시적으로 검색하거나 상세 페이지에 들어갈 때만 개별 데이터를 읽도록 유도합니다.
-    // await fetchFirestoreData(); 
-    
-    // 3. 최신 변경 내역 로드 (최소한의 읽기)
     renderRecentChanges();
-    // loadNotice(); // [읽기 최적화] 공지/소식은 이제 HTML에서 정적으로 관리합니다.
+    
+    // [신규] 홈페이지의 하드코딩된 이미지들을 D1에 저장된 최신 편집 사진으로 동기화합니다.
+    syncHomepageImages();
+}
+
+async function syncHomepageImages() {
+    try {
+        const response = await fetch('/api/images');
+        if (!response.ok) return;
+        const images = await response.json();
+        
+        // 홈페이지 내 모든 캐릭터 카드(char-card-mini)를 찾아 이미지를 교체합니다.
+        const cards = document.querySelectorAll('.char-card-mini');
+        images.forEach(item => {
+            cards.forEach(card => {
+                const link = card.getAttribute('href');
+                if (link && link.includes(`#${item.title}`)) {
+                    const img = card.querySelector('img');
+                    if (img && item.image) {
+                        img.src = item.image;
+                    }
+                }
+            });
+        });
+    } catch (e) {
+        console.warn("Homepage image sync failed:", e);
+    }
 }
 
 // [읽기 최적화] Firestore 데이터를 더 이상 사용하지 않으므로 fetchFirestoreData 함수를 제거하거나 빈 상태로 둡니다.
