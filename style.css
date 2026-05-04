@@ -69,6 +69,8 @@ body {
     padding: 0.4rem 1rem; background: #eee; border: 1px solid var(--border-color); border-bottom: none;
     font-size: 0.8rem; color: #666; text-decoration: none; margin-right: 1px; cursor: pointer;
 }
+.wiki-tab.back-tab { background: #f9f9f9; color: var(--primary-color); font-weight: bold; }
+.wiki-tab.back-tab:hover { background: var(--primary-light); }
 .wiki-tab.active { background: white; margin-bottom: -1px; font-weight: 700; color: var(--primary-color); border-top: 2px solid var(--primary-color); }
 
 /* Content Headers */
