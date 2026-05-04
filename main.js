@@ -83,11 +83,20 @@ async function syncHomepageImages() {
         const cards = document.querySelectorAll('.char-card-mini');
         images.forEach(item => {
             cards.forEach(card => {
-                const link = card.getAttribute('href');
-                if (link && link.includes(`#${item.title}`)) {
+                const link = card.getAttribute('href') || "";
+                // 정확한 ID 매칭을 위해 해시(#) 이후의 문자열을 확인합니다.
+                const cardId = link.split('#').pop();
+                
+                if (cardId === item.title) {
+                    // 1. 이미지 교체
                     const img = card.querySelector('img');
                     if (img && item.image) {
                         img.src = item.image;
+                    }
+                    // 2. 이름 교체
+                    const span = card.querySelector('span');
+                    if (span && item.name) {
+                        span.textContent = item.name;
                     }
                 }
             });
