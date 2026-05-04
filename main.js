@@ -177,7 +177,16 @@ async function renderRecentChanges() {
         }
         
         list.innerHTML = results.map(d => {
-            const dateStr = d.updated_at ? new Date(d.updated_at).toLocaleString('ko-KR') : '-';
+            // [수정] 날짜 파싱 안정화
+            let dateStr = '-';
+            if (d.updated_at) {
+                try {
+                    const cleanDate = d.updated_at.replace('Z', '').replace('T', ' ');
+                    const dateObj = new Date(cleanDate);
+                    dateStr = dateObj.toLocaleDateString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                } catch(e) { dateStr = d.updated_at; }
+            }
+            
             return `
                 <div class="recent-item" style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">
                     <a href="detail.html#${d.title}" class="recent-link" style="font-weight:700; color:var(--text-link); text-decoration:none; font-size:14px;">${d.title}</a>

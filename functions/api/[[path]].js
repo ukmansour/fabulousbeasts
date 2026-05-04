@@ -78,6 +78,9 @@ export async function onRequest(context) {
     // 2-2. GET: 사이트 설정 (공지/소식)
     if (request.method === "GET" && apiPath === "/settings") {
         try {
+            // [추가] 테이블이 없을 경우를 대비해 생성 시도
+            await env.DB.prepare("CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, value TEXT)").run();
+            
             const { results } = await env.DB.prepare("SELECT * FROM site_settings").all();
             const settings = {};
             results.forEach(r => settings[r.key] = r.value);
@@ -207,6 +210,9 @@ export async function onRequest(context) {
         try {
             const { notice, news, secret } = await request.json();
             if (secret !== "9889") return new Response("Unauthorized", { status: 401 });
+
+            // [추가] 테이블 생성 보장
+            await env.DB.prepare("CREATE TABLE IF NOT EXISTS site_settings (key TEXT PRIMARY KEY, value TEXT)").run();
 
             if (notice !== undefined) {
                 await env.DB.prepare("INSERT OR REPLACE INTO site_settings (key, value) VALUES ('notice', ?)").bind(notice).run();
