@@ -24,8 +24,10 @@ CREATE INDEX IF NOT EXISTS idx_wiki_pages_category ON wiki_pages(category);
 CREATE TABLE IF NOT EXISTS users (
     uid TEXT PRIMARY KEY,
     role TEXT DEFAULT 'member',
-    nickname TEXT,
+    name TEXT,
+    nickname TEXT, -- 하위 호환성 유지
     email TEXT,
+    is_banned INTEGER DEFAULT 0, -- 0: false, 1: true
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

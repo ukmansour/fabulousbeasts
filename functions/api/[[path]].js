@@ -175,29 +175,32 @@ export async function onRequest(context) {
 
     if (request.method === "POST" && apiPath === "/user/role") {
         try {
-            const { uid, role, nickname, email, secret } = await request.json();
+            const { uid, role, name, nickname, email, isBanned, secret } = await request.json();
             
-            // 보안 코드(9889)가 있는 경우에만 권한(role)을 수정할 수 있습니다.
+            // 보안 코드(9889)가 있는 경우에만 권한(role)과 차단 여부를 수정할 수 있습니다.
             if (secret === "9889") {
                 await env.DB.prepare(`
-                    INSERT INTO users (uid, role, nickname, email, updated_at)
-                    VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    INSERT INTO users (uid, role, name, nickname, email, is_banned, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                     ON CONFLICT(uid) DO UPDATE SET 
                         role = excluded.role, 
+                        name = excluded.name,
                         nickname = excluded.nickname, 
                         email = excluded.email, 
+                        is_banned = excluded.is_banned,
                         updated_at = CURRENT_TIMESTAMP
-                `).bind(uid, role || "member", nickname || "", email || "").run();
+                `).bind(uid, role || "member", name || nickname || "", nickname || "", email || "", isBanned ? 1 : 0).run();
             } else {
-                // 보안 코드가 없는 경우 (단순 동기화), 기존 권한을 유지하며 정보만 업데이트합니다.
+                // 보안 코드가 없는 경우 (단순 가입/동기화), 기존 권한을 유지하며 정보만 업데이트합니다.
                 await env.DB.prepare(`
-                    INSERT INTO users (uid, role, nickname, email, updated_at)
-                    VALUES (?, 'member', ?, ?, CURRENT_TIMESTAMP)
+                    INSERT INTO users (uid, role, name, nickname, email, is_banned, updated_at)
+                    VALUES (?, 'member', ?, ?, ?, 0, CURRENT_TIMESTAMP)
                     ON CONFLICT(uid) DO UPDATE SET 
+                        name = excluded.name,
                         nickname = excluded.nickname, 
                         email = excluded.email, 
                         updated_at = CURRENT_TIMESTAMP
-                `).bind(uid, nickname || "", email || "").run();
+                `).bind(uid, name || nickname || "", nickname || "", email || "").run();
             }
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         } catch (err) {

@@ -116,7 +116,8 @@ authForm.addEventListener('submit', async (e) => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             uid: user.uid,
-                            nickname: nickname, // D1 API 호환성을 위해 유지
+                            name: nickname, // 'name' 필드 명시
+                            nickname: nickname, // 하위 호환성
                             email: signupEmail,
                             role: 'member',
                             isBanned: false,
