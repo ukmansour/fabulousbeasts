@@ -1,6 +1,7 @@
 /**
  * Cloudflare Pages Function: Wiki Backend (D1 + R2)
  * Handles all requests under /api/*
+ * Version: 1.0.1 - Triggering redeploy
  */
 
 export async function onRequest(context) {
