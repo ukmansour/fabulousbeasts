@@ -173,7 +173,7 @@ function renderPage(data) {
 
 function renderNormalDetailPage(data) {
     renderInfobox(data);
-    renderContent(data.details || '내용이 없습니다.');
+    renderContent(data.details || '문서가 비어있습니다.');
 }
 
 function renderGalleryOnlyPage(data) {
