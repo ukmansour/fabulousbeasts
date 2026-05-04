@@ -147,8 +147,8 @@ async function renderAdminPage() {
         let html = `
             <div style="max-width:900px; margin:0 auto; padding:0; background:white; border:1px solid #ccc;">
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; background:#f0f0f0; border-bottom:1px solid #ccc;">
-                    <h2 style="font-size:1rem; font-weight:900; color:#111; margin:0; text-transform:uppercase;">USER MANAGEMENT (${users.length})</h2>
-                    <button onclick="window.importFirestoreUsers()" style="font-size:0.75rem; color:#555; background:white; border:1px solid #ccc; padding:2px 8px; cursor:pointer; font-weight:700;">Sync Firestore</button>
+                    <h2 style="font-size:1rem; font-weight:900; color:#111; margin:0;">사용자 관리 (${users.length})</h2>
+                    <button onclick="window.importFirestoreUsers()" style="font-size:0.75rem; color:#555; background:white; border:1px solid #ccc; padding:2px 8px; cursor:pointer; font-weight:700;">Firestore 유저 동기화</button>
                 </div>
                 
                 <div style="display:flex; flex-direction:column;">
@@ -169,25 +169,25 @@ async function renderAdminPage() {
                 roleBg = '#fef2f2';
             }
 
-            const displayName = u.nickname || (u.email ? u.email.split('@')[0] : 'UNKNOWN');
+            const displayName = u.nickname || (u.email ? u.email.split('@')[0] : '알 수 없음');
 
             html += `
                 <div style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1rem; ${index !== users.length - 1 ? 'border-bottom:1px solid #ccc;' : ''} transition:background 0.1s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
                     <div style="flex:1; min-width:0; display:flex; align-items:center; gap:1.2rem;">
-                        <span style="font-size:0.9rem; font-weight:800; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:120px; font-family:monospace;">${displayName}</span>
-                        <span style="font-size:0.8rem; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; font-family:monospace;">${u.email || 'NO EMAIL'}</span>
+                        <span style="font-size:0.9rem; font-weight:800; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:120px; font-family:inherit;">${displayName}</span>
+                        <span style="font-size:0.8rem; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; font-family:monospace;">${u.email || '이메일 없음'}</span>
                     </div>
 
                     <div style="display:flex; align-items:center; gap:0.8rem;">
-                        <span style="background:${roleBg}; color:${roleColor}; padding:2px 8px; border:1px solid ${roleColor}; font-size:0.7rem; font-weight:800; white-space:nowrap; text-transform:uppercase;">
+                        <span style="background:${roleBg}; color:${roleColor}; padding:2px 8px; border:1px solid ${roleColor}; font-size:0.7rem; font-weight:800; white-space:nowrap;">
                             ${roleText}
                         </span>
                         
-                        <select onchange="window.changeUserRole('${u.uid}', this.value)" style="padding:0.3rem 0.6rem; border:1px solid #999; border-radius:0; font-size:0.75rem; background:#fff; cursor:pointer; outline:none; font-weight:700; color:#333; width:110px; font-family:monospace;">
-                            <option value="">CHANGE ROLE</option>
-                            <option value="member">MEMBER</option>
-                            <option value="admin">ADMIN</option>
-                            <option value="banned">BANNED</option>
+                        <select onchange="window.changeUserRole('${u.uid}', this.value)" style="padding:0.3rem 0.6rem; border:1px solid #999; border-radius:0; font-size:0.75rem; background:#fff; cursor:pointer; outline:none; font-weight:700; color:#333; width:110px;">
+                            <option value="">권한 변경</option>
+                            <option value="member">일반 멤버</option>
+                            <option value="admin">관리자</option>
+                            <option value="banned">차단</option>
                         </select>
                     </div>
                 </div>
@@ -246,17 +246,17 @@ function renderWikiAdminPage() {
     if (!wikiContentArea) return;
     wikiContentArea.innerHTML = `
         <div style="max-width:700px; margin:1rem auto; padding:2rem; background:white; border:1px solid #ccc;">
-            <h2 style="font-weight:900; margin-bottom:0.5rem; font-size:1.2rem; text-transform:uppercase;">CREATE DOCUMENT</h2>
-            <p style="color:#666; font-size:0.85rem; margin-bottom:2rem;">Enter an ID to create or edit a document.</p>
+            <h2 style="font-weight:900; margin-bottom:0.5rem; font-size:1.2rem;">문서 생성 및 관리</h2>
+            <p style="color:#666; font-size:0.85rem; margin-bottom:2rem;">새로 만들거나 편집할 문서의 ID를 입력하세요.</p>
             
             <div style="margin-bottom:1.5rem;">
-                <label style="display:block; font-size:0.8rem; font-weight:800; color:#444; margin-bottom:0.5rem;">DOCUMENT ID</label>
-                <input type="text" id="new-doc-id" placeholder="e.g., tianlu" 
-                    style="width:100%; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:1rem; outline:none; font-family:monospace;">
+                <label style="display:block; font-size:0.8rem; font-weight:800; color:#444; margin-bottom:0.5rem;">문서 ID</label>
+                <input type="text" id="new-doc-id" placeholder="예: tianlu" 
+                    style="width:100%; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:1rem; outline:none; font-family:inherit;">
             </div>
             
             <button id="create-doc-btn" style="width:100%; padding:1rem; background:#333; color:white; border:none; border-radius:0; font-weight:900; cursor:pointer; font-size:1rem;">
-                PROCEED TO EDITOR
+                편집기 열기
             </button>
         </div>
     `;
@@ -321,19 +321,19 @@ async function renderSettingsAdminPage() {
             <div style="max-width:900px; margin:0 auto; display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
                 <!-- 공지사항 -->
                 <div style="background:white; border:1px solid #ccc; padding:1.5rem;">
-                    <h3 style="font-weight:900; margin-bottom:1rem; text-transform:uppercase; font-size:1rem;">ANNOUNCEMENTS</h3>
-                    <textarea id="edit-notice" style="width:100%; min-height:350px; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:monospace;">${settings.notice || ''}</textarea>
+                    <h3 style="font-weight:900; margin-bottom:1rem; font-size:1rem;">공지사항 관리</h3>
+                    <textarea id="edit-notice" style="width:100%; min-height:350px; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:inherit;">${settings.notice || ''}</textarea>
                 </div>
 
                 <!-- 최근 소식 -->
                 <div style="background:white; border:1px solid #ccc; padding:1.5rem;">
-                    <h3 style="font-weight:900; margin-bottom:1rem; text-transform:uppercase; font-size:1rem;">LATEST NEWS</h3>
-                    <textarea id="edit-news" style="width:100%; min-height:350px; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:monospace;">${settings.news || ''}</textarea>
+                    <h3 style="font-weight:900; margin-bottom:1rem; font-size:1rem;">최근 소식 관리</h3>
+                    <textarea id="edit-news" style="width:100%; min-height:350px; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:inherit;">${settings.news || ''}</textarea>
                 </div>
             </div>
             <div style="text-align:center; margin-top:2rem;">
-                <button id="save-settings-btn" style="padding:1rem 4rem; background:#333; color:white; border:none; border-radius:0; font-weight:900; cursor:pointer; font-size:1.1rem; text-transform:uppercase;">COMMIT SETTINGS</button>
-                <p style="margin-top:1rem; color:#666; font-size:0.75rem;">Authentication required for persistence.</p>
+                <button id="save-settings-btn" style="padding:1rem 4rem; background:#333; color:white; border:none; border-radius:0; font-weight:900; cursor:pointer; font-size:1.1rem;">설정 저장하기</button>
+                <p style="margin-top:1rem; color:#666; font-size:0.75rem;">변경 사항을 저장하려면 보안 코드가 필요합니다.</p>
             </div>
         `;
 
