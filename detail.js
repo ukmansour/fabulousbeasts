@@ -255,21 +255,47 @@ function renderInfobox(data) {
 function renderContent(details) {
     if (!contentArea || isGalleryPage) return;
     
-    let html = details
-        .split('\n').map(line => {
-            if (line.startsWith('## ')) return `<h2>${line.replace('## ', '')}</h2>`;
-            if (line.startsWith('### ')) return `<h3>${line.replace('### ', '')}</h3>`;
-            if (line === '---') return '<hr>';
-            if (line.startsWith('* ')) return `<li>${line.replace('* ', '')}</li>`;
-            return `<p>${line}</p>`;
-        }).join('');
+    // 인라인 마크다운 적용 (줄 단위 처리 전)
+    function applyInline(text) {
+        return text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:500px; border-radius:8px; display:block; margin:20px auto;">')
+            .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+    }
 
-    html = html
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" style="max-width:500px; border-radius:8px; display:block; margin:20px auto;">')
-        .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+    // 연속 빈줄을 하나로 정규화한 뒤, 빈줄 기준으로 단락 분리
+    const paragraphs = details.replace(/\r\n/g, '\n').split(/\n{2,}/);
 
+    let html = paragraphs.map(block => {
+        const lines = block.split('\n');
+
+        // 블록 내 첫 줄이 특수 요소인지 체크
+        if (lines[0].startsWith('## ')) return `<h2>${applyInline(lines[0].slice(3))}</h2>`;
+        if (lines[0].startsWith('### ')) return `<h3>${applyInline(lines[0].slice(4))}</h3>`;
+        if (lines[0] === '---') return '<hr>';
+
+        // 리스트 블록
+        if (lines.every(l => l.startsWith('* '))) {
+            const items = lines.map(l => `<li>${applyInline(l.slice(2))}</li>`).join('');
+            return `<ul>${items}</ul>`;
+        }
+
+        // 일반 단락: 줄바꿈 → <br>
+        const content = lines.map(l => {
+            if (l.startsWith('## ')) return `<h2>${applyInline(l.slice(3))}</h2>`;
+            if (l.startsWith('### ')) return `<h3>${applyInline(l.slice(4))}</h3>`;
+            if (l === '---') return '<hr>';
+            if (l.startsWith('* ')) return `<li>${applyInline(l.slice(2))}</li>`;
+            return applyInline(l);
+        }).join('<br>');
+
+        return `<p>${content}</p>`;
+    }).join('');
+
+    // 연속 <li> 묶기
     html = html.replace(/(<li>.*?<\/li>)+/g, '<ul>$&</ul>');
+
     contentArea.innerHTML = html;
     generateTOC();
 }
