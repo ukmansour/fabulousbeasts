@@ -113,41 +113,52 @@ async function renderAdminPage() {
         }
 
         let html = `
-            <div style="max-width:800px; margin:0 auto;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; padding-bottom:0.5rem; border-bottom:2px solid #eee;">
-                    <h2 style="font-size:1.1rem; font-weight:900; color:#222;">회원 관리 (${users.length}명)</h2>
+            <div style="max-width:900px; margin:0 auto; padding:1rem;">
+                <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid #eee;">
+                    <div>
+                        <h2 style="font-size:1.5rem; font-weight:900; color:#111; letter-spacing:-0.02em;">사용자 관리</h2>
+                        <p style="font-size:0.85rem; color:#666; margin-top:0.2rem;">전체 회원 ${users.length}명의 권한을 관리합니다.</p>
+                    </div>
                 </div>
-                <div style="display:flex; flex-direction:column; gap:0.8rem;">
+                
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:1.2rem;">
         `;
 
         users.forEach(u => {
-            let roleText = '일반 멤버';
-            let roleColor = '#0369a1';
+            let roleText = '멤버';
+            let roleColor = '#0284c7';
             let roleBg = '#f0f9ff';
+            let roleIcon = '👤';
             
             if (u.role === 'admin') {
                 roleText = '관리자';
-                roleColor = '#92400e';
-                roleBg = '#fef3c7';
+                roleColor = '#d97706';
+                roleBg = '#fffbeb';
+                roleIcon = '🛡️';
             } else if (u.role === 'banned') {
-                roleText = '차단됨';
+                roleText = '차단';
                 roleColor = '#dc2626';
-                roleBg = '#fee2e2';
+                roleBg = '#fef2f2';
+                roleIcon = '🚫';
             }
 
             html += `
-                <div style="background:white; border:1px solid #eee; border-radius:6px; padding:1rem; display:flex; justify-content:space-between; align-items:center; transition:0.2s;">
-                    <div style="display:flex; flex-direction:column; gap:0.2rem;">
-                        <div style="display:flex; align-items:center; gap:0.6rem;">
-                            <span style="font-weight:800; font-size:0.95rem; color:#333;">${u.nickname || '이름 없음'}</span>
-                            <span style="background:${roleBg}; color:${roleColor}; padding:2px 8px; border-radius:4px; font-size:0.7rem; font-weight:800;">${roleText}</span>
+                <div style="background:white; border:1px solid #f0f0f0; border-radius:12px; padding:1.25rem; display:flex; flex-direction:column; gap:1rem; transition:all 0.2s; box-shadow:0 2px 8px rgba(0,0,0,0.03);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.06)'" onmouseout="this.style.transform='none'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.03)'">
+                    <div style="display:flex; align-items:center; gap:0.8rem;">
+                        <div style="width:40px; height:40px; background:#f5f5f5; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.2rem;">${roleIcon}</div>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-weight:800; font-size:1rem; color:#222; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.nickname || '이름 없음'}</div>
+                            <div style="font-size:0.75rem; color:#999; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.email || '이메일 없음'}</div>
                         </div>
-                        <div style="font-size:0.8rem; color:#777;">${u.email || '이메일 정보 없음'}</div>
                     </div>
-                    
-                    <div style="display:flex; align-items:center; gap:0.5rem;">
-                        <select onchange="window.changeUserRole('${u.id}', this.value)" style="padding:0.4rem; border:1px solid #ddd; border-radius:4px; font-size:0.8rem; background:#fafafa; cursor:pointer; outline:none;">
-                            <option value="">권한 변경...</option>
+
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding-top:0.8rem; border-top:1px solid #f9f9f9;">
+                        <span style="background:${roleBg}; color:${roleColor}; padding:3px 10px; border-radius:6px; font-size:0.7rem; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
+                            ${roleText}
+                        </span>
+                        
+                        <select onchange="window.changeUserRole('${u.id}', this.value)" style="padding:0.4rem 0.6rem; border:1px solid #e5e7eb; border-radius:8px; font-size:0.75rem; background:#fff; cursor:pointer; outline:none; font-weight:600; color:#444;">
+                            <option value="">권한 변경</option>
                             <option value="member">일반 멤버</option>
                             <option value="admin">관리자 승격</option>
                             <option value="banned">사용 차단</option>
@@ -159,8 +170,8 @@ async function renderAdminPage() {
 
         html += `
                 </div>
-                <div style="margin-top:2rem; text-align:center; font-size:0.75rem; color:#aaa;">
-                    관리 권한을 변경하려면 보안 코드가 필요합니다.
+                <div style="margin-top:3rem; padding:1.5rem; background:#f9fafb; border-radius:12px; text-align:center; font-size:0.75rem; color:#777;">
+                    🛡️ 관리 권한 변경은 시스템에 즉시 반영됩니다. 보안에 유의해 주세요.
                 </div>
             </div>
         `;
