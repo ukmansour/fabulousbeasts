@@ -107,7 +107,24 @@ authForm.addEventListener('submit', async (e) => {
                 updatedAt: serverTimestamp()
             });
 
-            console.log("User successfully created in Auth and Firestore.");
+            // 5. Cloudflare D1 데이터베이스에도 사용자 정보 동기화 (관리자 탭 표시용)
+            try {
+                await fetch('/api/user/role', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        uid: user.uid,
+                        nickname: nickname,
+                        email: signupEmail,
+                        role: 'member',
+                        secret: '9889' // 유저 생성용 보안 코드
+                    })
+                });
+            } catch (e) {
+                console.error("D1 sync failed:", e);
+            }
+
+            console.log("User successfully created in Auth, Firestore, and D1.");
             alert(`${nickname}님, 가입이 완료되었습니다!`);
 
             window.location.href = 'index.html';
