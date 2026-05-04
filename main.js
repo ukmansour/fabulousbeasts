@@ -70,7 +70,10 @@ async function initHome() {
     renderRecentChanges();
     
     // [신규] 홈페이지의 하드코딩된 이미지들을 D1에 저장된 최신 편집 사진으로 동기화합니다.
-    syncHomepageImages();
+    await syncHomepageImages();
+    
+    // 30초마다 실시간 동기화 유지
+    setInterval(syncHomepageImages, 30000);
 }
 
 async function syncHomepageImages() {
@@ -79,27 +82,43 @@ async function syncHomepageImages() {
         if (!response.ok) return;
         const images = await response.json();
         
-        // 홈페이지 내 모든 캐릭터 카드(char-card-mini)를 찾아 이미지를 교체합니다.
-        const cards = document.querySelectorAll('.char-card-mini');
+        // 1. mergedCharacters 업데이트 (검색 결과 반영용)
         images.forEach(item => {
-            cards.forEach(card => {
-                const link = card.getAttribute('href') || "";
-                // 정확한 ID 매칭을 위해 해시(#) 이후의 문자열을 확인합니다.
-                const cardId = link.split('#').pop();
-                
-                if (cardId === item.title) {
-                    // 1. 이미지 교체
-                    const img = card.querySelector('img');
-                    if (img && item.image) {
-                        img.src = item.image;
-                    }
-                    // 2. 이름 교체
-                    const span = card.querySelector('span');
-                    if (span && item.name) {
-                        span.textContent = item.name;
-                    }
+            const index = mergedCharacters.findIndex(c => c.id === item.title);
+            if (index !== -1) {
+                mergedCharacters[index].name = item.name || mergedCharacters[index].name;
+                mergedCharacters[index].image = item.image || mergedCharacters[index].image;
+            } else {
+                // 새로운 캐릭터가 DB에만 있는 경우 (검색에 포함시키기 위해)
+                mergedCharacters.push({
+                    id: item.title,
+                    name: item.name || item.title,
+                    image: item.image,
+                    category: '기타'
+                });
+            }
+        });
+
+        // 2. 홈페이지 내 모든 캐릭터 카드(char-card-mini)를 찾아 이미지를 교체합니다.
+        const cards = document.querySelectorAll('.char-card-mini');
+        cards.forEach(card => {
+            const link = card.getAttribute('href') || "";
+            // 정확한 ID 매칭을 위해 해시(#) 이후의 문자열을 확인합니다.
+            const cardId = link.split('#').pop();
+            
+            const item = images.find(img => img.title === cardId);
+            if (item) {
+                // 이미지 교체
+                const img = card.querySelector('img');
+                if (img && item.image && img.src !== item.image) {
+                    img.src = item.image;
                 }
-            });
+                // 이름 교체
+                const span = card.querySelector('span');
+                if (span && item.name && span.textContent !== item.name) {
+                    span.textContent = item.name;
+                }
+            }
         });
     } catch (e) {
         console.warn("Homepage image sync failed:", e);

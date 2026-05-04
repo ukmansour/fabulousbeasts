@@ -382,9 +382,13 @@ if (form) {
         
         saveBtn.disabled = true;
         saveBtn.textContent = '저장 중...';
+
+        const newName = document.getElementById('edit-name').value;
+        // [수정] 이름이 바뀌면 title(ID)도 함께 변경하여 D1 PK를 동기화합니다.
         const updatedData = {
-            title: charId,
-            name: document.getElementById('edit-name').value,
+            oldTitle: charId,
+            title: newName, // 새 이름을 새로운 title로 사용
+            name: newName,
             category: categorySelect ? categorySelect.value : '기타',
             content: editor.value,
             species: document.getElementById('info-species').value,
@@ -407,7 +411,8 @@ if (form) {
                 throw new Error(errorData.error || '서버 저장 실패');
             }
             
-            location.href = `detail.html#${charId}`;
+            // 이름이 바뀌었으므로 새 주소(#이름)로 이동합니다.
+            location.href = `detail.html#${encodeURIComponent(newName)}`;
         } catch (err) {
             alert("저장 실패: " + err.message);
             checkPermission();

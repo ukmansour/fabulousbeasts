@@ -107,6 +107,34 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
     *   Disabled dynamic content loading (`loadNotice`) in `main.js` to eliminate associated Firestore reads.
     *   This shifts all structural and informational updates to the codebase, ensuring maximum performance and zero runtime cost for static content.
 
+## Real-time Character Synchronization (2026.05.04)
+
+**Objective:** Ensure that character names and images on the home page reflect the latest edits from the database in real-time without requiring a full page refresh.
+
+**Changes:**
+1.  **Dynamic Polling (`main.js`)**:
+    *   Implemented `syncHomepageImages()` to fetch the latest character metadata (title, name, image) from the `/api/images` endpoint.
+    *   Set a 30-second polling interval to keep the home page UI and search data synchronized with the database.
+2.  **UI & Search Data Sync**:
+    *   The sync process updates existing character cards in the DOM to reflect name or image changes.
+    *   Updates the global `mergedCharacters` array, ensuring that search results always point to the latest character information.
+    *   Maintains the performance benefits of static rendering by performing updates asynchronously after the initial load.
+
+## Document Title Renaming (2026.05.04)
+
+**Objective:** Synchronize the document's unique identifier (title) with the character's name in the D1 database when edited.
+
+**Changes:**
+1.  **API Support (`functions/api/[[path]].js`)**:
+    *   Added support for an `oldTitle` parameter in the `POST /wiki` endpoint.
+    *   If `oldTitle` differs from the new `title`, the API performs a SQL `UPDATE` on the primary key of the `wiki_pages` table.
+    *   Automatically updates related records in the `wiki_revisions` table to maintain data integrity.
+    *   Includes a check to prevent overwriting existing documents if the new title already exists.
+2.  **Editor Integration (`edit.js`)**:
+    *   Updated the save logic to detect when the name field has been modified.
+    *   Sends both the original ID (`oldTitle`) and the new name (as the new `title`) to the backend.
+    *   On successful save, redirects the user to the updated URL hash (`detail.html#NewName`), ensuring seamless navigation.
+
 ## Database Migration (Firestore to Cloudflare D1) (2026.05.03)
 
 **Objective:** Migrate the wiki backend from Firebase Firestore to Cloudflare D1 for better performance, cost optimization, and simplified management.
@@ -124,4 +152,3 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
 3.  **Wrangler Configuration**:
     *   Bound the D1 database `fabulousbeasts` to the worker as `env.DB`.
     *   Configured both `wrangler.toml` and `wrangler.jsonc` for consistent development environments.
-

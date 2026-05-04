@@ -88,7 +88,26 @@ export async function onRequest(context) {
     if (request.method === "POST" && apiPath === "/wiki") {
         try {
             const data = await request.json();
-            const { title, name, content, author, category, species, nation, alias, birthday, image, gallery } = data;
+            const { title, oldTitle, name, content, author, category, species, nation, alias, birthday, image, gallery } = data;
+
+            // [추가] 제목(ID) 변경 로직: oldTitle이 있고 title과 다를 경우 D1의 PK를 업데이트합니다.
+            if (oldTitle && oldTitle !== title) {
+                // 1. 새로운 제목이 이미 존재하는지 확인 (덮어쓰기 방지)
+                const existing = await env.DB.prepare("SELECT title FROM wiki_pages WHERE title = ?").bind(title).first();
+                if (existing) {
+                    return new Response(JSON.stringify({ error: "이미 존재하는 제목입니다. 다른 이름을 사용해 주세요." }), { status: 400, headers: corsHeaders });
+                }
+                
+                // 2. PK 업데이트
+                await env.DB.prepare("UPDATE wiki_pages SET title = ? WHERE title = ?").bind(title, oldTitle).run();
+                
+                // 3. 관련 리비전 제목도 함께 업데이트
+                try {
+                    await env.DB.prepare("UPDATE wiki_revisions SET title = ? WHERE title = ?").bind(title, oldTitle).run();
+                } catch (e) {
+                    console.error("Revision title update failed:", e);
+                }
+            }
 
             await env.DB.prepare(`
                 INSERT INTO wiki_pages (title, name, content, author, category, species, nation, alias, birthday, image, gallery, updated_at)
