@@ -184,14 +184,15 @@ async function loadInitialData() {
                 console.log("D1 data received for edit:", dbData);
                 const data = { 
                     ...baseData, 
-                    details: dbData.content,
-                    category: dbData.category,
-                    species: dbData.species,
-                    nation: dbData.nation,
-                    alias: dbData.alias,
-                    birthday: dbData.birthday,
-                    image: dbData.image,
-                    gallery: typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery
+                    name: dbData.name || baseData.name,
+                    details: dbData.content || baseData.details,
+                    category: dbData.category || baseData.category,
+                    species: dbData.species || baseData.species,
+                    nation: dbData.nation || baseData.nation,
+                    alias: dbData.alias || baseData.alias,
+                    birthday: dbData.birthday || baseData.birthday,
+                    image: dbData.image || baseData.image,
+                    gallery: dbData.gallery ? (typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery) : (baseData.gallery || [])
                 };
                 fillForm(data);
             } else {

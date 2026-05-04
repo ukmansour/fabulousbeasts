@@ -118,15 +118,16 @@ async function loadDetail() {
                 
                 const data = { 
                     ...baseData, 
-                    details: dbData.content,
-                    author: dbData.author,
-                    category: dbData.category,
-                    species: dbData.species,
-                    nation: dbData.nation,
-                    alias: dbData.alias,
-                    birthday: dbData.birthday,
-                    image: dbData.image,
-                    gallery: typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery,
+                    name: dbData.name || baseData.name,
+                    details: dbData.content || baseData.details,
+                    author: dbData.author || baseData.author,
+                    category: dbData.category || baseData.category,
+                    species: dbData.species || baseData.species,
+                    nation: dbData.nation || baseData.nation,
+                    alias: dbData.alias || baseData.alias,
+                    birthday: dbData.birthday || baseData.birthday,
+                    image: dbData.image || baseData.image,
+                    gallery: dbData.gallery ? (typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery) : (baseData.gallery || []),
                     updatedAt: { seconds: Math.floor(new Date(dbData.updated_at).getTime() / 1000) },
                     updatedBy: dbData.author
                 };
