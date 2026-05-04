@@ -77,7 +77,7 @@ export async function onRequest(context) {
     // 2-1. GET: 모든 문서의 이미지/이름 목록 (홈페이지 동기화용)
     if (request.method === "GET" && apiPath === "/images") {
         try {
-            const { results } = await env.DB.prepare("SELECT title, name, image FROM wiki_pages").all();
+            const { results } = await env.DB.prepare("SELECT title, name, image, category FROM wiki_pages").all();
             return new Response(JSON.stringify(results), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
