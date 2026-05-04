@@ -61,8 +61,11 @@ async function isNicknameTaken(nickname) {
     return !querySnapshot.empty;
 }
 
+let isProcessingAuth = false;
+
 authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    isProcessingAuth = true;
     
     const nickname = nicknameInput.value.trim();
     const email = emailInput.value.trim();
@@ -76,7 +79,6 @@ authForm.addEventListener('submit', async (e) => {
     try {
         if (isLogin) {
             // [로그인 로직]
-            // 닉네임으로 가입했으므로 내부 도메인을 붙여서 인증
             const loginEmail = nickname.includes('@') ? nickname : nickname + INTERNAL_DOMAIN;
             await signInWithEmailAndPassword(auth, loginEmail, password);
             window.location.href = 'index.html';
@@ -99,7 +101,7 @@ authForm.addEventListener('submit', async (e) => {
             await updateProfile(user, { displayName: nickname });
             console.log("2단계: 프로필 업데이트 성공");
 
-            // 4. Firestore 및 Cloudflare D1 데이터베이스에 유저 정보 동기화 (순차 진행으로 안정성 확보)
+            // 4. Firestore 및 Cloudflare D1 데이터베이스에 유저 정보 동기화
             try {
                 // [필수] Firestore 문서 생성
                 await setDoc(doc(db, "users", user.uid), {
@@ -113,7 +115,7 @@ authForm.addEventListener('submit', async (e) => {
                 });
                 console.log("3단계: Firestore 유저 문서 생성 성공!");
 
-                // [선택] Cloudflare D1 동기화 (관리자 탭 표시용)
+                // [선택] Cloudflare D1 동기화
                 try {
                     await fetch('/api/user/role', {
                         method: 'POST',
@@ -145,6 +147,7 @@ authForm.addEventListener('submit', async (e) => {
         console.error(error);
         errorMessage.textContent = error.message;
         errorMessage.style.display = 'block';
+        isProcessingAuth = false; // 에러 시 플래그 초기화
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = isLogin ? '로그인' : '멤버 가입';
@@ -152,7 +155,8 @@ authForm.addEventListener('submit', async (e) => {
 });
 
 onAuthStateChanged(auth, (user) => {
-    if (user && !window.location.hash.includes('logout')) {
+    // 가입/로그인 버튼을 눌러서 처리 중일 때는 여기서 강제 이동하지 않음!
+    if (user && !isProcessingAuth && !window.location.hash.includes('logout')) {
         window.location.href = 'index.html';
     }
 });
