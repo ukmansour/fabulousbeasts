@@ -89,48 +89,56 @@ authForm.addEventListener('submit', async (e) => {
             const taken = await isNicknameTaken(nickname);
             if (taken) throw new Error("이미 존재하는 닉네임입니다. 다른 이름을 사용해 주세요.");
 
-            // 2. 계정 생성
+            // 2. 계정 생성 (Authentication)
             const signupEmail = email || (nickname + INTERNAL_DOMAIN);
             const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, password);
             const user = userCredential.user;
+            console.log("1단계: 계정 생성 성공", user.uid);
 
             // 3. Firebase Auth 프로필 업데이트
             await updateProfile(user, { displayName: nickname });
+            console.log("2단계: 프로필 업데이트 성공");
 
-            // 4. Firestore 및 Cloudflare D1 데이터베이스에 유저 정보 동기화 (동시 진행)
+            // 4. Firestore 및 Cloudflare D1 데이터베이스에 유저 정보 동기화 (순차 진행으로 안정성 확보)
             try {
-                await Promise.all([
-                    // Firestore 저장 (요청하신 표준 필드 사용)
-                    setDoc(doc(db, "users", user.uid), {
-                        uid: user.uid,
-                        email: signupEmail,
-                        name: nickname || "이름 없음", // 방어 코드: 이름이 없으면 '이름 없음'으로 저장
-                        role: 'member',
-                        isBanned: false,
-                        createdAt: serverTimestamp(),
-                        updatedAt: serverTimestamp()
-                    }),
-                    // Cloudflare D1 저장 (관리자 탭 표시용)
-                    fetch('/api/user/role', {
+                // [필수] Firestore 문서 생성
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid,
+                    email: signupEmail,
+                    name: nickname || "이름 없음",
+                    role: 'member',
+                    isBanned: false,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+                console.log("3단계: Firestore 유저 문서 생성 성공!");
+
+                // [선택] Cloudflare D1 동기화 (관리자 탭 표시용)
+                try {
+                    await fetch('/api/user/role', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             uid: user.uid,
-                            name: nickname, // 'name' 필드 명시
-                            nickname: nickname, // 하위 호환성
+                            name: nickname,
+                            nickname: nickname,
                             email: signupEmail,
                             role: 'member',
                             isBanned: false,
                             secret: '9889'
                         })
-                    })
-                ]);
-                console.log("User successfully synchronized to Firestore and D1.");
-            } catch (syncError) {
-                console.error("Synchronization failed:", syncError);
+                    });
+                    console.log("4단계: D1 데이터베이스 동기화 성공");
+                } catch (d1Error) {
+                    console.warn("D1 동기화 실패 (Firestore는 성공):", d1Error);
+                }
+
+            } catch (firestoreError) {
+                console.error("Firestore 저장 실패 (중단):", firestoreError);
+                throw new Error("데이터베이스 등록에 실패했습니다. 보안 규칙을 확인해 주세요.");
             }
 
-            alert(`${nickname}님, 가입이 완료되었습니다!`);
+            alert(`${nickname}님, 가입 및 DB 등록이 완료되었습니다!`);
             window.location.href = 'index.html';
         }
     } catch (error) {
