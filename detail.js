@@ -391,7 +391,7 @@ async function renderRecentChanges() {
         const results = await response.json();
         
         list.innerHTML = results.map(d => {
-            const date = d.updated_at ? new Date(d.updated_at.replace(' ', 'T') + (d.updated_at.endsWith('Z') ? '' : 'Z')).toLocaleString('ko-KR') : '-';
+            const date = d.updated_at ? new Date(d.updated_at.replace(' ', 'T') + (d.updated_at.endsWith('Z') ? '' : 'Z')).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
             return `
                 <div style="margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid #f0f0f0;">
                     <a href="detail.html#${d.title}" style="font-size:13px; color:var(--text-link); text-decoration:none; font-weight:700;">${d.title}</a>
