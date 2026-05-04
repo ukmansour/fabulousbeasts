@@ -51,6 +51,7 @@
 
         <div class="admin-tabs">
             <div class="admin-tab active" id="tab-btn-users" onclick="switchTab('users')">사용자 관리</div>
+            <div class="admin-tab" id="tab-btn-wiki" onclick="switchTab('wiki')">문서 관리</div>
         </div>
 
         <div id="tab-users" class="tab-panel active">
@@ -58,7 +59,26 @@
                 <div class="loading">사용자 목록을 불러오는 중...</div>
             </div>
         </div>
+
+        <div id="tab-wiki" class="tab-panel">
+            <div id="wiki-admin-content">
+                <!-- JS handles this -->
+            </div>
+        </div>
     </main>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            
+            document.getElementById('tab-btn-' + tabId).classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            // 전역 이벤트로 탭 전환 알림 (admin.js에서 감지 가능)
+            window.dispatchEvent(new CustomEvent('adminTabSwitch', { detail: tabId }));
+        }
+    </script>
 
     <script type="module" src="admin.js?v=3"></script>
 </body>

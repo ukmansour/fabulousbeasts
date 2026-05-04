@@ -53,16 +53,23 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
 
 ## Administrator Management (2026.04.30)
 
-**Objective:** Provide a secure interface for existing administrators to manage user roles and promote/demote members.
+... (기존 내용) ...
+
+## Admin Tab Improvements & Document Creation (2026.05.04)
+
+**Objective:** Enhance the administrative interface with better organization and direct document creation tools.
 
 **Changes:**
-1.  **Admin Management Page (`admin.html`, `admin.js`)**:
-    *   Created a dedicated interface to list all registered users.
-    *   Implemented role-toggling functionality (Admin <-> Member).
-    *   Added security checks to ensure only existing administrators can access this page.
-2.  **Navigation Integration**:
-    *   Added a "관리자 설정" (Admin Settings) link to the site header, visible only to authorized administrators.
-    *   Synchronized user role fetching across `main.js` and `detail.js` for consistent UI feedback.
+1.  **Tabbed Admin Interface (`admin.html`)**:
+    *   Introduced a tab system to separate different administrative tasks.
+    *   Added "사용자 관리" (User Management) and "문서 관리" (Document Management) tabs.
+2.  **Document Creation Tool (`admin.js`)**:
+    *   Implemented a "새 문서 만들기" (Create New Document) feature within the Document Management tab.
+    *   Administrators can now input a specific Document ID and be redirected directly to the editor (`edit.html#ID`).
+    *   This provides a structured way to initiate new wiki pages without relying on search fallback links.
+3.  **UI/UX Refinement**:
+    *   Added a modern, card-based layout for the document creation form.
+    *   Included helpful tips and validation to ensure Document IDs are provided before redirection.
 
 ## Visual Layout Improvements (2026.04.30)
 

@@ -8,7 +8,18 @@ function initAdminToolbars() {
 }
 
 const contentArea = document.getElementById('admin-content');
+const wikiContentArea = document.getElementById('wiki-admin-content');
 let currentUser = null;
+
+// [추가] 탭 전환 이벤트 리스너
+window.addEventListener('adminTabSwitch', (e) => {
+    const tabId = e.detail;
+    if (tabId === 'wiki') {
+        renderWikiAdminPage();
+    } else {
+        renderAdminPage();
+    }
+});
 
 onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
@@ -38,6 +49,7 @@ onAuthStateChanged(auth, async (user) => {
         // [읽기 최적화] 마스터 관리자 계정은 즉시 허용 (DB 읽기 0)
         if (user.email === "hodu@youshouyan.wiki") {
             renderAdminPage();
+            renderWikiAdminPage(); // 초기 로드 시 둘 다 렌더링 준비
             return;
         }
 
@@ -46,6 +58,7 @@ onAuthStateChanged(auth, async (user) => {
         if (userSnap.exists() && userSnap.data().role === 'admin') {
             sessionStorage.setItem(`role_${user.uid}`, 'admin');
             renderAdminPage();
+            renderWikiAdminPage();
         } else {
             showRecoveryUI();
         }
@@ -92,6 +105,7 @@ function showRecoveryUI() {
 }
 
 async function renderAdminPage() {
+    if (!contentArea) return;
     contentArea.innerHTML = `
         <div style="display:flex; justify-content:center; padding:3rem;">
             <div class="loading-spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid var(--primary-color); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite;"></div>
@@ -180,6 +194,43 @@ async function renderAdminPage() {
         console.error("사용자 목록 불러오기 실패:", e);
         contentArea.innerHTML = `<div style="text-align:center; padding:3rem; color:#dc2626; font-weight:700;">오류: ${e.message}</div>`;
     }
+}
+
+// [추가] 문서 관리(Wiki) 탭 렌더링
+function renderWikiAdminPage() {
+    if (!wikiContentArea) return;
+    wikiContentArea.innerHTML = `
+        <div style="max-width:600px; margin:2rem auto; padding:2rem; background:white; border:1px solid #eee; border-radius:12px; box-shadow:0 4px 20px rgba(0,0,0,0.05);">
+            <h2 style="font-weight:900; margin-bottom:0.5rem;">새 문서 만들기</h2>
+            <p style="color:#666; font-size:0.85rem; margin-bottom:2rem;">새로운 캐릭터나 설정 문서를 즉시 생성합니다.</p>
+            
+            <div style="margin-bottom:1.5rem;">
+                <label style="display:block; font-size:0.8rem; font-weight:800; color:#444; margin-bottom:0.5rem;">문서 ID (영문/숫자 권장)</label>
+                <input type="text" id="new-doc-id" placeholder="예: tianlu, nok-호두" 
+                    style="width:100%; padding:0.8rem; border:1px solid #ddd; border-radius:8px; font-size:1rem; outline:none; transition:border-color 0.2s;"
+                    onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#ddd'">
+            </div>
+            
+            <button id="create-doc-btn" style="width:100%; padding:1rem; background:var(--primary-color); color:white; border:none; border-radius:8px; font-weight:900; cursor:pointer; font-size:1rem; transition:opacity 0.2s;">
+                문서 생성하러 가기
+            </button>
+            
+            <div style="margin-top:2rem; padding:1rem; background:#fff8f0; border-radius:8px; border-left:4px solid #f97316;">
+                <p style="font-size:0.8rem; color:#7c2d12; line-height:1.5;">
+                    💡 <strong>팁:</strong> 생성하려는 문서 ID가 이미 존재할 경우 해당 문서의 편집 화면으로 이동합니다.
+                </p>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('create-doc-btn').onclick = () => {
+        const id = document.getElementById('new-doc-id').value.trim();
+        if (!id) { alert("문서 ID를 입력해 주세요."); return; }
+        
+        // 특수문자 및 공백 처리 (URL 해시용)
+        const safeId = encodeURIComponent(id);
+        location.href = `edit.html#${safeId}`;
+    };
 }
 
 
