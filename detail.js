@@ -267,7 +267,8 @@ function renderContent(details) {
             .replace(/\[\[([^\]]+)\]\]/g, (match, p1) => {
                 const parts = p1.split('/');
                 if (parts.length > 1) {
-                    return `<a href="detail.html#${encodeURIComponent(parts[1].trim())}">${parts[0].trim()}</a>`;
+                    // [변경] [[문서제목/표시이름]] -> parts[0]이 제목, parts[1]이 표시이름
+                    return `<a href="detail.html#${encodeURIComponent(parts[0].trim())}">${parts[1].trim()}</a>`;
                 }
                 return `<a href="detail.html#${encodeURIComponent(p1.trim())}">${p1.trim()}</a>`;
             });

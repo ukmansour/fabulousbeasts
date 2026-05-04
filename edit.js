@@ -146,7 +146,8 @@ function previewRender(details) {
             .replace(/\[\[([^\]]+)\]\]/g, (match, p1) => {
                 const parts = p1.split('/');
                 if (parts.length > 1) {
-                    return `<a href="detail.html#${encodeURIComponent(parts[1].trim())}">${parts[0].trim()}</a>`;
+                    // [변경] [[문서제목/표시이름]] -> parts[0]이 제목, parts[1]이 표시이름
+                    return `<a href="detail.html#${encodeURIComponent(parts[0].trim())}">${parts[1].trim()}</a>`;
                 }
                 return `<a href="detail.html#${encodeURIComponent(p1.trim())}">${p1.trim()}</a>`;
             });
@@ -338,15 +339,16 @@ function initToolbar() {
                 const charData = allTitles.find(t => t.title === title);
                 const displayName = charData ? (charData.name || charData.title) : title;
                 
-                // 표시이름과 문서제목이 다를 경우 [[표시이름/문서제목]] 형식으로 삽입
-                const insertText = (displayName !== title) ? `${displayName}/${title}` : title;
+                // [변경] [[문서제목/표시이름]] 형식으로 삽입
+                const insertText = (displayName !== title) ? `${title}/${displayName}` : title;
 
                 const text = editor.value;
                 const before = text.substring(0, editor.selectionStart);
                 const openIdx = before.lastIndexOf('[[');
                 const after = text.substring(editor.selectionStart);
                 
-                editor.value = text.substring(0, openIdx + 2) + insertText + ']]' + after;
+                // 버그 수정: query 부분을 정확히 교체하고 뒤에 붙어있을 수 있는 ]] 처리
+                editor.value = text.substring(0, openIdx + 2) + insertText + ']]' + after.replace(/^\]\]/, '');
                 editor.focus();
                 const newPos = openIdx + insertText.length + 4;
                 editor.setSelectionRange(newPos, newPos);
@@ -375,7 +377,7 @@ function initToolbar() {
                 case 'underline': replacement = `__${sel || '밑줄'}__`; break;
                 case 'strike':    replacement = `~~${sel || '취소선'}~~`; break;
                 case 'link':      replacement = `[${sel || '링크이름'}](주소)`; break;
-                case 'ilink':     replacement = `[[${sel || '표시이름'}/${sel || '문서제목'}]]`; break;
+                case 'ilink':     replacement = `[[${sel || '문서제목'}/${sel || '표시이름'}]]`; break;
                 case 'image':     replacement = `![${sel || '설명'}](이미지주소)`; break;
                 case 'list':      replacement = `\n* ${sel || '항목'}`; break;
                 case 'hr':        replacement = `\n---\n`; break;
