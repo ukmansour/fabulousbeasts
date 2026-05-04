@@ -173,7 +173,8 @@ async function fetchFirestoreData() {
 
 async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
-    if (!list) return;
+    const listInline = document.getElementById('home-recent-list-inline');
+    if (!list && !listInline) return;
     
     try {
         const response = await fetch('/api/recent');
@@ -181,11 +182,13 @@ async function renderRecentChanges() {
         const results = await response.json();
         
         if (results.length === 0) {
-            list.innerHTML = '<p style="font-size:0.8rem; color:#999;">문서가 아직 없습니다.</p>';
+            const empty = '<p style="font-size:0.8rem; color:#999;">문서가 아직 없습니다.</p>';
+            if (list) list.innerHTML = empty;
+            if (listInline) listInline.innerHTML = empty;
             return;
         }
         
-        list.innerHTML = results.map(d => {
+        const html = results.map(d => {
             // [수정] 날짜 파싱 안정화
             let dateStr = '-';
             if (d.updated_at) {
@@ -204,9 +207,14 @@ async function renderRecentChanges() {
                     </div>
                 </div>`;
         }).join('');
+
+        if (list) list.innerHTML = html;
+        if (listInline) listInline.innerHTML = html;
     } catch (e) {
         console.error("Recent changes error:", e);
-        list.innerHTML = '<p style="font-size:0.8rem; color:#999;">불러오기 실패</p>';
+        const err = '<p style="font-size:0.8rem; color:#999;">불러오기 실패</p>';
+        if (list) list.innerHTML = err;
+        if (listInline) listInline.innerHTML = err;
     }
     
     // 무한 루프 방지: 타이머가 없을 때만 설정
