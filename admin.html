@@ -46,8 +46,11 @@
     </header>
 
     <main class="admin-container">
-        <h1>관리자 설정</h1>
-        <p style="color:#666; margin-bottom:2rem;">회원 권한 관리를 할 수 있습니다.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h1 style="margin-bottom:0;">관리자 설정</h1>
+            <button onclick="quickCreateDoc()" style="padding:0.6rem 1.2rem; background:var(--primary-color); color:white; border:none; border-radius:6px; font-weight:800; cursor:pointer; box-shadow:0 2px 10px rgba(0,160,233,0.2);">+ 새 문서 만들기</button>
+        </div>
+        <p style="color:#666; margin-bottom:2rem;">회원 권한 관리 및 시스템 설정을 할 수 있습니다.</p>
 
         <div class="admin-tabs">
             <div class="admin-tab active" id="tab-btn-users" onclick="switchTab('users')">사용자 관리</div>
@@ -77,6 +80,13 @@
             
             // 전역 이벤트로 탭 전환 알림 (admin.js에서 감지 가능)
             window.dispatchEvent(new CustomEvent('adminTabSwitch', { detail: tabId }));
+        }
+
+        function quickCreateDoc() {
+            const id = prompt("새로 만들 문서의 ID를 입력해 주세요 (영문/숫자 권장):");
+            if (id && id.trim()) {
+                location.href = `edit.html#${encodeURIComponent(id.trim())}`;
+            }
         }
     </script>
 
