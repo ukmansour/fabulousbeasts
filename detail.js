@@ -264,7 +264,13 @@ function renderContent(details) {
             .replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>')
             .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:500px; border-radius:8px; display:block; margin:20px auto;">')
             .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
-            .replace(/\[\[([^\]]+)\]\]/g, '<a href="detail.html#$1">$1</a>');
+            .replace(/\[\[([^\]]+)\]\]/g, (match, p1) => {
+                const parts = p1.split('/');
+                if (parts.length > 1) {
+                    return `<a href="detail.html#${encodeURIComponent(parts[1].trim())}">${parts[0].trim()}</a>`;
+                }
+                return `<a href="detail.html#${encodeURIComponent(p1.trim())}">${p1.trim()}</a>`;
+            });
     }
 
     const lines = details.replace(/\r\n/g, '\n').split('\n');
