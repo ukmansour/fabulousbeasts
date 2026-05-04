@@ -28,15 +28,17 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
 3.  **Content Purge**:
     *   Reset `characters/index.js` to remove all previous descriptions, providing a clean slate for the administrator to rebuild the wiki.
 
-## Character Relocation (2026.04.30)
+## Character Reorganization (2026.05.04)
 
-**Objective:** Elevate '사불상 (四不像)' to the main character category as requested.
+**Objective:** Organize characters into specific categories based on the D1 database for better navigation and classification.
 
 **Changes:**
-1.  **Category Update (`characters/index.js`)**:
-    *   Moved '사불상 (四不像)' from `녹인점` -> `주인` to `메인 캐릭터` -> `사장님`.
-    *   Updated the character's internal category tag to `메인 캐릭터`.
-    *   This ensures he appears at the top of the character list and is correctly grouped with other primary characters.
+1.  **Updated Categories (`characters/index.js`)**:
+    *   Renamed "운남산 언덕" to "채운산 언덕".
+    *   Reordered the `CATEGORIES` array to match the requested order: 메인 캐릭터, 녹인점, 고대, 지옥, 토보서 그룹, 채운산 언덕, 기린, 맹극, 와묘, 신조, 천상, 기타.
+2.  **Dynamic Grid Integration**:
+    *   The homepage grid now automatically uses this new order when rendering category sections from the D1 database.
+    *   Ensures that character search and filtering align with these updated groups.
 
 ## Global Data Synchronization (2026.04.30)
 
