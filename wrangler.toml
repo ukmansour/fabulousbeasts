@@ -1,12 +1,4 @@
-name = "fabulousbeasts"
-main = "worker.js"
 compatibility_date = "2026-05-04"
-
-# 도메인 라우팅 설정
-routes = [
-  { pattern = "fabulousbeasts.kr/*", zone_name = "fabulousbeasts.kr" },
-  { pattern = "wiki.fabulousbeasts.kr/*", zone_name = "fabulousbeasts.kr" }
-]
 
 # 정적 자산 설정 (Frontend)
 [assets]
