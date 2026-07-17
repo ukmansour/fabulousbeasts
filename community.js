@@ -473,10 +473,21 @@ async function openDetailModal(postId) {
     
     // 이미지가 있으면 표시
     if (post.image) {
+        console.log('게시글 이미지 URL:', post.image);
         const imgEl = document.createElement('img');
         imgEl.src = post.image;
-        imgEl.style.cssText = 'max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 1rem; cursor: pointer;';
+        imgEl.alt = '게시글 이미지';
+        imgEl.style.cssText = 'max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 1rem; cursor: pointer; display: block;';
+        imgEl.onload = () => console.log('이미지 로드 성공:', post.image);
         imgEl.onclick = () => window.open(post.image, '_blank');
+        imgEl.onerror = () => {
+            console.error('이미지 로드 실패:', post.image);
+            imgEl.style.display = 'none';
+            const errorMsg = document.createElement('div');
+            errorMsg.textContent = '이미지를 불러올 수 없습니다.';
+            errorMsg.style.cssText = 'color: #868e96; font-size: 0.85rem; padding: 1rem; background: #f8f9fa; border-radius: 6px; margin-bottom: 1rem; text-align: center;';
+            bodyEl.insertBefore(errorMsg, bodyEl.firstChild);
+        };
         bodyEl.appendChild(imgEl);
     }
     
