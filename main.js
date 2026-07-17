@@ -97,24 +97,67 @@ onAuthStateChanged(auth, async (user) => {
     }
     updateCommunityUI();
 });
-    } else {
-        currentUser = null;
-        userRole = 'guest';
-        info.innerHTML = `<a href="auth.html" class="nav-link">로그인</a>`;
-    }
-    updateCommunityUI();
-});
 
 async function initHome() {
-    initSearch();
-    renderRecentChanges();
-    loadSettings(); // [신규] 공지사항 및 소식 불러오기
+    // 로딩 표시
+    showLoadingIndicator();
     
-    // [신규] 홈페이지의 하드코딩된 이미지들을 D1에 저장된 최신 편집 사진으로 동기화합니다.
-    await syncHomepageImages();
-    
-    // 30초마다 실시간 동기화 유지
-    setInterval(syncHomepageImages, 30000);
+    try {
+        // [중요] D1 데이터 먼저 로드 - await로 완료될 때까지 대기
+        await syncHomepageImages();
+        
+        // D1 데이터 로드 완료 후 나머지 초기화
+        initSearch();
+        renderRecentChanges();
+        loadSettings(); // 공지사항 및 소식 불러오기
+        
+        // 30초마다 실시간 동기화 유지
+        setInterval(syncHomepageImages, 30000);
+        
+    } catch (error) {
+        console.error('초기화 실패:', error);
+        showErrorMessage();
+    } finally {
+        hideLoadingIndicator();
+    }
+}
+
+function showLoadingIndicator() {
+    const container = document.getElementById('char-grid');
+    if (container) {
+        container.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 2rem; gap: 1rem;">
+                <div style="width: 50px; height: 50px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-color); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="color: #666; font-size: 0.95rem;">캐릭터 정보를 불러오는 중...</p>
+            </div>
+            <style>
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            </style>
+        `;
+    }
+}
+
+function hideLoadingIndicator() {
+    // 로딩 인디케이터는 syncHomepageImages()에서 실제 컨텐츠로 교체됨
+}
+
+function showErrorMessage() {
+    const container = document.getElementById('char-grid');
+    if (container) {
+        container.innerHTML = `
+            <div style="padding: 4rem 2rem; text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                <h3 style="color: #ff4d4f; margin-bottom: 0.5rem;">데이터를 불러올 수 없습니다</h3>
+                <p style="color: #666; margin-bottom: 1.5rem;">서버 연결에 문제가 있습니다. 잠시 후 다시 시도해 주세요.</p>
+                <button onclick="location.reload()" style="padding: 0.8rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">
+                    새로고침
+                </button>
+            </div>
+        `;
+    }
 }
 
 async function loadSettings() {
