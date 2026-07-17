@@ -343,36 +343,41 @@ function renderUpcomingBirthdays() {
         return;
     }
 
-    const closest = bdayChars.map(c => {
+    // 가장 가까운 3명의 생일을 가져옵니다
+    const closestThree = bdayChars.map(c => {
         const parsed = parseBirthday(c.birthday);
         if (!parsed) return null;
         const info = getNextBirthdayInfo(parsed.month, parsed.day);
         return { char: c, info };
     }).filter(item => item !== null)
-      .sort((a, b) => a.info.daysLeft - b.info.daysLeft)[0];
+      .sort((a, b) => a.info.daysLeft - b.info.daysLeft)
+      .slice(0, 3); // 최대 3명
 
-    if (!closest) {
+    if (closestThree.length === 0) {
         container.innerHTML = `<div style="padding: 1rem; text-align: center; color: #888;">다가오는 생일 정보가 없습니다.</div>`;
         return;
     }
 
-    const c = closest.char;
-    const info = closest.info;
-    const ddayText = info.isToday ? 'D-Day' : `D-${info.daysLeft}`;
-    const nextDateStr = `${info.nextDate.getMonth() + 1}월 ${info.nextDate.getDate()}일`;
+    container.innerHTML = closestThree.map(item => {
+        const c = item.char;
+        const info = item.info;
+        const ddayText = info.isToday ? 'D-Day' : `D-${info.daysLeft}`;
+        const nextDateStr = `${info.nextDate.getMonth() + 1}월 ${info.nextDate.getDate()}일`;
 
-    container.innerHTML = `
-        <a href="detail.html#${encodeURIComponent(c.id)}" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none; color: inherit; padding: 0.3rem 0;">
-            <img src="${c.image || 'https://via.placeholder.com/50'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ffc9db;">
-            <div style="flex: 1;">
-                <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-main);">${c.name}</div>
-                <div style="font-size: 0.75rem; color: #868e96;">${nextDateStr}</div>
-            </div>
-            <span style="font-weight: 800; color: #d6336c; font-size: 0.8rem; background: #fff0f6; padding: 0.2rem 0.6rem; border-radius: 12px; border: 1px solid #ffc9db; font-family: monospace;">
-                ${ddayText}
-            </span>
-        </a>
-    `;
+        return `
+            <a href="detail.html#${encodeURIComponent(c.id)}" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none; color: inherit; padding: 0.3rem 0; margin-bottom: 0.5rem;">
+                <img src="${c.image || 'https://via.placeholder.com/50'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ffc9db;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-main);">${c.name}</div>
+                    <div style="font-size: 0.75rem; color: #868e96;">${nextDateStr}</div>
+                </div>
+                <span style="font-weight: 800; color: #d6336c; font-size: 0.8rem; background: #fff0f6; padding: 0.2rem 0.6rem; border-radius: 12px; border: 1px solid #ffc9db; font-family: monospace;">
+                    ${ddayText}
+                </span>
+            </a>
+        `;
+    }).join('');
+}
 }
 
 function updateCommunityUI() {
