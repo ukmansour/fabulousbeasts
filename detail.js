@@ -212,6 +212,45 @@ function renderGalleryOnlyPage(data) {
     if (contentArea) contentArea.innerHTML = html;
 }
 
+function parseBirthday(birthdayStr) {
+    if (!birthdayStr) return null;
+    let match = birthdayStr.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (match) {
+        return { month: parseInt(match[2], 10), day: parseInt(match[3], 10) };
+    }
+    match = birthdayStr.match(/(\d{1,2})[-/.](\d{1,2})/);
+    if (match) {
+        return { month: parseInt(match[1], 10), day: parseInt(match[2], 10) };
+    }
+    match = birthdayStr.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+    if (match) {
+        return { month: parseInt(match[1], 10), day: parseInt(match[2], 10) };
+    }
+    return null;
+}
+
+function getNextBirthdayInfo(month, day) {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    let bday = new Date(currentYear, month - 1, day);
+    
+    const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const bdayZero = new Date(bday.getFullYear(), bday.getMonth(), bday.getDate());
+    
+    if (bdayZero < todayZero) {
+        bday = new Date(currentYear + 1, month - 1, day);
+    }
+    
+    const diffTime = bday.getTime() - todayZero.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return {
+        nextDate: bday,
+        daysLeft: diffDays,
+        isToday: diffDays === 0
+    };
+}
+
 function renderInfobox(data) {
     if (!infoboxArea || isGalleryPage) return;
     const gallery = data.gallery || [];
@@ -243,7 +282,22 @@ function renderInfobox(data) {
                     ${data.alias ? `<tr><th style="background:#f4f4f4; width:35%; padding:5px; border:1px solid #eee; text-align:left;">별명</th><td style="padding:5px; border:1px solid #eee;">${data.alias}</td></tr>` : ''}
                     ${data.species ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">종족</th><td style="padding:5px; border:1px solid #eee;">${data.species}</td></tr>` : ''}
                     ${data.nation ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">국적</th><td style="padding:5px; border:1px solid #eee;">${data.nation}</td></tr>` : ''}
-                    ${data.birthday ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">생일</th><td style="padding:5px; border:1px solid #eee;">${data.birthday}</td></tr>` : ''}
+                    ${(() => {
+                        if (!data.birthday) return '';
+                        const parsed = parseBirthday(data.birthday);
+                        let birthdayHtml = `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">생일</th><td style="padding:5px; border:1px solid #eee;">${data.birthday}`;
+                        if (parsed) {
+                            const info = getNextBirthdayInfo(parsed.month, parsed.day);
+                            const nextDateStr = `${info.nextDate.getFullYear()}년 ${info.nextDate.getMonth() + 1}월 ${info.nextDate.getDate()}일`;
+                            if (info.isToday) {
+                                birthdayHtml += `<br><span style="color:#d6336c; font-weight:bold; font-size:12px; display:inline-block; margin-top:4px; animation: pulse 1.5s infinite;">🎂 오늘 생일입니다! 🎉</span>`;
+                            } else {
+                                birthdayHtml += `<br><span style="color:#666; font-size:11px; display:inline-block; margin-top:4px;">다음 생일: ${nextDateStr}<br>(${info.daysLeft}일 남음)</span>`;
+                            }
+                        }
+                        birthdayHtml += `</td></tr>`;
+                        return birthdayHtml;
+                    })()}
                     ${data.customInfo && Array.isArray(data.customInfo) ? data.customInfo.map(field => `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">${field.key.replace(/</g, '&lt;')}</th><td style="padding:5px; border:1px solid #eee;">${applyInline(field.value)}</td></tr>`).join('') : ''}
                 </table>
                 ${galleryHTML}
@@ -386,7 +440,7 @@ async function renderRecentChanges() {
     const list = document.getElementById('home-recent-list');
     if (!list) return;
     try {
-        const response = await fetch('/recent');
+        const response = await fetch('/api/recent');
         if (!response.ok) return;
         const results = await response.json();
         

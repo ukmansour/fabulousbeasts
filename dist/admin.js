@@ -1,63 +1,75 @@
-import { db, auth, getDocSafe, getDocsSafe } from './firebase-config.js';
-import { collection, doc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { db, auth } from './firebase-config.js';
+import { 
+    doc, 
+    updateDoc, 
+    serverTimestamp, 
+    collection, 
+    onSnapshot, 
+    query, 
+    orderBy 
+} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// ─── 툴바 삽입 함수 ────────────────────────────────────────────
-window.insertText = (textareaId, type) => {
-    const ta = document.getElementById(textareaId);
-    if (!ta) return;
-    const start = ta.selectionStart;
-    const end = ta.selectionEnd;
-    const text = ta.value;
-    const selected = text.substring(start, end);
-    let replacement = '';
-    switch (type) {
-        case 'bold':   replacement = `**${selected || '굵은글씨'}**`; break;
-        case 'italic': replacement = `*${selected || '기울임'}*`; break;
-        case 'list':   replacement = `\n• ${selected || '항목'}`; break;
-        case 'link':   replacement = `[${selected || '링크이름'}](주소)`; break;
-        case 'hr':     replacement = `\n---\n`; break;
-    }
-    ta.focus();
-    ta.value = text.substring(0, start) + replacement + text.substring(end);
-    const pos = start + replacement.length;
-    ta.setSelectionRange(pos, pos);
-};
-
-// 툴바 버튼 이벤트 리스너 설정
+// 툴바 버튼 이벤트 리스너 설정 (사용자 관리 페이지에서 필요하지 않다면 빈 함수로 두거나 제거)
 function initAdminToolbars() {
-    document.querySelectorAll('.admin-toolbar-btn').forEach(btn => {
-        // 기존 onclick 제거 (이미 존재할 수 있으므로)
-        btn.onclick = null; 
-        btn.addEventListener('click', (e) => {
-            const targetId = btn.getAttribute('data-target');
-            const type = btn.getAttribute('data-type');
-            if (targetId && type) {
-                window.insertText(targetId, type);
-            }
-        });
-    });
+    // 사용자 관리에서는 현재 사용하지 않음
 }
 
 const contentArea = document.getElementById('admin-content');
+const wikiContentArea = document.getElementById('wiki-admin-content');
 let currentUser = null;
 
+// [추가] 탭 전환 이벤트 리스너
+window.addEventListener('adminTabSwitch', (e) => {
+    const tabId = e.detail;
+    if (tabId === 'wiki') {
+        renderWikiAdminPage();
+    } else if (tabId === 'settings') {
+        renderSettingsAdminPage();
+    } else {
+        renderAdminPage();
+    }
+});
+
 onAuthStateChanged(auth, async (user) => {
+    const info = document.getElementById('user-info');
     if (!user) { location.href = 'auth.html'; return; }
     currentUser = user;
 
+    // [읽기 최적화] 헤더에 표시할 이름은 Auth에서 가져옵니다 (DB 읽기 0)
+    if (info) {
+        const nickname = user.displayName || user.email?.split('@')[0] || "관리자";
+        info.innerHTML = `
+            <span style="color:white; font-size:0.75rem; margin-right:1rem;">${nickname}님</span>
+            <a href="#" class="nav-link" id="logout-btn">로그아웃</a>
+        `;
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.onclick = (e) => {
+                e.preventDefault();
+                if (confirm("로그아웃하시습니까?")) {
+                    sessionStorage.removeItem(`role_${user.uid}`);
+                    auth.signOut().then(() => location.reload());
+                }
+            };
+        }
+    }
+
     try {
-        // [중요] 마스터 관리자 계정은 즉시 허용
+        // [읽기 최적화] 마스터 관리자 계정은 즉시 허용 (DB 읽기 0)
         if (user.email === "hodu@youshouyan.wiki") {
             renderAdminPage();
+            renderWikiAdminPage(); // 초기 로드 시 둘 다 렌더링 준비
             return;
         }
 
+        // [읽기 최적화] 세션 캐시 확인
         const userSnap = await getDocSafe(doc(db, "users", user.uid));
         if (userSnap.exists() && userSnap.data().role === 'admin') {
+            sessionStorage.setItem(`role_${user.uid}`, 'admin');
             renderAdminPage();
+            renderWikiAdminPage();
         } else {
-            // users 컬렉션에 없거나 권한이 없는 경우 → 보안 코드로 복구 허용
             showRecoveryUI();
         }
     } catch (e) {
@@ -68,14 +80,14 @@ onAuthStateChanged(auth, async (user) => {
 
 function showRecoveryUI() {
     contentArea.innerHTML = `
-        <div style="text-align:center; padding:3rem; background:#fffbe6; border:2px solid #ffe58f; border-radius:8px; max-width:500px; margin:2rem auto;">
-            <h2 style="color:#856404;">관리자 권한 복구</h2>
-            <p style="margin-top:1rem; color:#555;">데이터베이스에 관리자 정보가 없습니다.<br>보안 코드로 현재 계정을 관리자로 등록할 수 있습니다.</p>
-            <input type="password" id="recovery-code" placeholder="보안 코드 입력" 
-                style="margin-top:1.5rem; padding:0.6rem 1rem; border:1px solid #ccc; border-radius:4px; font-size:1rem; width:200px; display:block; margin-left:auto; margin-right:auto;">
+        <div style="text-align:center; padding:3rem; background:#f9f9f9; border:2px solid #555; max-width:500px; margin:2rem auto;">
+            <h2 style="color:#333; text-transform:uppercase; letter-spacing:1px;">ADMIN RECOVERY</h2>
+            <p style="margin-top:1rem; color:#666; font-size:0.9rem;">ENTER SECURITY CODE TO ACTIVATE ADMINISTRATIVE PRIVILEGES.</p>
+            <input type="password" id="recovery-code" placeholder="SECURITY CODE" 
+                style="margin-top:1.5rem; padding:0.6rem 1rem; border:1px solid #ccc; border-radius:0; font-size:1rem; width:200px; display:block; margin-left:auto; margin-right:auto; font-family:monospace; text-align:center;">
             <button id="recovery-btn" 
-                style="margin-top:1rem; padding:0.8rem 2rem; background:#00a0e9; color:white; border:none; border-radius:4px; font-weight:bold; cursor:pointer; font-size:1rem;">
-                관리자로 등록
+                style="margin-top:1rem; padding:0.8rem 2rem; background:#333; color:white; border:none; border-radius:0; font-weight:bold; cursor:pointer; font-size:1rem; text-transform:uppercase;">
+                ACTIVATE
             </button>
         </div>
     `;
@@ -85,242 +97,286 @@ function showRecoveryUI() {
         if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
         try {
-            await setDoc(doc(db, "users", currentUser.uid), {
+            // 1. Firestore 업데이트 (updateDoc이 아닌 첫 생성이므로 setDoc 사용 가능하지만 여기서는 merge 권장)
+            const userRef = doc(db, "users", currentUser.uid);
+            await setDoc(userRef, {
                 uid: currentUser.uid,
-                nickname: currentUser.displayName || "관리자",
+                name: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "익명"),
                 email: currentUser.email || "",
                 role: 'admin',
-                joinedAt: serverTimestamp(),
-                contributionCount: 0
+                isBanned: false,
+                updatedAt: serverTimestamp()
+            }, { merge: true });
+            
+            // 2. Cloudflare D1 업데이트
+            await fetch('/api/user/role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    uid: currentUser.uid,
+                    role: 'admin',
+                    name: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "익명"),
+                    email: currentUser.email || "",
+                    isBanned: false,
+                    secret: code
+                })
             });
-            alert("관리자 등록 완료! 페이지를 새로고침합니다.");
+
+            alert("관리자 권한이 활성화되었습니다!");
             location.reload();
         } catch (e) {
-            alert("등록 실패: " + e.message);
+            alert("활성화 실패: " + e.message);
         }
     };
 }
 
-async function renderAdminPage() {
-    contentArea.innerHTML = `<p style="color:#999; text-align:center; padding:2rem;">사용자 목록 불러오는 중...</p>`;
-    await loadAndRenderUsers();
-}
+let unsubscribeUsers = null;
 
-async function loadAndRenderUsers() {
-    try {
-        // 사용자 목록은 최대 100명까지만 (필요 시 페이징 구현 권장)
-        const snap = await getDocsSafe(collection(db, "users"), 100);
-        
-        if (snap.empty) {
+async function renderAdminPage() {
+    if (!contentArea) return;
+    
+    // 이전 리스너가 있다면 해제
+    if (unsubscribeUsers) unsubscribeUsers();
+
+    contentArea.innerHTML = `
+        <div style="display:flex; justify-content:center; padding:2rem;">
+            <div class="loading-spinner" style="border: 2px solid #f3f3f3; border-top: 3px solid #333; border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite;"></div>
+        </div>
+    `;
+    
+    // [실시간 업데이트] Firestore users 컬렉션을 감시합니다.
+    const q = query(collection(db, "users"), orderBy("updatedAt", "desc"));
+    
+    unsubscribeUsers = onSnapshot(q, (snapshot) => {
+        const users = [];
+        snapshot.forEach(doc => users.push(doc.data()));
+
+        if (users.length === 0) {
             contentArea.innerHTML = `
-                <div style="text-align:center; padding:2rem; color:#999;">
-                    <p>등록된 사용자가 없습니다.</p>
-                    <p style="font-size:0.85rem; margin-top:0.5rem;">다른 사용자들이 사이트에 접속하면 자동으로 목록에 추가됩니다.</p>
-                    <button onclick="location.reload()" style="margin-top:1rem; padding:0.5rem 1.2rem; cursor:pointer; border:1px solid #ccc; border-radius:4px;">새로고침</button>
-                </div>
-            `;
+                <div style="text-align:center; padding:3rem; color:#999;">
+                    <p style="font-size:0.85rem; margin-bottom:1.5rem;">가입한 회원이 없습니다.</p>
+                </div>`;
             return;
         }
 
-        let users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        
-        // 관리자 먼저, 그 다음 가입일 순 정렬
-        users.sort((a, b) => {
-            if (a.role === 'admin' && b.role !== 'admin') return -1;
-            if (a.role !== 'admin' && b.role === 'admin') return 1;
-            const ta = a.joinedAt?.seconds ?? 0;
-            const tb = b.joinedAt?.seconds ?? 0;
-            return tb - ta;
-        });
-
         let html = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
-                <p style="font-size:0.9rem; color:#555;">총 <strong>${users.length}</strong>명의 사용자가 등록되어 있습니다.</p>
-                <button onclick="window.refreshUserList()" style="padding:0.4rem 1rem; border:1px solid #ccc; border-radius:4px; cursor:pointer; font-size:0.85rem;">새로고침</button>
-            </div>
-            <table class="user-table" style="width:100%; border-collapse:collapse;">
-                <thead>
-                    <tr style="background:#f5f6f7; border-bottom:2px solid #ddd;">
-                        <th style="padding:0.8rem; text-align:left; font-size:0.85rem;">닉네임</th>
-                        <th style="padding:0.8rem; text-align:left; font-size:0.85rem;">이메일</th>
-                        <th style="padding:0.8rem; text-align:center; font-size:0.85rem;">현재 권한</th>
-                        <th style="padding:0.8rem; text-align:center; font-size:0.85rem;">가입일</th>
-                        <th style="padding:0.8rem; text-align:center; font-size:0.85rem;">권한 변경</th>
-                    </tr>
-                </thead>
-                <tbody>
+            <div style="max-width:900px; margin:0 auto; padding:0; background:white; border:1px solid #ccc;">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; background:#f0f0f0; border-bottom:1px solid #ccc;">
+                    <h2 style="font-size:1rem; font-weight:900; color:#111; margin:0;">사용자 관리 (${users.length})</h2>
+                    <span style="font-size:0.7rem; color:#666;">실시간 동기화 중</span>
+                </div>
+                
+                <div style="display:flex; flex-direction:column;">
         `;
 
-        users.forEach(user => {
-            const isMe = user.uid === currentUser.uid;
-            const role = user.role || 'member';
-            const isAdmin = role === 'admin';
-            const isBanned = role === 'banned';
-            const date = user.joinedAt?.seconds
-                ? new Date(user.joinedAt.seconds * 1000).toLocaleDateString('ko-KR')
-                : '기록 없음';
-
-            let roleBadge = '';
-            if (isAdmin) roleBadge = `<span style="background:#fef3c7; color:#92400e; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">관리자</span>`;
-            else if (isBanned) roleBadge = `<span style="background:#fee2e2; color:#dc2626; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">차단됨</span>`;
-            else roleBadge = `<span style="background:#f0f9ff; color:#0369a1; padding:0.2rem 0.6rem; border-radius:20px; font-size:0.8rem; font-weight:700;">일반 멤버</span>`;
-
-            let actionBtns = '';
-            if (isMe) {
-                actionBtns = `<span style="font-size:0.8rem; color:#aaa;">(본인)</span>`;
-            } else {
-                // 일반 멤버라면 -> 관리자 승격 / 차단 버튼
-                if (role === 'member') {
-                    actionBtns = `
-                        <button onclick="window.changeRole('${user.id}', 'admin')" style="padding:0.3rem 0.6rem; background:#00a0e9; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem; margin-right:4px;">관리자 승격</button>
-                        <button onclick="window.changeRole('${user.id}', 'banned')" style="padding:0.3rem 0.6rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem;">차단</button>
-                    `;
-                } 
-                // 관리자라면 -> 멤버 강등
-                else if (role === 'admin') {
-                    actionBtns = `
-                        <button onclick="window.changeRole('${user.id}', 'member')" style="padding:0.3rem 0.6rem; background:white; border:1px solid #dc2626; color:#dc2626; border-radius:4px; cursor:pointer; font-size:0.75rem;">▼ 멤버로 강등</button>
-                    `;
-                }
-                // 차단 상태라면 -> 차단 해제(멤버로)
-                else if (role === 'banned') {
-                    actionBtns = `
-                        <button onclick="window.changeRole('${user.id}', 'member')" style="padding:0.3rem 0.6rem; background:#10b981; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.75rem;">차단 해제</button>
-                    `;
-                }
+        users.forEach((u, index) => {
+            let roleText = '멤버';
+            let roleColor = '#0284c7';
+            let roleBg = '#f0f9ff';
+            
+            if (u.role === 'admin') {
+                roleText = '관리자';
+                roleColor = '#d97706';
+                roleBg = '#fffbeb';
+            } else if (u.isBanned === true) {
+                roleText = '차단';
+                roleColor = '#dc2626';
+                roleBg = '#fef2f2';
             }
 
+            // [방어 코드] 이름이 없으면 익명 표시
+            const displayName = u.name || u.nickname || (u.email ? u.email.split('@')[0] : '익명');
+
             html += `
-                <tr style="border-bottom:1px solid #eee; ${isMe ? 'background:#f8faff;' : ''} ${isBanned ? 'background:#fff5f5;' : ''}">
-                    <td style="padding:0.8rem; font-weight:${isMe ? '800' : '500'};">${user.nickname || '이름 없음'}${isMe ? ' <span style="color:#00a0e9; font-size:0.75rem;">(나)</span>' : ''}</td>
-                    <td style="padding:0.8rem; color:#666; font-size:0.85rem;">${user.email || '-'}</td>
-                    <td style="padding:0.8rem; text-align:center;">${roleBadge}</td>
-                    <td style="padding:0.8rem; text-align:center; color:#999; font-size:0.85rem;">${date}</td>
-                    <td style="padding:0.8rem; text-align:center;">${actionBtns}</td>
-                </tr>
+                <div style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1rem; ${index !== users.length - 1 ? 'border-bottom:1px solid #ccc;' : ''} transition:background 0.1s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
+                    <div style="flex:1; min-width:0; display:flex; align-items:center; gap:1.2rem;">
+                        <span style="font-size:0.9rem; font-weight:800; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:120px;">${displayName}</span>
+                        <span style="font-size:0.8rem; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; font-family:monospace;">${u.email || '이메일 없음'}</span>
+                    </div>
+
+                    <div style="display:flex; align-items:center; gap:0.8rem;">
+                        <span style="background:${roleBg}; color:${roleColor}; padding:2px 8px; border:1px solid ${roleColor}; font-size:0.7rem; font-weight:800; white-space:nowrap; text-transform:uppercase;">
+                            ${roleText}
+                        </span>
+                        
+                        <select onchange="window.changeUserRole('${u.uid}', this.value)" style="padding:0.3rem 0.6rem; border:1px solid #999; border-radius:0; font-size:0.75rem; background:#fff; cursor:pointer; outline:none; font-weight:700; color:#333; width:110px;">
+                            <option value="">권한 변경</option>
+                            <option value="member">멤버</option>
+                            <option value="admin">관리자</option>
+                            <option value="banned">차단하기</option>
+                        </select>
+                    </div>
+                </div>
             `;
         });
 
-        html += `</tbody></table>`;
+        html += `
+                </div>
+            </div>
+            <p style="text-align:center; font-size:0.7rem; color:#aaa; margin-top:1.5rem;">🔒 관리 권한 변경은 데이터 유실 없이 안전하게 처리됩니다.</p>
+        `;
         contentArea.innerHTML = html;
-
-    } catch (e) {
-        console.error("User list load error:", e);
-        contentArea.innerHTML = `<p style="color:red; padding:2rem; text-align:center;">오류: ${e.message}</p>`;
-    }
+    }, (error) => {
+        console.error("Firestore listen failed:", error);
+        contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:red;">권한이 없거나 데이터를 불러올 수 없습니다.</div>`;
+    });
 }
 
-window.changeRole = async (uid, newRole) => {
-    let actionText = '';
-    if (newRole === 'admin') actionText = '관리자로 승격';
-    else if (newRole === 'banned') actionText = '해당 사용자를 차단';
-    else actionText = '권한을 일반 멤버로 변경(또는 차단 해제)';
+// [추가] Firestore의 유저 데이터를 D1으로 동기화하는 함수
+window.importFirestoreUsers = async () => {
+    const code = prompt("데이터 동기화를 위한 보안 코드를 입력하세요:");
+    if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
-    const code = prompt(`${actionText}하시겠습니까?\n보안 코드를 입력하세요:`);
-    if (code === null) return;
+    if (!confirm("Firestore에 저장된 사용자들을 D1 데이터베이스로 가져오시겠습니까?")) return;
+
+    try {
+        const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
+        const snapshot = await getDocs(collection(db, "users"));
+        
+        let count = 0;
+        for (const docSnap of snapshot.docs) {
+            const u = docSnap.data();
+            await fetch('/api/user/role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    uid: u.uid,
+                    role: u.role || 'member',
+                    nickname: u.nickname || '',
+                    email: u.email || '',
+                    secret: '9889'
+                })
+            });
+            count++;
+        }
+        
+        alert(`${count}명의 사용자를 성공적으로 동기화했습니다!`);
+        renderAdminPage();
+    } catch (e) {
+        alert("동기화 실패: " + e.message);
+    }
+};
+
+// [추가] 문서 관리(Wiki) 탭 렌더링
+function renderWikiAdminPage() {
+    if (!wikiContentArea) return;
+    wikiContentArea.innerHTML = `
+        <div style="max-width:700px; margin:1rem auto; padding:2rem; background:white; border:1px solid #ccc;">
+            <h2 style="font-weight:900; margin-bottom:0.5rem; font-size:1.2rem;">문서 생성 및 관리</h2>
+            <p style="color:#666; font-size:0.85rem; margin-bottom:2rem;">새로 만들거나 편집할 문서의 ID를 입력하세요.</p>
+            
+            <div style="margin-bottom:1.5rem;">
+                <label style="display:block; font-size:0.8rem; font-weight:800; color:#444; margin-bottom:0.5rem;">문서 ID</label>
+                <input type="text" id="new-doc-id" placeholder="예: tianlu" 
+                    style="width:100%; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:1rem; outline:none; font-family:inherit;">
+            </div>
+            
+            <button id="create-doc-btn" style="width:100%; padding:1rem; background:#333; color:white; border:none; border-radius:0; font-weight:900; cursor:pointer; font-size:1rem;">
+                편집기 열기
+            </button>
+        </div>
+    `;
+
+    document.getElementById('create-doc-btn').onclick = () => {
+        const id = document.getElementById('new-doc-id').value.trim();
+        if (!id) { alert("문서 ID를 입력해 주세요."); return; }
+        
+        // 특수문자 및 공백 처리 (URL 해시용)
+        const safeId = encodeURIComponent(id);
+        location.href = `edit.html#${safeId}`;
+    };
+}
+
+
+window.changeUserRole = async (uid, newRole) => {
+    if (!newRole) return;
+    
+    let actionText = newRole === 'admin' ? '관리자로 승격' : newRole === 'banned' ? '차단' : '일반 멤버로 변경';
+    if (!confirm(`해당 사용자를 ${actionText}하시겠습니까?`)) return;
+
+    const code = prompt("보안 코드를 입력하세요:");
     if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
     try {
-        await updateDoc(doc(db, "users", uid), { role: newRole });
+        // [안전한 수정] updateDoc을 사용하여 기존 필드(name, email 등)를 유지하며 특정 필드만 수정합니다.
+        const userRef = doc(db, "users", uid);
+        await updateDoc(userRef, {
+            role: newRole,
+            isBanned: newRole === 'banned',
+            updatedAt: serverTimestamp()
+        });
+
+        // Cloudflare D1 동기화
+        const res = await fetch('/api/user/role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid, role: newRole, isBanned: newRole === 'banned', secret: code })
+        });
+        
+        if (!res.ok) throw new Error('D1 동기화 실패');
+
         alert(`${actionText} 완료!`);
-        await loadAndRenderUsers(); // 즉시 갱신
+        // onSnapshot이 실시간으로 화면을 갱신하므로 별도의 render 호출 불필요
     } catch (e) {
         alert("오류 발생: " + e.message);
     }
 };
 
-window.refreshUserList = async () => {
-    contentArea.innerHTML = `<p style="color:#999; text-align:center; padding:2rem;">새로고침 중...</p>`;
-    await loadAndRenderUsers();
-};
+// [추가] 공지/소식 관리 탭 렌더링
+async function renderSettingsAdminPage() {
+    const settingsArea = document.getElementById('settings-admin-content');
+    if (!settingsArea) return;
 
-// ─── 공지사항 관련 ───────────────────────────────────────────
+    settingsArea.innerHTML = '<div style="text-align:center; padding:2rem;">설정을 불러오는 중...</div>';
 
-// 공지 탭으로 전환할 때 기존 공지 내용 자동 불러오기
-window.switchTab = (tab) => {
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-    
-    const panel = document.getElementById('tab-' + tab);
-    const btn = document.getElementById('tab-btn-' + tab);
-    
-    if (panel) panel.classList.add('active');
-    if (btn) btn.classList.add('active');
-
-    // 공지 탭으로 이동 시 데이터 로드
-    if (tab === 'notice') {
-        loadNotice();
-        if (typeof initAdminToolbars === 'function') initAdminToolbars();
-    }
-};
-
-async function loadNotice() {
-    const noticeArea = document.getElementById('notice-content');
-    const newsArea = document.getElementById('news-content');
-    const guideArea = document.getElementById('guide-content');
-    
     try {
-        if (noticeArea) {
-            const snap = await getDocSafe(doc(db, "notices", "main"));
-            if (snap.exists()) noticeArea.value = snap.data().content || '';
-        }
-        if (newsArea) {
-            const snap = await getDocSafe(doc(db, "notices", "news"));
-            if (snap.exists()) newsArea.value = snap.data().content || '';
-        }
-        if (guideArea) {
-            const snap = await getDocSafe(doc(db, "notices", "guide"));
-            if (snap.exists()) guideArea.value = snap.data().content || '';
-        }
-        console.log("Notices loaded from Firestore");
+        const res = await fetch('/api/settings');
+        if (!res.ok) throw new Error('설정 로드 실패');
+        const settings = await res.json();
+
+        settingsArea.innerHTML = `
+            <div style="max-width:900px; margin:0 auto; display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem;">
+                <!-- 공지사항 -->
+                <div style="background:white; border:1px solid #ccc; padding:1.5rem;">
+                    <h3 style="font-weight:900; margin-bottom:1rem; font-size:1rem;">공지사항 관리</h3>
+                    <textarea id="edit-notice" style="width:100%; min-height:350px; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:inherit;">${settings.notice || ''}</textarea>
+                </div>
+
+                <!-- 최근 소식 -->
+                <div style="background:white; border:1px solid #ccc; padding:1.5rem;">
+                    <h3 style="font-weight:900; margin-bottom:1rem; font-size:1rem;">최근 소식 관리</h3>
+                    <textarea id="edit-news" style="width:100%; min-height:350px; padding:0.8rem; border:1px solid #ccc; border-radius:0; font-size:0.9rem; line-height:1.6; resize:vertical; outline:none; font-family:inherit;">${settings.news || ''}</textarea>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:2rem;">
+                <button id="save-settings-btn" style="padding:1rem 4rem; background:#333; color:white; border:none; border-radius:0; font-weight:900; cursor:pointer; font-size:1.1rem;">설정 저장하기</button>
+                <p style="margin-top:1rem; color:#666; font-size:0.75rem;">변경 사항을 저장하려면 보안 코드가 필요합니다.</p>
+            </div>
+        `;
+
+        document.getElementById('save-settings-btn').onclick = async () => {
+            const notice = document.getElementById('edit-notice').value;
+            const news = document.getElementById('edit-news').value;
+            const secret = prompt("보안 코드를 입력하세요:");
+            if (secret !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
+
+            try {
+                const saveRes = await fetch('/api/settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ notice, news, secret })
+                });
+
+                if (!saveRes.ok) throw new Error('저장 실패');
+                alert("공지 및 소식이 성공적으로 저장되었습니다!");
+                location.reload();
+            } catch (e) {
+                alert("오류 발생: " + e.message);
+            }
+        };
     } catch (e) {
-        console.error("공지 불러오기 실패:", e);
+        settingsArea.innerHTML = `<div style="text-align:center; padding:2rem; color:red;">오류: ${e.message}</div>`;
     }
 }
-
-window.saveNotice = async () => {
-    const pwd = prompt("저장하시려면 비밀번호를 입력하세요:");
-    if (pwd === null) return;
-    if (pwd.trim() !== "9889") {
-        alert("비밀번호가 일치하지 않습니다.");
-        return;
-    }
-
-    const noticeArea = document.getElementById('notice-content');
-    const newsArea = document.getElementById('news-content');
-    const guideArea = document.getElementById('guide-content');
-    const status = document.getElementById('notice-status');
-    if (!status) return;
-
-    status.textContent = '데이터베이스에 저장 중...';
-    status.style.color = '#666';
-
-    try {
-        console.log("Saving notices to Firestore...");
-        const updateData = {
-            updatedAt: serverTimestamp(),
-            updatedBy: currentUser?.displayName || currentUser?.email || '관리자'
-        };
-
-        if (noticeArea) await setDoc(doc(db, "notices", "main"), { content: noticeArea.value.trim(), ...updateData });
-        if (newsArea) await setDoc(doc(db, "notices", "news"), { content: newsArea.value.trim(), ...updateData });
-        if (guideArea) await setDoc(doc(db, "notices", "guide"), { content: guideArea.value.trim(), ...updateData });
-        
-        status.textContent = '홈 화면 내용이 성공적으로 저장되었습니다!';
-        status.style.color = 'green';
-        alert("저장되었습니다.");
-        setTimeout(() => { status.textContent = ''; }, 3000);
-    } catch (e) {
-        console.error("Notice save error:", e);
-        status.textContent = '저장 실패: ' + e.message;
-        status.style.color = 'red';
-        
-        if (e.code === 'permission-denied') {
-            alert("권한이 거부되었습니다. 관리자 권한이 있는지 확인해주세요.");
-        } else {
-            alert("저장 중 오류가 발생했습니다: " + e.message);
-        }
-    }
-};
 
 initAdminToolbars();

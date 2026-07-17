@@ -8,27 +8,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         .admin-container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-        .user-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; background: white; border: 1px solid var(--border-color); }
-        .user-table th, .user-table td { padding: 1rem; border: 1px solid var(--border-color); text-align: left; }
-        .user-table th { background: #f8f9fa; font-weight: 800; }
-        .role-badge { padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
-        .role-admin { background: #fee2e2; color: #dc2626; }
-        .role-member { background: #f3f4f6; color: #4b5563; }
-        .toggle-btn { padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid #ddd; background: white; cursor: pointer; font-size: 0.85rem; }
-        .toggle-btn:hover { background: #f8f9fa; }
-        .loading { text-align: center; padding: 3rem; color: #666; }
-        .admin-tabs { display: flex; gap: 0; margin-bottom: 2rem; border-bottom: 2px solid var(--primary-color); }
-        .admin-tab { padding: 0.6rem 1.5rem; cursor: pointer; font-weight: 700; border: 1px solid #ddd; border-bottom: none; background: #f5f6f7; color: #666; }
-        .admin-tab.active { background: white; color: var(--primary-color); border-top: 2px solid var(--primary-color); margin-bottom: -2px; }
-        .admin-tab:hover:not(.active) { background: #eee; }
-        .tab-panel { display: none; }
+        .admin-tabs { display: flex; gap: 4px; margin-bottom: 0; border-bottom: 2px solid #555; }
+        .admin-tab { padding: 0.8rem 1.8rem; cursor: pointer; font-weight: 700; border: 1px solid #ccc; border-bottom: none; background: #e1e1e1; color: #333; font-size: 0.9rem; transition: background 0.1s; }
+        .admin-tab.active { background: white; color: #000; border: 2px solid #555; border-bottom: none; margin-bottom: -2px; z-index: 10; }
+        .admin-tab:hover:not(.active) { background: #d1d1d1; }
+        .tab-panel { border: 2px solid #555; border-top: none; background: white; padding: 2rem; }
         .tab-panel.active { display: block; }
-        .notice-textarea { width: 100%; min-height: 160px; padding: 1rem; border: 1px solid #ddd; border-top: none; border-radius: 0 0 4px 4px; font-size: 0.95rem; line-height: 1.7; resize: vertical; font-family: 'Consolas', monospace; }
-        .notice-save-btn { margin-top: 1rem; padding: 0.7rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 1rem; }
-        .notice-save-btn:hover { background: var(--primary-dark); }
-        .admin-toolbar { display: flex; gap: 0.2rem; background: #f1f1f1; padding: 0.4rem; border: 1px solid #ddd; border-radius: 4px 4px 0 0; flex-wrap: wrap; margin-top: 0.3rem; }
-        .admin-toolbar-btn { background: white; border: 1px solid #ccc; padding: 0.25rem 0.55rem; font-size: 0.78rem; cursor: pointer; font-weight: 700; border-radius: 2px; transition: 0.1s; }
-        .admin-toolbar-btn:hover { background: var(--primary-light); border-color: var(--primary-color); }
+        .admin-btn { padding: 0.6rem 1.2rem; background: #444; color: white; border: 1px solid #222; border-radius: 2px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
+        .admin-btn:hover { background: #333; }
+        .loading { text-align: center; padding: 3rem; color: #666; font-family: monospace; }
     </style>
 </head>
 <body>
@@ -46,12 +34,16 @@
     </header>
 
     <main class="admin-container">
-        <h1>관리자 설정</h1>
-        <p style="color:#666; margin-bottom:2rem;">회원 권한 관리 및 공지사항 편집을 할 수 있습니다.</p>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom: 2px solid #eee; padding-bottom: 0.5rem;">
+            <h1 style="margin-bottom:0; font-size: 1.6rem; letter-spacing: -0.5px; font-weight:900;">관리자 설정</h1>
+            <button onclick="quickCreateDoc()" class="admin-btn">새 문서 만들기</button>
+        </div>
+        <p style="color:#666; margin-bottom:2rem;">회원 권한 관리 및 시스템 설정을 할 수 있습니다.</p>
 
         <div class="admin-tabs">
             <div class="admin-tab active" id="tab-btn-users" onclick="switchTab('users')">사용자 관리</div>
-            <div class="admin-tab" id="tab-btn-notice" onclick="switchTab('notice')">홈 화면 편집</div>
+            <div class="admin-tab" id="tab-btn-wiki" onclick="switchTab('wiki')">문서 관리</div>
+            <div class="admin-tab" id="tab-btn-settings" onclick="switchTab('settings')">공지/소식 관리</div>
         </div>
 
         <div id="tab-users" class="tab-panel active">
@@ -60,46 +52,38 @@
             </div>
         </div>
 
-        <div id="tab-notice" class="tab-panel">
-            <h2 style="font-size:1.2rem; margin-bottom:0.5rem;">홈 화면 내용 편집</h2>
-            <p style="color:#666; font-size:0.9rem; margin-bottom:1rem;">메인 페이지에 표시되는 공지, 최근 소식, 가이드를 편집할 수 있습니다.</p>
-            
-            <h3 style="font-size:1rem; margin-bottom:0.3rem;">공지사항 (사이드바)</h3>
-            <div class="admin-toolbar">
-                <button type="button" class="admin-toolbar-btn" data-target="notice-content" data-type="bold">굵게</button>
-                <button type="button" class="admin-toolbar-btn" data-target="notice-content" data-type="italic">기울임</button>
-                <button type="button" class="admin-toolbar-btn" data-target="notice-content" data-type="list">리스트</button>
-                <button type="button" class="admin-toolbar-btn" data-target="notice-content" data-type="link">링크</button>
-                <button type="button" class="admin-toolbar-btn" data-target="notice-content" data-type="hr">구분선</button>
+        <div id="tab-wiki" class="tab-panel">
+            <div id="wiki-admin-content">
+                <!-- JS handles this -->
             </div>
-            <textarea id="notice-content" class="notice-textarea" placeholder="공지 내용을 입력하세요..."></textarea>
-            
-            <h3 style="font-size:1rem; margin-top:1.5rem; margin-bottom:0.3rem;">최근 소식</h3>
-            <div class="admin-toolbar">
-                <button type="button" class="admin-toolbar-btn" data-target="news-content" data-type="bold">굵게</button>
-                <button type="button" class="admin-toolbar-btn" data-target="news-content" data-type="italic">기울임</button>
-                <button type="button" class="admin-toolbar-btn" data-target="news-content" data-type="list">리스트</button>
-                <button type="button" class="admin-toolbar-btn" data-target="news-content" data-type="link">링크</button>
-                <button type="button" class="admin-toolbar-btn" data-target="news-content" data-type="hr">구분선</button>
-            </div>
-            <textarea id="news-content" class="notice-textarea" placeholder="최근 소식을 입력하세요..."></textarea>
-            
-            <h3 style="font-size:1rem; margin-top:1.5rem; margin-bottom:0.3rem;">가이드</h3>
-            <div class="admin-toolbar">
-                <button type="button" class="admin-toolbar-btn" data-target="guide-content" data-type="bold">굵게</button>
-                <button type="button" class="admin-toolbar-btn" data-target="guide-content" data-type="italic">기울임</button>
-                <button type="button" class="admin-toolbar-btn" data-target="guide-content" data-type="list">리스트</button>
-                <button type="button" class="admin-toolbar-btn" data-target="guide-content" data-type="link">링크</button>
-                <button type="button" class="admin-toolbar-btn" data-target="guide-content" data-type="hr">구분선</button>
-            </div>
-            <textarea id="guide-content" class="notice-textarea" placeholder="가이드 내용을 입력하세요..."></textarea>
-            
-            <br>
-            <button class="notice-save-btn" onclick="window.saveNotice()">저장하기</button>
-            <p id="notice-status" style="margin-top:0.5rem; font-size:0.85rem; color:#666;"></p>
         </div>
 
+        <div id="tab-settings" class="tab-panel">
+            <div id="settings-admin-content">
+                <!-- JS handles this -->
+            </div>
+        </div>
     </main>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            
+            document.getElementById('tab-btn-' + tabId).classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            // 전역 이벤트로 탭 전환 알림 (admin.js에서 감지 가능)
+            window.dispatchEvent(new CustomEvent('adminTabSwitch', { detail: tabId }));
+        }
+
+        function quickCreateDoc() {
+            const id = prompt("새로 만들 문서의 ID를 입력해 주세요 (영문/숫자 권장):");
+            if (id && id.trim()) {
+                location.href = `edit.html#${encodeURIComponent(id.trim())}`;
+            }
+        }
+    </script>
 
     <script type="module" src="admin.js?v=3"></script>
 </body>

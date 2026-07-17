@@ -61,8 +61,11 @@ async function isNicknameTaken(nickname) {
     return !querySnapshot.empty;
 }
 
+let isProcessingAuth = false;
+
 authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    isProcessingAuth = true;
     
     const nickname = nicknameInput.value.trim();
     const email = emailInput.value.trim();
@@ -76,7 +79,6 @@ authForm.addEventListener('submit', async (e) => {
     try {
         if (isLogin) {
             // [로그인 로직]
-            // 닉네임으로 가입했으므로 내부 도메인을 붙여서 인증
             const loginEmail = nickname.includes('@') ? nickname : nickname + INTERNAL_DOMAIN;
             await signInWithEmailAndPassword(auth, loginEmail, password);
             window.location.href = 'index.html';
@@ -89,41 +91,63 @@ authForm.addEventListener('submit', async (e) => {
             const taken = await isNicknameTaken(nickname);
             if (taken) throw new Error("이미 존재하는 닉네임입니다. 다른 이름을 사용해 주세요.");
 
-            // 2. 계정 생성
+            // 2. 계정 생성 (Authentication)
             const signupEmail = email || (nickname + INTERNAL_DOMAIN);
             const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, password);
             const user = userCredential.user;
+            console.log("1단계: 계정 생성 성공", user.uid);
 
             // 3. Firebase Auth 프로필 업데이트
             await updateProfile(user, { displayName: nickname });
+            console.log("2단계: 프로필 업데이트 성공");
 
-            // 4. Firestore에 유저 문서 생성 (모두 일반 멤버로 시작)
-            const userData = {
-                uid: user.uid,
-                nickname: nickname,
-                realEmail: email || null,
-                role: 'member', // 초기값은 멤버
-                joinedAt: serverTimestamp(),
-                contributionCount: 0
-            };
-
-            console.log("Saving user to Firestore...", user.uid);
+            // 4. Firestore 및 Cloudflare D1 데이터베이스에 유저 정보 동기화
             try {
-                await setDoc(doc(db, "users", user.uid), userData);
-                console.log("Firestore document created!");
-                alert(`${nickname}님, 가입이 완료되었습니다! (DB 등록 성공)`);
-            } catch (fsError) {
-                console.error("Firestore Save Error:", fsError);
-                alert("Auth 계정은 생성되었으나 DB 등록에 실패했습니다: " + fsError.message);
-                throw fsError;
+                // [필수] Firestore 문서 생성
+                await setDoc(doc(db, "users", user.uid), {
+                    uid: user.uid,
+                    email: signupEmail,
+                    name: nickname || "이름 없음",
+                    role: 'member',
+                    isBanned: false,
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                });
+                console.log("3단계: Firestore 유저 문서 생성 성공!");
+
+                // [선택] Cloudflare D1 동기화
+                try {
+                    await fetch('/api/user/role', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            uid: user.uid,
+                            name: nickname,
+                            nickname: nickname,
+                            email: signupEmail,
+                            role: 'member',
+                            isBanned: false,
+                            secret: '9889'
+                        })
+                    });
+                    console.log("4단계: D1 데이터베이스 동기화 성공");
+                } catch (d1Error) {
+                    console.warn("D1 동기화 실패 (Firestore는 성공):", d1Error);
+                }
+
+            } catch (firestoreError) {
+                console.error("Firestore 저장 실패 (중단):", firestoreError);
+                throw new Error("데이터베이스 등록에 실패했습니다. 보안 규칙을 확인해 주세요.");
             }
 
+            alert(`${nickname}님, 가입 및 DB 등록이 완료되었습니다!`);
             window.location.href = 'index.html';
         }
     } catch (error) {
         console.error(error);
         errorMessage.textContent = error.message;
         errorMessage.style.display = 'block';
+        isProcessingAuth = false; // 에러 시 플래그 초기화
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = isLogin ? '로그인' : '멤버 가입';
@@ -131,7 +155,8 @@ authForm.addEventListener('submit', async (e) => {
 });
 
 onAuthStateChanged(auth, (user) => {
-    if (user && !window.location.hash.includes('logout')) {
+    // 가입/로그인 버튼을 눌러서 처리 중일 때는 여기서 강제 이동하지 않음!
+    if (user && !isProcessingAuth && !window.location.hash.includes('logout')) {
         window.location.href = 'index.html';
     }
 });

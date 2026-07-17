@@ -22,19 +22,28 @@ if (input) {
     };
 }
 
+let currentUser = null;
+let userRole = 'member';
+let currentEpisodeNum = null;
+
 onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
     if (user) {
-        // [차단 확인]
+        currentUser = user;
+        // [역할 확인]
         try {
             const userSnap = await getDoc(doc(db, "users", user.uid));
-            if (userSnap.exists() && userSnap.data().role === 'banned') {
-                alert("⚠️ 귀하의 계정은 차단되었습니다.");
-                document.body.innerHTML = `<div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#f8f9fa;">
-                    <h1 style="color:#dc2626;">🚫 접근 차단됨</h1>
-                    <button onclick="auth.signOut().then(() => location.reload())" style="margin-top:2rem; padding:0.8rem 2rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer;">로그아웃</button>
-                </div>`;
-                return;
+            if (userSnap.exists()) {
+                const userData = userSnap.data();
+                userRole = userData.role || 'member';
+                if (userRole === 'banned') {
+                    alert("⚠️ 귀하의 계정은 차단되었습니다.");
+                    document.body.innerHTML = `<div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#f8f9fa;">
+                        <h1 style="color:#dc2626;">🚫 접근 차단됨</h1>
+                        <button onclick="auth.signOut().then(() => location.reload())" style="margin-top:2rem; padding:0.8rem 2rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer;">로그아웃</button>
+                    </div>`;
+                    return;
+                }
             }
         } catch (e) { console.error(e); }
 
@@ -46,6 +55,16 @@ onAuthStateChanged(auth, async (user) => {
                 if (confirm("로그아웃하시겠습니까?")) signOut(auth).then(() => location.href = 'index.html');
             };
         }
+    } else {
+        currentUser = null;
+        userRole = 'guest';
+        if (info) {
+            info.innerHTML = `<a href="login.html" class="nav-link">로그인</a>`;
+        }
+    }
+    updateCommentForm();
+    if (currentEpisodeNum) {
+        loadLikesAndComments(currentEpisodeNum);
     }
 });
 
@@ -119,6 +138,191 @@ function playVideo(ep, shouldPlay = false) {
 
     displayTitle.textContent = ep.title;
     displayDesc.textContent = `${ep.num}화 에피소드입니다. 즐겁게 감상하세요.`;
+    
+    currentEpisodeNum = ep.num;
+    loadLikesAndComments(ep.num);
+}
+
+async function loadLikesAndComments(episodeNum) {
+    if (!episodeNum) return;
+    
+    // 1. 좋아요 정보 조회
+    const uidParam = currentUser ? `&uid=${currentUser.uid}` : '';
+    try {
+        const res = await fetch(`/api/likes?episode=${episodeNum}${uidParam}`);
+        if (res.ok) {
+            const data = await res.json();
+            const likeBtn = document.getElementById('like-btn');
+            const likeCount = document.getElementById('like-count');
+            likeCount.textContent = data.count;
+            
+            if (data.liked) {
+                likeBtn.classList.add('liked');
+                likeBtn.querySelector('.like-icon').textContent = '❤️';
+            } else {
+                likeBtn.classList.remove('liked');
+                likeBtn.querySelector('.like-icon').textContent = '🤍';
+            }
+        }
+    } catch (e) {
+        console.error("좋아요 조회 실패:", e);
+    }
+
+    // 2. 댓글 목록 조회
+    try {
+        const res = await fetch(`/api/comments?episode=${episodeNum}`);
+        if (res.ok) {
+            const comments = await res.json();
+            document.getElementById('comments-count').textContent = comments.length;
+            const commentsList = document.getElementById('comments-list');
+            
+            if (comments.length === 0) {
+                commentsList.innerHTML = `<div style="padding: 2rem; text-align: center; color: #888; font-size: 0.95rem; background: #fafafa; border-radius: 8px; border: 1px dashed #eee;">첫 번째 댓글을 남겨보세요!</div>`;
+                return;
+            }
+
+            commentsList.innerHTML = comments.map(c => {
+                const date = new Date(c.created_at);
+                const localDateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                
+                const canDelete = currentUser && (c.uid === currentUser.uid || userRole === 'admin');
+                
+                return `
+                    <div class="comment-item" style="padding: 1.2rem; border: 1px solid #f1f1f1; border-radius: 8px; background: white; display: flex; gap: 1rem; position: relative;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; flex-shrink: 0; border: 1.5px solid var(--border-color);">
+                            ${(c.author || '유').substring(0, 1).toUpperCase()}
+                        </div>
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem;">
+                                <strong style="font-size: 0.9rem; color: #212529;">${c.author}</strong>
+                                <span style="font-size: 0.75rem; color: #868e96;">${localDateStr}</span>
+                            </div>
+                            <p style="margin: 0; font-size: 0.9rem; color: #495057; line-height: 1.6; white-space: pre-wrap;">${c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                        </div>
+                        ${canDelete ? `
+                            <button class="delete-comment-btn" data-id="${c.id}" style="align-self: flex-start; background: none; border: none; color: #e03131; cursor: pointer; font-size: 0.8rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 4px; transition: background 0.2s;">삭제</button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            // 삭제 버튼 이벤트 바인딩
+            commentsList.querySelectorAll('.delete-comment-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    const id = btn.getAttribute('data-id');
+                    if (confirm("정말 이 댓글을 삭제하시겠습니까?")) {
+                        try {
+                            const dres = await fetch('/api/comments/delete', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: parseInt(id, 10), uid: currentUser.uid, role: userRole })
+                            });
+                            if (dres.ok) {
+                                loadLikesAndComments(episodeNum);
+                            } else {
+                                const err = await dres.json();
+                                alert(`삭제 실패: ${err.error}`);
+                            }
+                        } catch (e) {
+                            console.error(e);
+                            alert("댓글 삭제 도중 오류가 발생했습니다.");
+                        }
+                    }
+                };
+            });
+        }
+    } catch (e) {
+        console.error("댓글 조회 실패:", e);
+    }
+}
+
+function updateCommentForm() {
+    const wrap = document.getElementById('comment-form-wrap');
+    if (!wrap) return;
+
+    if (!currentUser) {
+        wrap.innerHTML = `
+            <div style="padding: 1.5rem; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; text-align: center; font-size: 0.9rem; color: #495057;">
+                댓글과 좋아요는 <a href="login.html" style="color: var(--primary-color); font-weight: 800; text-decoration: underline;">로그인</a> 후 이용하실 수 있습니다.
+            </div>
+        `;
+        return;
+    }
+
+    wrap.innerHTML = `
+        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+            <textarea id="comment-input" placeholder="이 회차에 대한 따뜻한 댓글을 남겨보세요..." style="width: 100%; min-height: 80px; padding: 0.8rem; border: 1.5px solid #dee2e6; border-radius: 8px; font-family: inherit; font-size: 0.9rem; resize: vertical; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--primary-color)'" onblur="this.style.borderColor='#dee2e6'"></textarea>
+            <div style="display: flex; justify-content: flex-end;">
+                <button id="submit-comment-btn" style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 6px; font-weight: 800; font-size: 0.9rem; cursor: pointer; transition: background 0.2s;">등록</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('submit-comment-btn').onclick = async () => {
+        const textInput = document.getElementById('comment-input');
+        const content = textInput.value.trim();
+        if (!content) {
+            alert("댓글 내용을 입력해 주세요.");
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/comments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    episode_num: currentEpisodeNum,
+                    content: content,
+                    author: currentUser.displayName || '익명 유저',
+                    uid: currentUser.uid
+                })
+            });
+
+            if (res.ok) {
+                textInput.value = '';
+                loadLikesAndComments(currentEpisodeNum);
+            } else {
+                const err = await res.json();
+                alert(`댓글 등록 실패: ${err.error}`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("댓글 등록에 실패했습니다.");
+        }
+    };
+}
+
+// 좋아요 클릭 이벤트 핸들러 설정
+const likeBtn = document.getElementById('like-btn');
+if (likeBtn) {
+    likeBtn.onclick = async () => {
+        if (!currentUser) {
+            alert("로그인한 사용자만 좋아요를 누를 수 있습니다.");
+            return;
+        }
+        if (!currentEpisodeNum) return;
+
+        try {
+            const res = await fetch('/api/likes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    episode_num: currentEpisodeNum,
+                    uid: currentUser.uid
+                })
+            });
+
+            if (res.ok) {
+                loadLikesAndComments(currentEpisodeNum);
+            } else {
+                const err = await res.json();
+                alert(`좋아요 실패: ${err.error}`);
+            }
+        } catch (e) {
+            console.error(e);
+            alert("좋아요 처리 도중 오류가 발생했습니다.");
+        }
+    };
 }
 
 seasonSelect.onchange = (e) => renderEpisodes(e.target.value, true); // 시즌 변경 시에는 첫 화 자동 재생

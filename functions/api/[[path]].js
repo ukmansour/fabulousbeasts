@@ -117,7 +117,7 @@ export async function onRequest(context) {
     // 2-1. GET: 모든 문서의 이미지/이름 목록 (홈페이지 동기화용)
     if (request.method === "GET" && apiPath === "/images") {
         try {
-            const { results } = await env.DB.prepare("SELECT title, name, image, category FROM wiki_pages").all();
+            const { results } = await env.DB.prepare("SELECT title, name, image, category, birthday FROM wiki_pages").all();
             return new Response(JSON.stringify(results), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
@@ -251,6 +251,146 @@ export async function onRequest(context) {
             }
 
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 7. GET: 댓글 목록 조회
+    if (request.method === "GET" && apiPath === "/comments") {
+        const episode = url.searchParams.get("episode");
+        if (!episode) return new Response(JSON.stringify({ error: "Missing episode parameter" }), { status: 400, headers: corsHeaders });
+        try {
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS video_comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    episode_num INTEGER NOT NULL,
+                    uid TEXT NOT NULL,
+                    author TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+
+            const { results } = await env.DB.prepare("SELECT id, episode_num, uid, author, content, strftime('%Y-%m-%dT%H:%M:%SZ', created_at) as created_at FROM video_comments WHERE episode_num = ? ORDER BY created_at DESC").bind(episode).all();
+            return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 8. POST: 댓글 작성
+    if (request.method === "POST" && apiPath === "/comments") {
+        try {
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS video_comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    episode_num INTEGER NOT NULL,
+                    uid TEXT NOT NULL,
+                    author TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+
+            const data = await request.json();
+            const { episode_num, content, author, uid } = data;
+            if (!episode_num || !content || !author || !uid) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+
+            await env.DB.prepare("INSERT INTO video_comments (episode_num, uid, author, content) VALUES (?, ?, ?, ?)").bind(episode_num, uid, author, content).run();
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 9. POST: 댓글 삭제
+    if (request.method === "POST" && apiPath === "/comments/delete") {
+        try {
+            const data = await request.json();
+            const { id, uid, role } = data;
+            if (!id || !uid) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+
+            // 댓글 작성자이거나 관리자(admin)인지 확인
+            const comment = await env.DB.prepare("SELECT uid FROM video_comments WHERE id = ?").bind(id).first();
+            if (!comment) {
+                return new Response(JSON.stringify({ error: "Comment not found" }), { status: 404, headers: corsHeaders });
+            }
+
+            if (comment.uid !== uid && role !== 'admin') {
+                return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 403, headers: corsHeaders });
+            }
+
+            await env.DB.prepare("DELETE FROM video_comments WHERE id = ?").bind(id).run();
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 10. GET: 좋아요 정보 조회
+    if (request.method === "GET" && apiPath === "/likes") {
+        const episode = url.searchParams.get("episode");
+        const uid = url.searchParams.get("uid");
+        if (!episode) return new Response(JSON.stringify({ error: "Missing episode parameter" }), { status: 400, headers: corsHeaders });
+        try {
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS video_likes (
+                    episode_num INTEGER NOT NULL,
+                    uid TEXT NOT NULL,
+                    PRIMARY KEY (episode_num, uid)
+                )
+            `).run();
+
+            // 총 좋아요 개수
+            const countResult = await env.DB.prepare("SELECT COUNT(*) as count FROM video_likes WHERE episode_num = ?").bind(episode).first();
+            const totalLikes = countResult ? countResult.count : 0;
+
+            // 내가 좋아요를 눌렀는지 여부
+            let userLiked = false;
+            if (uid) {
+                const likedResult = await env.DB.prepare("SELECT 1 FROM video_likes WHERE episode_num = ? AND uid = ?").bind(episode, uid).first();
+                userLiked = !!likedResult;
+            }
+
+            return new Response(JSON.stringify({ count: totalLikes, liked: userLiked }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 11. POST: 좋아요 토글
+    if (request.method === "POST" && apiPath === "/likes") {
+        try {
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS video_likes (
+                    episode_num INTEGER NOT NULL,
+                    uid TEXT NOT NULL,
+                    PRIMARY KEY (episode_num, uid)
+                )
+            `).run();
+
+            const data = await request.json();
+            const { episode_num, uid } = data;
+            if (!episode_num || !uid) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+
+            // 기 등록 여부 확인
+            const existing = await env.DB.prepare("SELECT 1 FROM video_likes WHERE episode_num = ? AND uid = ?").bind(episode_num, uid).first();
+            if (existing) {
+                // 이미 존재하면 삭제 (좋아요 취소)
+                await env.DB.prepare("DELETE FROM video_likes WHERE episode_num = ? AND uid = ?").bind(episode_num, uid).run();
+                return new Response(JSON.stringify({ success: true, liked: false }), { headers: corsHeaders });
+            } else {
+                // 없으면 추가
+                await env.DB.prepare("INSERT INTO video_likes (episode_num, uid) VALUES (?, ?)").bind(episode_num, uid).run();
+                return new Response(JSON.stringify({ success: true, liked: true }), { headers: corsHeaders });
+            }
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
         }

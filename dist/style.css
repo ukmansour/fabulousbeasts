@@ -69,6 +69,8 @@ body {
     padding: 0.4rem 1rem; background: #eee; border: 1px solid var(--border-color); border-bottom: none;
     font-size: 0.8rem; color: #666; text-decoration: none; margin-right: 1px; cursor: pointer;
 }
+.wiki-tab.back-tab { background: #f9f9f9; color: var(--primary-color); font-weight: bold; }
+.wiki-tab.back-tab:hover { background: var(--primary-light); }
 .wiki-tab.active { background: white; margin-bottom: -1px; font-weight: 700; color: var(--primary-color); border-top: 2px solid var(--primary-color); }
 
 /* Content Headers */
@@ -187,6 +189,14 @@ body {
 @media (max-width: 1024px) {
     .wiki-outer-container { grid-template-columns: 1fr; }
     .wiki-sidebar { display: none; }
+}
+
+/* 최근 변경 내역 (항상 하단에 표시) */
+.recent-changes-inline {
+    display: block;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--border-color);
 }
 
 /* 모바일 화면 최적화 */
@@ -433,3 +443,270 @@ body {
 }
 .gallery-clear-btn:hover { background: #ff4d4f; color: white; }
 
+/* === Wiki Extended Elements === */
+.wiki-quote {
+    border-left: 4px solid var(--primary-color);
+    padding: 0.8rem 1.2rem;
+    margin: 1rem 0;
+    background: var(--primary-light);
+    color: #555;
+    font-style: italic;
+    border-radius: 0 4px 4px 0;
+}
+.wiki-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+.wiki-table th {
+    background: var(--primary-color);
+    color: white;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--primary-dark);
+    text-align: left;
+}
+.wiki-table td {
+    padding: 0.5rem 0.8rem;
+    border: 1px solid var(--border-color);
+}
+.wiki-table tr:nth-child(even) td { background: var(--primary-light); }
+
+.wiki-spoiler {
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    margin: 1rem 0;
+}
+.wiki-spoiler > summary {
+    padding: 0.5rem 0;
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--text-muted);
+    user-select: none;
+    list-style: none;
+    font-size: 0.9rem;
+}
+.wiki-spoiler > summary:hover { color: var(--primary-color); }
+.wiki-spoiler > summary::before { content: '▶ '; }
+.wiki-spoiler[open] > summary::before { content: '▼ '; }
+.wiki-spoiler .spoiler-content { padding: 0.8rem 0; }
+
+.wiki-callout {
+    padding: 0.6rem 0;
+    margin: 0.8rem 0;
+    font-size: 0.9rem;
+    border-top: 1px solid var(--border-color);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.5rem;
+}
+.wiki-callout-note { border-color: #f0c040; color: #7d6608; }
+.wiki-callout-warn { border-color: #f5a0a0; color: #a00; }
+
+/* Preview Modal */
+.preview-modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 9000;
+    align-items: center;
+    justify-content: center;
+}
+.preview-modal.active { display: flex; }
+.preview-modal-inner {
+    background: white;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 8px;
+    padding: 2rem;
+    position: relative;
+}
+.preview-modal-close {
+    position: absolute; top: 1rem; right: 1.5rem;
+    font-size: 1.5rem; cursor: pointer; color: #888;
+}
+
+/* Color Palette */
+.color-palette {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 6px;
+    z-index: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: none;
+    grid-template-columns: repeat(6, 22px);
+    gap: 3px;
+}
+.color-palette.open { display: grid; }
+.color-swatch {
+    width: 22px; height: 22px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid rgba(0,0,0,0.15);
+    transition: transform 0.1s;
+}
+.color-swatch:hover { transform: scale(1.2); }
+.color-picker-wrap { position: relative; display: inline-block; }
+
+/* Toolbar groups */
+.toolbar-sep { width: 1px; background: #ccc; margin: 2px 3px; align-self: stretch; display: inline-block; }
+
+/* Autocomplete List */
+.autocomplete-list {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 250px;
+    max-height: 200px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+}
+.autocomplete-list.active { display: block; }
+.autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover { background: var(--primary-light); }
+.autocomplete-item img {
+    width: 24px;
+    height: 24px;
+    object-fit: cover;
+    border-radius: 2px;
+}
+
+/* === Birthday Banner & Celebration === */
+.birthday-banner-card {
+    background: linear-gradient(135deg, #fff0f6, #ffdeeb);
+    border: 1.5px solid #ffc9db;
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 10px 25px rgba(255, 192, 203, 0.4);
+    transition: transform 0.3s ease;
+    margin-bottom: 2rem;
+}
+.birthday-banner-card:hover {
+    transform: translateY(-2px);
+}
+.birthday-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+.birthday-avatar {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid white;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.birthday-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    font-size: 1.8rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+    animation: bounce 2s infinite alternate;
+}
+.birthday-btn {
+    background: #d6336c;
+    color: white !important;
+    padding: 0.6rem 1.5rem;
+    border-radius: 24px;
+    text-decoration: none;
+    font-weight: 800;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(214, 51, 108, 0.3);
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.2s;
+}
+.birthday-btn:hover {
+    background: #c2255c;
+    transform: scale(1.05);
+}
+
+/* === Likes & Comments === */
+.like-button {
+    background: white;
+    border: 1.5px solid #eee;
+    padding: 0.5rem 1.2rem;
+    border-radius: 24px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.like-button:hover {
+    background: #f8f9fa;
+    border-color: #dee2e6;
+    transform: scale(1.05);
+}
+.like-button.liked {
+    background: #fff0f6;
+    border-color: #ffc9db;
+    color: #e03131;
+    box-shadow: 0 2px 8px rgba(224, 49, 49, 0.15);
+}
+.like-button.liked:hover {
+    background: #ffdeeb;
+}
+
+.comment-item {
+    transition: all 0.2s ease;
+}
+.comment-item:hover {
+    border-color: #dee2e6 !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+}
+.delete-comment-btn:hover {
+    background: #fff5f5;
+    color: #c92a2a !important;
+}
+
+/* Animations */
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-6px); }
+}
+@keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.9; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@media (max-width: 650px) {
+    .birthday-banner-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+        padding: 1.2rem;
+    }
+    .birthday-btn {
+        width: 100%;
+        text-align: center;
+    }
+}

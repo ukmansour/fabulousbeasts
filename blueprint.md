@@ -40,11 +40,28 @@ This project is a comprehensive wiki for '유수언' (YouShouYan), providing det
 - **사용자 관리 자동화**: 회원가입 시 자동으로 데이터베이스에 유저 정보를 동기화하여 관리자 탭에서 즉시 확인할 수 있습니다.
 - **편의성 개선**: 상세 페이지 상단에 '🏠 홈으로' 돌아가기 버튼을 추가했습니다.
 
-## [Current Plan] 유저 관리 및 배포 최적화
-1. **D1 사용자 연동**: 가입 시점에 `/api/user/role`을 호출하여 D1 DB에 유저 정보를 즉시 기록합니다.
-2. **배포 자동화**: GitHub Actions를 통해 `main` 브랜치 푸시 시 Cloudflare Pages로 자동 배포되도록 설정했습니다.
-from the D1 database.
-    *   Ensures that character search and filtering align with these updated groups.
+## [Current Plan] 캐릭터 생일 알림 및 애니메이션 댓글/좋아요 구현
+
+**목표**:
+1. 에디터 내 생일 입력 필드를 활용하여 상세 페이지에 다음 생일 YYYY년 MM월 DD일 및 디데이(D-Day)를 계산하여 표시하고, 생일 당일인 캐릭터가 있을 경우 홈 화면에 축하 배너를 동적으로 자동 노출합니다.
+2. 애니메이션 시청 페이지(`watch.html`) 하단에 회차별 댓글 작성/삭제 및 좋아요 토글 기능(싫어요 없음)을 구현하여 유저 상호작용을 향상합니다. 로그인한 유저만 댓글 작성 및 좋아요를 누를 수 있습니다.
+
+**세부 계획**:
+1. **API 및 DB 스키마 수정 (`functions/api/[[path]].js`)**:
+   - `/api/images`가 캐릭터 정보 로드 시 `birthday` 필드도 함께 가져오도록 쿼리 수정.
+   - `video_comments` 및 `video_likes` 테이블 자동 생성 구문 추가.
+   - 댓글 목록 조회(`GET /api/comments`), 작성(`POST /api/comments`), 삭제(`POST /api/comments/delete`) 엔드포인트 구현.
+   - 좋아요 정보 조회(`GET /api/likes`), 토글(`POST /api/likes`) 엔드포인트 구현.
+2. **생일 알림 UI 구현**:
+   - 홈 화면(`index.html`, `main.js`) 상단에 오늘 생일인 캐릭터 배너 영역 및 동적 렌더링 코드 추가.
+   - 상세 페이지(`detail.js`) 인포박스 내부 생일 항목에 다음 생일 날짜/디데이/오늘 생일 표시 로직 탑재.
+   - 에디터(`edit.html`) 생일 입력란의 플레이스홀더를 개선하여 입력 형식 가이드라인 제시.
+3. **애니메이션 댓글/좋아요 UI 구현**:
+   - 시청 화면(`watch.html`, `watch.js`) 비디오 정보 하단에 좋아요 하트 버튼 및 댓글 쓰기/목록 공간 추가.
+   - 재생되는 회차가 바뀔 때마다 해당 회차의 댓글 및 좋아요 현황을 실시간으로 가져와 화면을 갱신.
+   - 스타일(`style.css`)에 생일 배너, 좋아요 버튼(토글 시 하트 채워짐 및 붉은색 활성화), 댓글 리스트, 비로그인 알림 등의 스타일 정의.
+
+
 
 ## Global Data Synchronization (2026.04.30)
 

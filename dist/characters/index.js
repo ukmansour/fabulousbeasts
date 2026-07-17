@@ -4,8 +4,8 @@
  */
 
 export const CATEGORIES = [
-    "메인 캐릭터", "녹인점", "고대", "지옥", "토보서 그룹", "운남산 언덕", 
-    "기린", "맹극", "와묘", "신조", "천상", "다른장르", "기타"
+    "메인 캐릭터", "녹인점", "고대", "지옥", "토보서 그룹", "채운산 언덕", 
+    "기린", "맹극", "와묘", "신조", "천상", "기타"
 ];
 
 export const DETAIL_SECTIONS = [
@@ -22,14 +22,14 @@ export const DETAIL_SECTIONS = [
 export const CHARACTER_COLLECTION = {
     '메인 캐릭터': {
         '사장님': {
-            sibuxiang: { id: 'sibuxiang', category: '메인 캐릭터', name: '사불상 (四不像)' }
+            sibuxiang: { id: 'sibuxiang', category: '메인 캐릭터', name: '사불상 (四不像)', image: 'https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png' }
         },
         '비휴 형제': {
-            tianlu: { id: 'tianlu', category: '메인 캐릭터', name: '천록 (天禄 / 피피)' },
-            pixiu: { id: 'pixiu', category: '메인 캐릭터', name: '벽사 (辟邪)' }
+            tianlu: { id: 'tianlu', category: '메인 캐릭터', name: '천록 (天禄 / 피피)', image: 'https://static.wikitide.net/youshouyanwiki/thumb/a/ab/Tianlu.png/300px-Tianlu.png' },
+            pixiu: { id: 'pixiu', category: '메인 캐릭터', name: '벽사 (辟邪)', image: 'https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png' }
         },
         '동료': {
-            tony: { id: 'tony', category: '메인 캐릭터', name: '투예 (兔爷 / 토야)' }
+            tony: { id: 'tony', category: '메인 캐릭터', name: '투예 (兔爷 / 토야)', image: 'https://static.wikitide.net/youshouyanwiki/thumb/0/00/TuyeFullbodyD.png/300px-TuyeFullbodyD.png' }
         }
     },
     '녹인점': {
@@ -90,18 +90,18 @@ export const CHARACTER_COLLECTION = {
             }, {})
         }
     },
-    '운남산 언덕': {
+    '채운산 언덕': {
         '이웃 신수': {
-            'un-리치': { id: 'un-리치', category: '운남산 언덕', name: '리치' },
-            'un-장장': { id: 'un-장장', category: '운남산 언덕', name: '장장' },
-            'un-추구': { id: 'un-추구', category: '운남산 언덕', name: '추구' },
-            'un-마오마오레이': { id: 'un-마오마오레이', category: '운남산 언덕', name: '마오마오레이' },
-            'un-소산작': { id: 'un-소산작', category: '운남산 언덕', name: '소산작' },
-            'un-반호': { id: 'un-반호', category: '운남산 언덕', name: '반호' }
+            'un-리치': { id: 'un-리치', category: '채운산 언덕', name: '리치' },
+            'un-장장': { id: 'un-장장', category: '채운산 언덕', name: '장장' },
+            'un-추구': { id: 'un-추구', category: '채운산 언덕', name: '추구' },
+            'un-마오마오레이': { id: 'un-마오마오레이', category: '채운산 언덕', name: '마오마오레이' },
+            'un-소산작': { id: 'un-소산작', category: '채운산 언덕', name: '소산작' },
+            'un-반호': { id: 'un-반호', category: '채운산 언덕', name: '반호' }
         },
         '차세대 신수': {
             ...["해치", "화초", "샤오빙", "유성", "피칠성", "토삼성", "사일성"].reduce((acc, name) => {
-                acc[`un-${name}`] = { id: `un-${name}`, category: '운남산 언덕', name };
+                acc[`un-${name}`] = { id: `un-${name}`, category: '채운산 언덕', name };
                 return acc;
             }, {})
         }

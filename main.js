@@ -121,6 +121,45 @@ async function loadSettings() {
     }
 }
 
+function parseBirthday(birthdayStr) {
+    if (!birthdayStr) return null;
+    let match = birthdayStr.match(/(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (match) {
+        return { month: parseInt(match[2], 10), day: parseInt(match[3], 10) };
+    }
+    match = birthdayStr.match(/(\d{1,2})[-/.](\d{1,2})/);
+    if (match) {
+        return { month: parseInt(match[1], 10), day: parseInt(match[2], 10) };
+    }
+    match = birthdayStr.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+    if (match) {
+        return { month: parseInt(match[1], 10), day: parseInt(match[2], 10) };
+    }
+    return null;
+}
+
+function getNextBirthdayInfo(month, day) {
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    let bday = new Date(currentYear, month - 1, day);
+    
+    const todayZero = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const bdayZero = new Date(bday.getFullYear(), bday.getMonth(), bday.getDate());
+    
+    if (bdayZero < todayZero) {
+        bday = new Date(currentYear + 1, month - 1, day);
+    }
+    
+    const diffTime = bday.getTime() - todayZero.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return {
+        nextDate: bday,
+        daysLeft: diffDays,
+        isToday: diffDays === 0
+    };
+}
+
 async function syncHomepageImages() {
     try {
         const response = await fetch('/api/images');
@@ -133,8 +172,45 @@ async function syncHomepageImages() {
             id: item.title,
             name: item.name || item.title,
             image: item.image,
-            category: item.category || '기타'
+            category: item.category || '기타',
+            birthday: item.birthday || ''
         }));
+
+        // 1.5 오늘 생일인 캐릭터 배너 노출 처리
+        const todayBirthdayBanner = document.getElementById('today-birthday-banner');
+        if (todayBirthdayBanner) {
+            const todayBornChars = mergedCharacters.filter(c => {
+                if (!c.birthday) return false;
+                const parsed = parseBirthday(c.birthday);
+                if (!parsed) return false;
+                const info = getNextBirthdayInfo(parsed.month, parsed.day);
+                return info.isToday;
+            });
+
+            if (todayBornChars.length > 0) {
+                const today = new Date();
+                const currentMonth = today.getMonth() + 1;
+                const currentDate = today.getDate();
+                
+                todayBirthdayBanner.innerHTML = todayBornChars.map(c => `
+                    <div class="birthday-banner-card">
+                        <div class="birthday-avatar-wrap">
+                            <img src="${c.image || 'https://via.placeholder.com/150'}" alt="${c.name}" class="birthday-avatar">
+                            <span class="birthday-badge">🎂</span>
+                        </div>
+                        <div style="flex: 1;">
+                            <h3 style="margin: 0 0 0.3rem 0; color: #d6336c; font-size: 1.2rem; font-weight: 800;">🎉 오늘(${currentMonth}월 ${currentDate}일)은 ${c.name}의 생일입니다! 🎉</h3>
+                            <p style="margin: 0; color: #495057; font-size: 0.9rem;">${c.name}의 생일을 함께 축하해 주세요! 상세 페이지에서 자세한 프로필을 확인해보세요.</p>
+                        </div>
+                        <a href="detail.html#${encodeURIComponent(c.id)}" class="birthday-btn">축하하러 가기</a>
+                    </div>
+                `).join('');
+                todayBirthdayBanner.style.display = 'block';
+            } else {
+                todayBirthdayBanner.innerHTML = '';
+                todayBirthdayBanner.style.display = 'none';
+            }
+        }
 
         // 2. 전체 목록(char-grid) 동적 렌더링
         const container = document.getElementById('char-grid');
