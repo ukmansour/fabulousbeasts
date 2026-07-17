@@ -61,6 +61,7 @@ onAuthStateChanged(auth, async (user) => {
         }
 
         userRole = isAdmin ? 'admin' : 'member';
+        console.log('커뮤니티 userRole:', userRole, 'isAdmin:', isAdmin, 'uid:', user.uid);
 
         info.innerHTML = `
             ${isAdmin ? `<a href="admin.html" class="nav-link" style="border:1px solid rgba(255,255,255,0.3);padding:0.2rem 0.5rem;border-radius:3px;">관리자</a>` : ''}

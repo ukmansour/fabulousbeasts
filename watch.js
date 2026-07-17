@@ -36,6 +36,7 @@ onAuthStateChanged(auth, async (user) => {
             if (userSnap.exists()) {
                 const userData = userSnap.data();
                 userRole = userData.role || 'member';
+                console.log('애니보기 userRole:', userRole, 'uid:', user.uid);
                 if (userRole === 'banned') {
                     alert("⚠️ 귀하의 계정은 차단되었습니다.");
                     document.body.innerHTML = `<div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#f8f9fa;">
