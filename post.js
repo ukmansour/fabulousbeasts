@@ -161,6 +161,30 @@ function renderPost() {
         bodyHTML += '</div>';
     }
     
+    // 동영상 표시 (videos 필드)
+    let videoUrls = [];
+    if (currentPost.videos) {
+        try {
+            videoUrls = JSON.parse(currentPost.videos);
+        } catch (e) {
+            console.error('동영상 파싱 오류:', e);
+        }
+    }
+    
+    // 동영상들 표시
+    if (videoUrls.length > 0) {
+        bodyHTML += '<div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">';
+        videoUrls.forEach(url => {
+            bodyHTML += `
+                <video controls style="width: 100%; max-width: 100%; border-radius: 0; background: #000;">
+                    <source src="${url}" type="video/mp4">
+                    브라우저가 동영상을 지원하지 않습니다.
+                </video>
+            `;
+        });
+        bodyHTML += '</div>';
+    }
+    
     bodyHTML += `<div>${escHtml(currentPost.content)}</div>`;
     
     container.innerHTML = `

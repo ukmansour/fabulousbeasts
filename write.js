@@ -106,6 +106,14 @@ function renderWriteForm() {
                     <!-- 미리보기 이미지들이 여기 표시됩니다 -->
                 </div>
             </div>
+
+            <div class="write-field">
+                <label class="write-label" for="write-videos">동영상 첨부 (선택, 최대 2개, 각 50MB 이하)</label>
+                <input type="file" class="write-input" id="write-videos" accept="video/*" multiple style="padding: 0.5rem 0.8rem;">
+                <div class="videos-preview-wrap" id="videos-preview">
+                    <!-- 미리보기 동영상들이 여기 표시됩니다 -->
+                </div>
+            </div>
         </div>
 
         <div class="write-actions">
@@ -116,7 +124,7 @@ function renderWriteForm() {
 
     // 이미지 미리보기 (여러 장)
     const imagesInput = document.getElementById('write-images');
-    const previewDiv = document.getElementById('images-preview');
+    const imagesPreviewDiv = document.getElementById('images-preview');
     let selectedFiles = [];
 
     imagesInput.addEventListener('change', (e) => {
@@ -133,13 +141,13 @@ function renderWriteForm() {
 
     function renderImagePreviews() {
         if (selectedFiles.length === 0) {
-            previewDiv.style.display = 'none';
-            previewDiv.innerHTML = '';
+            imagesPreviewDiv.style.display = 'none';
+            imagesPreviewDiv.innerHTML = '';
             return;
         }
 
-        previewDiv.style.display = 'flex';
-        previewDiv.innerHTML = '';
+        imagesPreviewDiv.style.display = 'flex';
+        imagesPreviewDiv.innerHTML = '';
 
         selectedFiles.forEach((file, index) => {
             const reader = new FileReader();
@@ -161,9 +169,67 @@ function renderWriteForm() {
                     imagesInput.files = dt.files;
                 });
                 
-                previewDiv.appendChild(item);
+                imagesPreviewDiv.appendChild(item);
             };
             reader.readAsDataURL(file);
+        });
+    }
+
+    // 동영상 미리보기 (여러 개)
+    const videosInput = document.getElementById('write-videos');
+    const videosPreviewDiv = document.getElementById('videos-preview');
+    let selectedVideos = [];
+
+    videosInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        
+        if (files.length > 2) {
+            alert('동영상은 최대 2개까지 첨부할 수 있습니다.');
+            return;
+        }
+
+        // 각 파일 크기 체크 (50MB)
+        for (const file of files) {
+            if (file.size > 50 * 1024 * 1024) {
+                alert(`"${file.name}"의 크기가 50MB를 초과합니다.`);
+                return;
+            }
+        }
+
+        selectedVideos = files;
+        renderVideoPreviews();
+    });
+
+    function renderVideoPreviews() {
+        if (selectedVideos.length === 0) {
+            videosPreviewDiv.style.display = 'none';
+            videosPreviewDiv.innerHTML = '';
+            return;
+        }
+
+        videosPreviewDiv.style.display = 'flex';
+        videosPreviewDiv.innerHTML = '';
+
+        selectedVideos.forEach((file, index) => {
+            const url = URL.createObjectURL(file);
+            const item = document.createElement('div');
+            item.className = 'preview-item';
+            item.innerHTML = `
+                <video src="${url}" controls style="width: 100%; height: 150px;"></video>
+                <button type="button" class="remove-btn" data-index="${index}">×</button>
+            `;
+            
+            item.querySelector('.remove-btn').addEventListener('click', () => {
+                selectedVideos.splice(index, 1);
+                renderVideoPreviews();
+                
+                // input 파일 목록 업데이트
+                const dt = new DataTransfer();
+                selectedVideos.forEach(f => dt.items.add(f));
+                videosInput.files = dt.files;
+            });
+            
+            videosPreviewDiv.appendChild(item);
         });
     }
 
@@ -182,6 +248,7 @@ async function submitPost() {
     const rawTitle = document.getElementById('write-title').value.trim();
     const content = document.getElementById('write-content').value.trim();
     const imagesInput = document.getElementById('write-images');
+    const videosInput = document.getElementById('write-videos');
 
     if (!rawTitle) {
         alert('제목을 입력해 주세요.');
@@ -204,6 +271,7 @@ async function submitPost() {
     submitBtn.textContent = '등록 중...';
 
     let imageUrls = [];
+    let videoUrls = [];
 
     try {
         // 이미지 업로드 (여러 장)
@@ -249,14 +317,58 @@ async function submitPost() {
             }
         }
 
-        // 게시글 저장 (이미지 URL들을 JSON 배열로 저장)
+        // 동영상 업로드 (여러 개)
+        if (videosInput.files && videosInput.files.length > 0) {
+            const files = Array.from(videosInput.files);
+            
+            if (files.length > 2) {
+                alert('동영상은 최대 2개까지 첨부할 수 있습니다.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '등록';
+                return;
+            }
+
+            // 파일 크기 체크 (각 50MB 제한)
+            for (const file of files) {
+                if (file.size > 50 * 1024 * 1024) {
+                    alert(`"${file.name}"의 크기가 50MB를 초과합니다.`);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '등록';
+                    return;
+                }
+            }
+
+            // 각 동영상 업로드
+            for (let i = 0; i < files.length; i++) {
+                submitBtn.textContent = `동영상 업로드 중... (${i + 1}/${files.length})`;
+                
+                const formData = new FormData();
+                formData.append('file', files[i]);
+                formData.append('folder', 'community');
+
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (uploadRes.ok) {
+                    const uploadData = await uploadRes.json();
+                    videoUrls.push(uploadData.url);
+                } else {
+                    throw new Error(`동영상 ${i + 1} 업로드 실패`);
+                }
+            }
+        }
+
+        // 게시글 저장 (이미지 URL들과 동영상 URL들을 JSON 배열로 저장)
         submitBtn.textContent = '게시글 등록 중...';
         const payload = {
             uid: currentUser.uid,
             author: currentUser.displayName || currentUser.email?.split('@')[0] || '익명 유저',
             title: title,
             content: content,
-            images: JSON.stringify(imageUrls) // 여러 이미지 URL을 JSON으로 저장
+            images: JSON.stringify(imageUrls), // 여러 이미지 URL을 JSON으로 저장
+            videos: JSON.stringify(videoUrls)  // 여러 동영상 URL을 JSON으로 저장
         };
 
         console.log('게시글 전송 데이터:', payload);
