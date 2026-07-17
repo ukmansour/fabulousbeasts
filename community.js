@@ -330,7 +330,9 @@ function updatePostCountLabel() {
 // ===== 글쓰기 모달 =====
 function openWriteModal() {
     if (!currentUser) {
-        alert('로그인 후 글을 작성할 수 있습니다.');
+        if (confirm('로그인 후 이용해 주세요.\n\n로그인 페이지로 이동하시겠습니까?')) {
+            window.location.href = 'auth.html';
+        }
         return;
     }
     document.getElementById('write-title').value = '';
@@ -641,7 +643,9 @@ async function submitComment(postId) {
     console.log('currentUser:', currentUser);
     
     if (!currentUser) {
-        alert('댓글을 작성하려면 로그인이 필요합니다.');
+        if (confirm('로그인 후 이용해 주세요.\n\n로그인 페이지로 이동하시겠습니까?')) {
+            window.location.href = 'auth.html';
+        }
         return;
     }
 
