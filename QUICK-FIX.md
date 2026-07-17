@@ -15,13 +15,14 @@
 2. 아래 SQL을 복사해서 붙여넣기:
 
 ```sql
--- 커뮤니티 게시글 테이블
+-- 커뮤니티 게시글 테이블 (이미지 지원 포함)
 CREATE TABLE IF NOT EXISTS community_posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     uid TEXT NOT NULL,
     author TEXT NOT NULL,
     title TEXT NOT NULL,
     content TEXT NOT NULL,
+    image TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -42,6 +43,17 @@ CREATE INDEX IF NOT EXISTS idx_community_comments_created_at ON community_commen
 ```
 
 3. **Execute** 버튼 클릭
+
+### 2-1단계: 기존 테이블이 있다면 image 컬럼 추가
+
+기존 테이블에 이미지 컬럼이 없다면 추가:
+
+```sql
+-- 기존 community_posts 테이블에 image 컬럼 추가
+ALTER TABLE community_posts ADD COLUMN image TEXT;
+```
+
+**참고**: 테이블이 이미 image 컬럼을 가지고 있으면 에러가 발생하는데, 무시해도 됩니다.
 
 ### 3단계: 확인
 
@@ -90,9 +102,18 @@ npx wrangler d1 execute fabulousbeasts --file=./schema-community.sql --remote
 2. 로그인 (상단 우측 "로그인" 버튼)
 3. **글쓰기** 버튼 클릭
 4. 테스트 게시글 작성
-5. 게시글 클릭 후 댓글 작성 시도
+5. **이미지 첨부** 버튼으로 사진 선택 (선택사항, 5MB 이하)
+6. 게시글 등록
+7. 게시글 클릭 후 댓글 작성 시도
 
 브라우저 개발자 도구 (F12) → Console 탭에서 에러 확인
+
+### 이미지 업로드 기능
+- 지원 형식: JPG, PNG, GIF, WEBP 등 모든 이미지 형식
+- 최대 크기: 5MB
+- 저장 위치: Cloudflare R2 (community 폴더)
+- 게시글 목록에서 이미지가 있는 글은 📷 아이콘 표시
+- 상세보기에서 이미지 클릭 시 원본 크기로 새 탭에서 열림
 
 ---
 
