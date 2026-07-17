@@ -503,11 +503,11 @@ async function loadCommunityPosts() {
 
         listEl.innerHTML = tableHTML;
 
-        // 게시글 클릭 시 community.html로 이동 (postId는 URL 경로로 전달)
+        // 게시글 클릭 시 post.html로 이동
         listEl.querySelectorAll('.community-post-item').forEach(item => {
             const id = item.getAttribute('data-id');
             item.onclick = () => {
-                window.location.href = `/community/${id}`;
+                window.location.href = `/post.html?id=${id}`;
             };
         });
 

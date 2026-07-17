@@ -460,21 +460,9 @@ async function submitPost() {
 
 // ===== 상세 모달 =====
 async function openDetailModal(postId) {
-    currentOpenPostId = postId;
-    const modal = document.getElementById('detail-modal');
-    modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
-    
-    // URL을 /community/ID 형식으로 업데이트
-    window.history.pushState({ postId }, '', `/community/${postId}`);
-
-    // 캐시에서 게시글 찾기
-    const post = allPosts.find(p => p.id === postId);
-    if (!post) {
-        closeDetailModal();
-        alert('게시글을 찾을 수 없습니다.');
-        return;
-    }
+    // 별도 페이지로 이동
+    window.location.href = `/post.html?id=${postId}`;
+}
 
     // 본문 렌더
     const displayTitle = stripCategoryTag(post.title);

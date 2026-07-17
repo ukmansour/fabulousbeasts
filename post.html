@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 - 유수언 커뮤니티</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* 게시글 페이지 전용 스타일 */
+        .post-page-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .post-header {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px 8px 0 0;
+            padding: 1.5rem 2rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .post-header h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #212529;
+            margin: 0 0 1rem 0;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+
+        .post-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #868e96;
+            background: #f8f9fa;
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+        }
+
+        .post-meta .meta-left {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .post-category {
+            background: var(--primary-light);
+            color: var(--primary-color);
+            padding: 0.15rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+
+        .post-body {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            padding: 2rem;
+            font-size: 1rem;
+            color: #343a40;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-break: break-all;
+            min-height: 200px;
+        }
+
+        .post-body img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            margin: 1rem 0;
+            cursor: pointer;
+            display: block;
+        }
+
+        .post-actions {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            padding: 0.8rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .btn-back {
+            padding: 0.5rem 1.2rem;
+            background: #e9ecef;
+            color: #495057;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-delete {
+            padding: 0.5rem 1.2rem;
+            background: #fff0f0;
+            color: #e03131;
+            border: 1px solid #ffc9c9;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* 댓글 섹션 */
+        .comment-section {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 2rem;
+        }
+
+        .comment-section-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: #212529;
+        }
+
+        .comment-section-title span {
+            color: var(--primary-color);
+            margin-left: 0.4rem;
+        }
+
+        .comment-write-wrap {
+            margin-bottom: 1.5rem;
+        }
+
+        .comment-write-wrap textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 0.8rem;
+            border: 1.5px solid #dee2e6;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .comment-write-wrap textarea:focus {
+            border-color: var(--primary-color);
+        }
+
+        .comment-write-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.6rem;
+        }
+
+        .btn-comment-submit {
+            padding: 0.5rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .comment-login-notice {
+            padding: 1rem 1.2rem;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #495057;
+            margin-bottom: 1.5rem;
+        }
+
+        .comment-login-notice a {
+            color: var(--primary-color);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .comment-item {
+            display: flex;
+            gap: 0.8rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .comment-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+
+        .comment-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .comment-author {
+            font-weight: 800;
+            font-size: 0.9rem;
+            color: #212529;
+        }
+
+        .comment-time {
+            font-size: 0.78rem;
+            color: #868e96;
+        }
+
+        .comment-content {
+            font-size: 0.9rem;
+            color: #343a40;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .btn-comment-delete {
+            font-size: 0.78rem;
+            color: #aaa;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .btn-comment-delete:hover {
+            color: #e03131;
+        }
+
+        .comment-empty {
+            text-align: center;
+            color: #aaa;
+            font-size: 0.9rem;
+            padding: 2rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #868e96;
+            font-size: 0.95rem;
+        }
+
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: #e03131;
+            font-size: 0.95rem;
+        }
+
+        /* 반응형 */
+        @media (max-width: 640px) {
+            .post-header {
+                padding: 1.2rem 1rem;
+            }
+            .post-header h1 {
+                font-size: 1.2rem;
+            }
+            .post-body {
+                padding: 1.5rem 1rem;
+            }
+            .post-actions {
+                padding: 0.6rem 1rem;
+            }
+            .comment-section {
+                padding: 1.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
+                <span>유수언</span>
+            </a>
+            <nav class="top-nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="index.html#characters" class="nav-link">전체 캐릭터</a>
+                <a href="watch.html" class="nav-link">애니 보기</a>
+                <a href="community.html" class="nav-link" style="border-bottom: 2px solid rgba(255,255,255,0.9);">커뮤니티</a>
+                <span id="user-info"></span>
+            </nav>
+        </div>
+    </header>
+
+    <div class="post-page-container">
+        <div id="post-content">
+            <div class="loading">게시글을 불러오는 중...</div>
+        </div>
+    </div>
+
+    <script type="module" src="post.js"></script>
+</body>
+</html>
