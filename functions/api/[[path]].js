@@ -57,15 +57,17 @@ export async function onRequest(context) {
         }
     }
 
-    // === R2 이미지 조회 ===
+    // === R2 이미지 조회 (신규 형식: /api/r2/...) ===
     if (request.method === "GET" && apiPath.startsWith("/r2/")) {
         try {
             if (!env.BUCKET) return new Response("R2 BUCKET not bound", { status: 500 });
 
             const filename = decodeURIComponent(apiPath.replace("/r2/", ""));
+            console.log('R2 GET request:', filename);
             const object = await env.BUCKET.get(filename);
 
             if (!object) {
+                console.error('R2 object not found:', filename);
                 return new Response("Image not found", { status: 404 });
             }
 
@@ -77,7 +79,34 @@ export async function onRequest(context) {
             return new Response(object.body, { headers });
         } catch (err) {
             console.error('R2 Get error:', err);
-            return new Response("Error loading image", { status: 500 });
+            return new Response("Error loading image: " + err.message, { status: 500 });
+        }
+    }
+
+    // === 레거시 이미지 URL 리다이렉트 (media.fabulousbeasts.kr 대체) ===
+    // 기존에 media.fabulousbeasts.kr로 저장된 이미지 URL을 처리
+    if (request.method === "GET" && url.hostname === "media.fabulousbeasts.kr") {
+        try {
+            if (!env.BUCKET) return new Response("R2 BUCKET not bound", { status: 500 });
+
+            const filename = url.pathname.substring(1); // Remove leading /
+            console.log('Legacy media URL redirect:', filename);
+            const object = await env.BUCKET.get(filename);
+
+            if (!object) {
+                console.error('Legacy R2 object not found:', filename);
+                return new Response("Image not found", { status: 404 });
+            }
+
+            const headers = new Headers();
+            object.writeHttpMetadata(headers);
+            headers.set("Cache-Control", "public, max-age=31536000");
+            headers.set("Access-Control-Allow-Origin", "*");
+
+            return new Response(object.body, { headers });
+        } catch (err) {
+            console.error('Legacy R2 Get error:', err);
+            return new Response("Error loading image: " + err.message, { status: 500 });
         }
     }
 
@@ -111,6 +140,31 @@ export async function onRequest(context) {
         try {
             const result = await env.DB.prepare("SELECT * FROM wiki_pages WHERE title = ?").bind(title).first();
             if (!result) return new Response(JSON.stringify({ error: "Not Found" }), { status: 404, headers: corsHeaders });
+            
+            // [수정] 레거시 media URL 변환
+            if (result.image && result.image.includes('media.fabulousbeasts.kr')) {
+                const filename = result.image.replace(/https?:\/\/media\.fabulousbeasts\.kr\//, '');
+                result.image = `https://wiki.fabulousbeasts.kr/api/r2/${encodeURIComponent(filename)}`;
+            }
+            
+            // [수정] 갤러리 이미지들도 변환
+            if (result.gallery) {
+                try {
+                    const gallery = typeof result.gallery === 'string' ? JSON.parse(result.gallery) : result.gallery;
+                    if (Array.isArray(gallery)) {
+                        result.gallery = JSON.stringify(gallery.map(url => {
+                            if (url && url.includes('media.fabulousbeasts.kr')) {
+                                const filename = url.replace(/https?:\/\/media\.fabulousbeasts\.kr\//, '');
+                                return `https://wiki.fabulousbeasts.kr/api/r2/${encodeURIComponent(filename)}`;
+                            }
+                            return url;
+                        }));
+                    }
+                } catch (e) {
+                    console.error('Gallery parsing error:', e);
+                }
+            }
+            
             return new Response(JSON.stringify(result), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
@@ -147,7 +201,18 @@ export async function onRequest(context) {
     if (request.method === "GET" && apiPath === "/images") {
         try {
             const { results } = await env.DB.prepare("SELECT title, name, image, category, birthday FROM wiki_pages").all();
-            return new Response(JSON.stringify(results), { headers: corsHeaders });
+            
+            // [수정] 레거시 media.fabulousbeasts.kr URL을 새로운 Worker 경로로 자동 변환
+            const convertedResults = results.map(item => {
+                if (item.image && item.image.includes('media.fabulousbeasts.kr')) {
+                    // media.fabulousbeasts.kr/filename.jpg -> /api/r2/filename.jpg
+                    const filename = item.image.replace(/https?:\/\/media\.fabulousbeasts\.kr\//, '');
+                    item.image = `https://wiki.fabulousbeasts.kr/api/r2/${encodeURIComponent(filename)}`;
+                }
+                return item;
+            });
+            
+            return new Response(JSON.stringify(convertedResults), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
         }
