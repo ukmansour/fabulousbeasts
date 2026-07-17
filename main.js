@@ -6,11 +6,15 @@ import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/
 
 let mergedCharacters = []; // [수정] 초기 상태를 빈 배열로 설정하여 정적 데이터(data.js) 노출을 차단합니다.
 let recentChangesTimer = null;
+let currentUser = null;
+let userRole = 'guest';
+let currentOpenPostId = null;
 
 onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
     if (!info) return;
     if (user) {
+        currentUser = user;
         // [신규] 로그인한 유저 정보를 D1에 실시간 동기화 (Auth -> D1)
         try {
             fetch('/api/user/role', {
@@ -68,6 +72,8 @@ onAuthStateChanged(auth, async (user) => {
             }
         }
 
+        userRole = isAdmin ? 'admin' : 'member';
+
         info.innerHTML = `
             ${isAdmin ? `<a href="admin.html" class="nav-link" style="color:white; font-weight:bold; margin-right:1rem; border:1px solid rgba(255,255,255,0.3); padding:0.2rem 0.5rem; border-radius:3px;">관리자 설정</a>` : ''}
             <span style="color:white; font-size:0.75rem; margin-right:0.4rem;">${nickname}님</span>
@@ -78,15 +84,18 @@ onAuthStateChanged(auth, async (user) => {
         if (logoutBtn) {
             logoutBtn.onclick = (e) => {
                 e.preventDefault();
-                if (confirm("로그아웃하시습니까?")) {
+                if (confirm("로그아웃하시겠습니까?")) {
                     sessionStorage.removeItem(`role_${user.uid}`);
                     signOut(auth).then(() => location.reload());
                 }
             };
         }
     } else {
+        currentUser = null;
+        userRole = 'guest';
         info.innerHTML = `<a href="auth.html" class="nav-link">로그인</a>`;
     }
+    updateCommunityUI();
 });
 
 async function initHome() {
@@ -212,6 +221,9 @@ async function syncHomepageImages() {
             }
         }
 
+        // 1.8 다가오는 생일 렌더링
+        renderUpcomingBirthdays();
+
         // 2. 전체 목록(char-grid) 동적 렌더링
         const container = document.getElementById('char-grid');
         if (container) {
@@ -315,6 +327,360 @@ function renderCategoryGrid() {
     }).join('');
 }
 
+async function submitPost() {
+    const titleInput = document.getElementById('post-title');
+    const contentInput = document.getElementById('post-content');
+    if (!titleInput || !contentInput) return;
+
+    const title = titleInput.value.trim();
+    const content = contentInput.value.trim();
+
+    if (!title || !content) {
+        alert("제목과 내용을 모두 입력해 주세요.");
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/community/posts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                uid: currentUser.uid,
+                author: currentUser.displayName || '익명 유저',
+                title: title,
+                content: content
+            })
+        });
+
+        if (res.ok) {
+            titleInput.value = '';
+            contentInput.value = '';
+            document.getElementById('post-write-modal').classList.remove('active');
+            loadCommunityPosts();
+        } else {
+            alert("게시글 작성에 실패했습니다.");
+        }
+    } catch (err) {
+        console.error(err);
+        alert("게시글 작성 중 오류가 발생했습니다.");
+    }
+}
+
+function renderUpcomingBirthdays() {
+    const container = document.getElementById('home-upcoming-birthdays');
+    if (!container) return;
+
+    const bdayChars = mergedCharacters.filter(c => c.birthday);
+    if (bdayChars.length === 0) {
+        container.innerHTML = `<div style="padding: 1rem; text-align: center; color: #888;">등록된 생일 정보가 없습니다.</div>`;
+        return;
+    }
+
+    const sorted = bdayChars.map(c => {
+        const parsed = parseBirthday(c.birthday);
+        if (!parsed) return null;
+        const info = getNextBirthdayInfo(parsed.month, parsed.day);
+        return { char: c, info };
+    }).filter(item => item !== null)
+      .sort((a, b) => a.info.daysLeft - b.info.daysLeft)
+      .slice(0, 4);
+
+    if (sorted.length === 0) {
+        container.innerHTML = `<div style="padding: 1rem; text-align: center; color: #888;">다가오는 생일 정보가 없습니다.</div>`;
+        return;
+    }
+
+    container.innerHTML = sorted.map(item => {
+        const c = item.char;
+        const info = item.info;
+        const ddayText = info.isToday ? 'D-Day' : `D-${info.daysLeft}`;
+        
+        return `
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.2rem; border-bottom: 1px solid #f3f3f5;">
+                <a href="detail.html#${encodeURIComponent(c.id)}" style="font-weight: 700; text-decoration: none; color: var(--text-main); display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem;">
+                    <img src="${c.image || 'https://via.placeholder.com/50'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;">
+                    <span>${c.name}</span>
+                </a>
+                <span style="font-weight: 800; color: #d6336c; font-size: 0.75rem; background: #fff0f6; padding: 0.15rem 0.5rem; border-radius: 12px; border: 1px solid #ffc9db; font-family: monospace;">
+                    ${ddayText}
+                </span>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateCommunityUI() {
+    const writeBtn = document.getElementById('write-post-btn');
+    if (writeBtn) {
+        writeBtn.style.display = currentUser ? 'block' : 'none';
+    }
+    loadCommunityPosts();
+}
+
+async function loadCommunityPosts() {
+    const listEl = document.getElementById('community-posts-list');
+    if (!listEl) return;
+
+    try {
+        const res = await fetch('/api/community/posts');
+        if (!res.ok) {
+            listEl.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #888;">게시글을 불러올 수 없습니다.</div>`;
+            return;
+        }
+        const posts = await res.json();
+        if (posts.length === 0) {
+            listEl.innerHTML = `<div style="padding: 2rem; text-align: center; color: #888; font-size: 0.95rem; background: #fafafa; border-radius: 8px; border: 1px dashed #eee;">첫 번째 커뮤니티 글을 남겨보세요!</div>`;
+            return;
+        }
+
+        listEl.innerHTML = posts.map(p => {
+            const date = new Date(p.created_at);
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            const snippet = p.content.length > 80 ? p.content.substring(0, 80) + '...' : p.content;
+            
+            return `
+                <div class="community-post-item" data-id="${p.id}" style="padding: 1rem; border: 1.5px solid #f1f3f5; border-radius: 8px; background: white; cursor: pointer; transition: all 0.2s ease;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.4rem;">
+                        <h4 style="margin: 0; font-size: 1rem; font-weight: 800; color: #212529; flex: 1;">
+                            ${p.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+                            ${p.comment_count > 0 ? `<span style="color: var(--primary-color); font-size: 0.85rem; margin-left: 0.4rem; font-weight: 700;">[${p.comment_count}]</span>` : ''}
+                        </h4>
+                        <span style="font-size: 0.75rem; color: #868e96; white-space: nowrap;">${dateStr}</span>
+                    </div>
+                    <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #495057; line-height: 1.5; white-space: pre-wrap;">${snippet.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.8rem; color: #495057; font-weight: 700;">글쓴이: ${p.author}</span>
+                        ${currentUser && (p.uid === currentUser.uid || userRole === 'admin') ? `
+                            <button class="delete-post-btn" data-id="${p.id}" style="background: none; border: none; color: #e03131; font-weight: 800; font-size: 0.75rem; cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 4px; z-index: 10;">삭제</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        listEl.querySelectorAll('.community-post-item').forEach(item => {
+            const id = item.getAttribute('data-id');
+            
+            const delBtn = item.querySelector('.delete-post-btn');
+            if (delBtn) {
+                delBtn.onclick = async (e) => {
+                    e.stopPropagation();
+                    if (confirm("정말 이 게시글을 삭제하시겠습니까? 관련 댓글도 모두 삭제됩니다.")) {
+                        try {
+                            const dres = await fetch('/api/community/posts/delete', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: parseInt(id, 10), uid: currentUser.uid, role: userRole })
+                            });
+                            if (dres.ok) {
+                                loadCommunityPosts();
+                            } else {
+                                alert("삭제 실패했습니다.");
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+                };
+            }
+
+            item.onclick = () => {
+                openPostDetail(parseInt(id, 10));
+            };
+        });
+
+    } catch (err) {
+        console.error(err);
+        listEl.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #888;">오류가 발생했습니다.</div>`;
+    }
+}
+
+async function openPostDetail(postId) {
+    currentOpenPostId = postId;
+    const modal = document.getElementById('post-detail-modal');
+    if (!modal) return;
+
+    modal.classList.add('active');
+
+    try {
+        const res = await fetch('/api/community/posts');
+        if (res.ok) {
+            const posts = await res.json();
+            const post = posts.find(p => p.id === postId);
+            if (!post) {
+                alert("게시글을 찾을 수 없습니다.");
+                modal.classList.remove('active');
+                return;
+            }
+
+            const date = new Date(post.created_at);
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+            document.getElementById('post-detail-content-wrap').innerHTML = `
+                <h2 style="font-size: 1.35rem; font-weight: 800; color: #212529; margin: 0.5rem 0 0.8rem 0; border: none; line-height: 1.4;">
+                    ${post.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+                </h2>
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #868e96; margin-bottom: 1.2rem; background: #f8f9fa; padding: 0.6rem 0.8rem; border-radius: 6px;">
+                    <span>작성자: <strong>${post.author}</strong></span>
+                    <span>${dateStr}</span>
+                </div>
+                <div style="font-size: 0.95rem; color: #343a40; line-height: 1.7; white-space: pre-wrap; word-break: break-all;">
+                    ${post.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+                </div>
+            `;
+
+            const formWrap = document.getElementById('post-comment-form-wrap');
+            if (currentUser) {
+                formWrap.innerHTML = `
+                    <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+                        <textarea id="post-comment-input" placeholder="따뜻한 댓글을 남겨보세요..." style="width: 100%; min-height: 60px; padding: 0.6rem; border: 1.5px solid #dee2e6; border-radius: 6px; font-family: inherit; font-size: 0.85rem; resize: vertical; outline: none;"></textarea>
+                        <div style="display: flex; justify-content: flex-end;">
+                            <button id="submit-post-comment-btn" style="background: var(--primary-color); color: white; border: none; padding: 0.4rem 1.2rem; border-radius: 6px; font-weight: 800; font-size: 0.8rem; cursor: pointer;">등록</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.getElementById('submit-post-comment-btn').onclick = async () => {
+                    const commentInput = document.getElementById('post-comment-input');
+                    const content = commentInput.value.trim();
+                    if (!content) {
+                        alert("댓글 내용을 입력해 주세요.");
+                        return;
+                    }
+
+                    try {
+                        const cres = await fetch('/api/community/comments', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                post_id: postId,
+                                uid: currentUser.uid,
+                                author: currentUser.displayName || '익명 유저',
+                                content: content
+                            })
+                        });
+
+                        if (cres.ok) {
+                            commentInput.value = '';
+                            loadPostComments(postId);
+                            loadCommunityPosts();
+                        } else {
+                            alert("댓글 작성에 실패했습니다.");
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                };
+            } else {
+                formWrap.innerHTML = `
+                    <div style="padding: 1rem; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; text-align: center; font-size: 0.85rem; color: #495057;">
+                        댓글은 로그인 후 작성할 수 있습니다.
+                    </div>
+                `;
+            }
+
+            loadPostComments(postId);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function loadPostComments(postId) {
+    const listEl = document.getElementById('post-comments-list');
+    const countEl = document.getElementById('post-comments-count');
+    if (!listEl) return;
+
+    try {
+        const res = await fetch(`/api/community/comments?post_id=${postId}`);
+        if (res.ok) {
+            const comments = await res.json();
+            countEl.textContent = comments.length;
+
+            if (comments.length === 0) {
+                listEl.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #888; font-size: 0.85rem;">작성된 댓글이 없습니다.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = comments.map(c => {
+                const date = new Date(c.created_at);
+                const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                const canDelete = currentUser && (c.uid === currentUser.uid || userRole === 'admin');
+
+                return `
+                    <div class="post-comment-item" style="padding: 0.8rem; border: 1px solid #f1f3f5; border-radius: 6px; background: #fafafa; display: flex; justify-content: space-between; gap: 1rem;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
+                                <strong style="font-size: 0.85rem; color: #212529;">${c.author}</strong>
+                                <span style="font-size: 0.7rem; color: #868e96;">${dateStr}</span>
+                            </div>
+                            <p style="margin: 0; font-size: 0.85rem; color: #495057; line-height: 1.4; white-space: pre-wrap;">${c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                        </div>
+                        ${canDelete ? `
+                            <button class="delete-post-comment-btn" data-id="${c.id}" style="background: none; border: none; color: #e03131; font-weight: 800; font-size: 0.75rem; cursor: pointer; padding: 0.2rem; align-self: flex-start;">삭제</button>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            listEl.querySelectorAll('.delete-post-comment-btn').forEach(btn => {
+                btn.onclick = async () => {
+                    const id = btn.getAttribute('data-id');
+                    if (confirm("정말 이 댓글을 삭제하시겠습니까?")) {
+                        try {
+                            const dres = await fetch('/api/community/comments/delete', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ id: parseInt(id, 10), uid: currentUser.uid, role: userRole })
+                            });
+                            if (dres.ok) {
+                                loadPostComments(postId);
+                                loadCommunityPosts();
+                            } else {
+                                alert("삭제 실패했습니다.");
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    }
+                };
+            });
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function initCommunityEvents() {
+    const writeBtn = document.getElementById('write-post-btn');
+    const writeModal = document.getElementById('post-write-modal');
+    const writeClose = document.getElementById('post-write-close');
+    const cancelPostBtn = document.getElementById('cancel-post-btn');
+    const submitPostBtn = document.getElementById('submit-post-btn');
+
+    if (writeBtn && writeModal) {
+        writeBtn.onclick = () => writeModal.classList.add('active');
+    }
+    if (writeClose && writeModal) {
+        writeClose.onclick = () => writeModal.classList.remove('active');
+    }
+    if (cancelPostBtn && writeModal) {
+        cancelPostBtn.onclick = () => writeModal.classList.remove('active');
+    }
+    if (submitPostBtn) {
+        submitPostBtn.onclick = submitPost;
+    }
+
+    const detailModal = document.getElementById('post-detail-modal');
+    const detailClose = document.getElementById('post-detail-close');
+    if (detailClose && detailModal) {
+        detailClose.onclick = () => {
+            detailModal.classList.remove('active');
+            currentOpenPostId = null;
+        };
+    }
+}
+
 function initSearch() {
     const input = document.getElementById('global-search');
     const results = document.getElementById('search-results');
@@ -331,4 +697,7 @@ function initSearch() {
     document.addEventListener('click', (e) => { if(!input.contains(e.target)) results.classList.remove('active'); });
 }
 
-window.addEventListener('load', initHome);
+window.addEventListener('load', () => {
+    initHome();
+    initCommunityEvents();
+});

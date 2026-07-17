@@ -290,9 +290,9 @@ function renderInfobox(data) {
                             const info = getNextBirthdayInfo(parsed.month, parsed.day);
                             const nextDateStr = `${info.nextDate.getFullYear()}년 ${info.nextDate.getMonth() + 1}월 ${info.nextDate.getDate()}일`;
                             if (info.isToday) {
-                                birthdayHtml += `<br><span style="color:#d6336c; font-weight:bold; font-size:12px; display:inline-block; margin-top:4px; animation: pulse 1.5s infinite;">🎂 오늘 생일입니다! 🎉</span>`;
+                                birthdayHtml += `<br><span style="color:#d6336c; font-weight:bold; font-size:12px; display:inline-block; margin-top:4px; animation: pulse 1.5s infinite;">🎂 오늘 생일입니다! 🎉 (D-Day)</span>`;
                             } else {
-                                birthdayHtml += `<br><span style="color:#666; font-size:11px; display:inline-block; margin-top:4px;">다음 생일: ${nextDateStr}<br>(${info.daysLeft}일 남음)</span>`;
+                                birthdayHtml += `<br><span style="color:#666; font-size:11px; display:inline-block; margin-top:4px;">다음 생일: ${nextDateStr}<br>(D-${info.daysLeft})</span>`;
                             }
                         }
                         birthdayHtml += `</td></tr>`;

@@ -396,5 +396,172 @@ export async function onRequest(context) {
         }
     }
 
+    // 12. GET: 커뮤니티 게시글 목록 조회
+    if (request.method === "GET" && apiPath === "/community/posts") {
+        try {
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS community_posts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    uid TEXT NOT NULL,
+                    author TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+            
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS community_comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    post_id INTEGER NOT NULL,
+                    uid TEXT NOT NULL,
+                    author TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+
+            const { results } = await env.DB.prepare(`
+                SELECT p.id, p.uid, p.author, p.title, p.content, strftime('%Y-%m-%dT%H:%M:%SZ', p.created_at) as created_at,
+                       (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) as comment_count
+                FROM community_posts p
+                ORDER BY p.created_at DESC
+            `).all();
+            
+            return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 13. POST: 커뮤니티 게시글 작성
+    if (request.method === "POST" && apiPath === "/community/posts") {
+        try {
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS community_posts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    uid TEXT NOT NULL,
+                    author TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+
+            const data = await request.json();
+            const { uid, author, title, content } = data;
+            if (!uid || !author || !title || !content) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+
+            await env.DB.prepare("INSERT INTO community_posts (uid, author, title, content) VALUES (?, ?, ?, ?)").bind(uid, author, title, content).run();
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 14. POST: 커뮤니티 게시글 삭제
+    if (request.method === "POST" && apiPath === "/community/posts/delete") {
+        try {
+            const data = await request.json();
+            const { id, uid, role } = data;
+            if (!id || !uid) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+
+            const post = await env.DB.prepare("SELECT uid FROM community_posts WHERE id = ?").bind(id).first();
+            if (!post) {
+                return new Response(JSON.stringify({ error: "Post not found" }), { status: 404, headers: corsHeaders });
+            }
+
+            if (post.uid !== uid && role !== 'admin') {
+                return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 403, headers: corsHeaders });
+            }
+
+            await env.DB.prepare("DELETE FROM community_comments WHERE post_id = ?").bind(id).run();
+            await env.DB.prepare("DELETE FROM community_posts WHERE id = ?").bind(id).run();
+            
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 15. GET: 특정 게시글 댓글 조회
+    if (request.method === "GET" && apiPath === "/community/comments") {
+        const postId = url.searchParams.get("post_id");
+        if (!postId) return new Response(JSON.stringify({ error: "Missing post_id parameter" }), { status: 400, headers: corsHeaders });
+        try {
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS community_comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    post_id INTEGER NOT NULL,
+                    uid TEXT NOT NULL,
+                    author TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+
+            const { results } = await env.DB.prepare("SELECT id, post_id, uid, author, content, strftime('%Y-%m-%dT%H:%M:%SZ', created_at) as created_at FROM community_comments WHERE post_id = ? ORDER BY created_at ASC").bind(postId).all();
+            return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 16. POST: 특정 게시글 댓글 작성
+    if (request.method === "POST" && apiPath === "/community/comments") {
+        try {
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS community_comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    post_id INTEGER NOT NULL,
+                    uid TEXT NOT NULL,
+                    author TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+
+            const data = await request.json();
+            const { post_id, uid, author, content } = data;
+            if (!post_id || !uid || !author || !content) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+
+            await env.DB.prepare("INSERT INTO community_comments (post_id, uid, author, content) VALUES (?, ?, ?, ?)").bind(post_id, uid, author, content).run();
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 17. POST: 특정 게시글 댓글 삭제
+    if (request.method === "POST" && apiPath === "/community/comments/delete") {
+        try {
+            const data = await request.json();
+            const { id, uid, role } = data;
+            if (!id || !uid) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+
+            const comment = await env.DB.prepare("SELECT uid FROM community_comments WHERE id = ?").bind(id).first();
+            if (!comment) {
+                return new Response(JSON.stringify({ error: "Comment not found" }), { status: 404, headers: corsHeaders });
+            }
+
+            if (comment.uid !== uid && role !== 'admin') {
+                return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 403, headers: corsHeaders });
+            }
+
+            await env.DB.prepare("DELETE FROM community_comments WHERE id = ?").bind(id).run();
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
     return new Response(JSON.stringify({ error: `Not Found: ${path}` }), { status: 404, headers: corsHeaders });
 }
