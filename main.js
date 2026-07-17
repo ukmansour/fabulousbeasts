@@ -439,15 +439,6 @@ async function loadCommunityPosts() {
         listEl.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #888;">오류가 발생했습니다.</div>`;
     }
 }
-            };
-        });
-
-    } catch (err) {
-        console.error(err);
-        listEl.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #888;">오류가 발생했습니다.</div>`;
-    }
-}
-
 function initSearch() {
     const input = document.getElementById('global-search');
     const results = document.getElementById('search-results');
@@ -466,5 +457,4 @@ function initSearch() {
 
 window.addEventListener('load', () => {
     initHome();
-    initCommunityEvents();
 });
