@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커뮤니티 - 유수언</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ===== 커뮤니티 페이지 레이아웃 ===== */
+        .community-page-wrap {
+            max-width: 900px;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
+        }
+
+        .community-page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--primary-color);
+            padding: 0.8rem 1.2rem;
+            border-radius: 4px 4px 0 0;
+        }
+
+        .community-page-header h1 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: white;
+            margin: 0;
+        }
+
+        .community-page-header .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .btn-write {
+            background: white;
+            color: var(--primary-color);
+            border: none;
+            padding: 0.35rem 1rem;
+            border-radius: 3px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .btn-write:hover { opacity: 0.85; }
+        .btn-write:disabled { opacity: 0.5; cursor: default; }
+
+        /* 카테고리 탭 */
+        .community-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .community-tab {
+            padding: 0.55rem 1.2rem;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #666;
+            cursor: pointer;
+            border-right: 1px solid var(--border-color);
+            transition: background 0.15s, color 0.15s;
+            user-select: none;
+        }
+        .community-tab:hover { background: #e9ecef; color: var(--primary-color); }
+        .community-tab.active {
+            background: white;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            margin-bottom: -2px;
+        }
+
+        /* 게시글 테이블 */
+        .post-table-wrap {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+        }
+
+        .post-table-header {
+            display: grid;
+            grid-template-columns: 60px 1fr 90px 80px 60px;
+            padding: 0.5rem 1rem;
+            background: #f8f9fa;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: #868e96;
+        }
+        .post-table-header span { text-align: center; }
+        .post-table-header .col-title { text-align: left; padding-left: 0.5rem; }
+
+        .post-row {
+            display: grid;
+            grid-template-columns: 60px 1fr 90px 80px 60px;
+            align-items: center;
+            padding: 0.6rem 1rem;
+            border-bottom: 1px solid #f3f3f5;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: background 0.12s;
+        }
+        .post-row:hover { background: #f0f9ff; }
+        .post-row:last-child { border-bottom: none; }
+
+        .post-row .col-num { color: #868e96; font-size: 0.8rem; text-align: center; }
+        .post-row .col-title {
+            font-weight: 700;
+            color: #212529;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding-left: 0.5rem;
+        }
+        .post-row .col-title .notice-badge {
+            display: inline-block;
+            background: var(--primary-color);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 2px;
+            margin-right: 0.4rem;
+            font-weight: 800;
+        }
+        .post-row .col-title .comment-count {
+            color: var(--primary-color);
+            font-size: 0.78rem;
+            margin-left: 0.3rem;
+        }
+        .post-row .col-author { text-align: center; color: #495057; font-size: 0.8rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .post-row .col-date { text-align: center; color: #868e96; font-size: 0.76rem; }
+        .post-row .col-views { text-align: center; color: #868e96; font-size: 0.76rem; }
+
+        /* 페이지네이션 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 1rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: 1px solid #f0f0f0;
+        }
+        .page-btn {
+            width: 30px; height: 30px;
+            display: flex; align-items: center; justify-content: center;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #495057;
+            background: white;
+            transition: all 0.12s;
+            user-select: none;
+        }
+        .page-btn:hover { background: var(--primary-light); color: var(--primary-color); border-color: var(--primary-color); }
+        .page-btn.active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+        .page-btn.disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+
+        /* 검색 바 */
+        .community-search-bar {
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.7rem 1rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+        }
+        .community-search-bar select {
+            padding: 0.35rem 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: #495057;
+            outline: none;
+        }
+        .community-search-bar input {
+            flex: 1;
+            padding: 0.35rem 0.7rem;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            font-size: 0.82rem;
+            outline: none;
+        }
+        .community-search-bar input:focus { border-color: var(--primary-color); }
+        .community-search-bar button {
+            padding: 0.35rem 0.9rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* 빈 게시판 안내 */
+        .post-empty {
+            padding: 3.5rem 1rem;
+            text-align: center;
+            color: #868e96;
+            font-size: 0.9rem;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+        }
+        .post-empty .empty-icon { font-size: 2.5rem; margin-bottom: 0.8rem; }
+
+        /* ===== 게시글 작성 모달 ===== */
+        .cm-modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 8000;
+            align-items: center;
+            justify-content: center;
+        }
+        .cm-modal-backdrop.active { display: flex; }
+
+        .cm-modal {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            margin: 1rem;
+            overflow: hidden;
+        }
+
+        .cm-modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.2rem;
+            border-bottom: 2px solid var(--primary-color);
+            flex-shrink: 0;
+        }
+        .cm-modal-head h2 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+        .cm-modal-close {
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            color: #868e96;
+            transition: background 0.12s;
+        }
+        .cm-modal-close:hover { background: #f0f0f0; color: #333; }
+
+        .cm-modal-body {
+            padding: 1.2rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .cm-field { margin-bottom: 1rem; }
+        .cm-label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 0.4rem;
+        }
+        .cm-input, .cm-textarea, .cm-select {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .cm-input:focus, .cm-textarea:focus { border-color: var(--primary-color); }
+        .cm-textarea { min-height: 220px; resize: vertical; line-height: 1.6; }
+
+        .cm-modal-foot {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.7rem;
+            padding: 0.9rem 1.2rem;
+            border-top: 1px solid #f0f0f0;
+            flex-shrink: 0;
+        }
+        .btn-cancel {
+            padding: 0.5rem 1.2rem;
+            background: #e9ecef;
+            color: #495057;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        .btn-submit {
+            padding: 0.5rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .btn-submit:hover { opacity: 0.9; }
+        .btn-submit:disabled { opacity: 0.5; cursor: default; }
+
+        /* ===== 게시글 상세 모달 ===== */
+        .post-detail-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 8000;
+            align-items: flex-start;
+            justify-content: center;
+            overflow-y: auto;
+            padding: 2rem 1rem;
+        }
+        .post-detail-modal.active { display: flex; }
+
+        .post-detail-inner {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 720px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .post-detail-head {
+            padding: 1.2rem 1.5rem 0.8rem;
+            border-bottom: 1px solid #eee;
+        }
+        .post-detail-head h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: #212529;
+            margin-bottom: 0.7rem;
+            line-height: 1.4;
+            word-break: break-all;
+        }
+        .post-detail-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #868e96;
+            background: #f8f9fa;
+            padding: 0.5rem 0.8rem;
+            border-radius: 4px;
+        }
+        .post-detail-meta .meta-left { display: flex; gap: 1rem; }
+
+        .post-detail-body {
+            padding: 1.2rem 1.5rem;
+            font-size: 0.95rem;
+            color: #343a40;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-break: break-all;
+            min-height: 100px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .post-detail-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+            padding: 0.6rem 1.5rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .btn-post-delete {
+            padding: 0.3rem 0.8rem;
+            background: #fff0f0;
+            color: #e03131;
+            border: 1px solid #ffc9c9;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-post-close {
+            padding: 0.3rem 0.8rem;
+            background: #f1f3f5;
+            color: #495057;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* 댓글 섹션 */
+        .comment-section { padding: 1.2rem 1.5rem; }
+        .comment-section-title {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: #212529;
+        }
+        .comment-section-title span { color: var(--primary-color); margin-left: 0.3rem; }
+
+        .comment-write-wrap { margin-bottom: 1.2rem; }
+        .comment-write-wrap textarea {
+            width: 100%;
+            min-height: 65px;
+            padding: 0.7rem;
+            border: 1.5px solid #dee2e6;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.15s;
+        }
+        .comment-write-wrap textarea:focus { border-color: var(--primary-color); }
+        .comment-write-row {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.5rem;
+        }
+        .btn-comment-submit {
+            padding: 0.4rem 1.2rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+        .comment-login-notice {
+            padding: 0.8rem 1rem;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #495057;
+            margin-bottom: 1.2rem;
+        }
+        .comment-login-notice a { color: var(--primary-color); font-weight: 700; text-decoration: none; }
+
+        .comment-list { display: flex; flex-direction: column; gap: 0.8rem; }
+
+        .comment-item {
+            display: flex;
+            gap: 0.7rem;
+            padding: 0.8rem;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border: 1px solid #f0f0f0;
+        }
+        .comment-avatar {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 800;
+            flex-shrink: 0;
+        }
+        .comment-body { flex: 1; min-width: 0; }
+        .comment-header {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            margin-bottom: 0.3rem;
+        }
+        .comment-author { font-weight: 800; font-size: 0.85rem; color: #212529; }
+        .comment-time { font-size: 0.75rem; color: #868e96; }
+        .comment-content { font-size: 0.85rem; color: #343a40; line-height: 1.6; white-space: pre-wrap; word-break: break-all; }
+        .btn-comment-delete {
+            font-size: 0.75rem;
+            color: #aaa;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        .btn-comment-delete:hover { color: #e03131; }
+
+        .comment-empty {
+            text-align: center;
+            color: #aaa;
+            font-size: 0.85rem;
+            padding: 1.5rem;
+        }
+
+        /* ===== 반응형 ===== */
+        @media (max-width: 640px) {
+            .post-table-header { grid-template-columns: 40px 1fr 70px 60px; }
+            .post-table-header .col-views { display: none; }
+            .post-row { grid-template-columns: 40px 1fr 70px 60px; }
+            .post-row .col-views { display: none; }
+            .community-page-wrap { padding: 0 0.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
+                <span>유수언</span>
+            </a>
+            <nav class="top-nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="index.html#characters" class="nav-link">전체 캐릭터</a>
+                <a href="watch.html" class="nav-link">애니 보기</a>
+                <a href="community.html" class="nav-link" style="border-bottom: 2px solid rgba(255,255,255,0.9);">커뮤니티</a>
+                <span id="user-info"></span>
+            </nav>
+        </div>
+    </header>
+
+    <div class="community-page-wrap">
+
+        <!-- 상단 헤더 바 -->
+        <div class="community-page-header">
+            <h1>💬 유수언 커뮤니티</h1>
+            <div class="header-actions">
+                <span id="post-count-label" style="color: rgba(255,255,255,0.8); font-size: 0.78rem;"></span>
+                <button class="btn-write" id="btn-open-write" disabled>글쓰기</button>
+            </div>
+        </div>
+
+        <!-- 카테고리 탭 -->
+        <div class="community-tabs">
+            <div class="community-tab active" data-cat="전체">전체</div>
+            <div class="community-tab" data-cat="자유">자유</div>
+            <div class="community-tab" data-cat="정보">정보&팁</div>
+            <div class="community-tab" data-cat="감상">감상</div>
+            <div class="community-tab" data-cat="질문">질문</div>
+            <div class="community-tab" data-cat="팬아트">팬아트</div>
+        </div>
+
+        <!-- 게시글 테이블 헤더 -->
+        <div class="post-table-header">
+            <span>번호</span>
+            <span class="col-title">제목</span>
+            <span>작성자</span>
+            <span>날짜</span>
+            <span>댓글</span>
+        </div>
+
+        <!-- 게시글 목록 -->
+        <div id="post-list-wrap">
+            <div class="post-empty">
+                <div class="empty-icon">📋</div>
+                <div>게시글을 불러오는 중...</div>
+            </div>
+        </div>
+
+        <!-- 검색 바 + 페이지네이션 -->
+        <div class="community-search-bar">
+            <select id="search-type">
+                <option value="title">제목</option>
+                <option value="content">내용</option>
+                <option value="author">작성자</option>
+            </select>
+            <input type="text" id="search-input" placeholder="검색어를 입력하세요">
+            <button id="btn-search">검색</button>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+
+    </div>
+
+    <!-- ===== 글쓰기 모달 ===== -->
+    <div class="cm-modal-backdrop" id="write-modal">
+        <div class="cm-modal">
+            <div class="cm-modal-head">
+                <h2>새 게시글 작성</h2>
+                <div class="cm-modal-close" id="write-modal-close">✕</div>
+            </div>
+            <div class="cm-modal-body">
+                <div class="cm-field">
+                    <label class="cm-label" for="write-category">카테고리</label>
+                    <select class="cm-input cm-select" id="write-category">
+                        <option value="자유">자유</option>
+                        <option value="정보">정보&팁</option>
+                        <option value="감상">감상</option>
+                        <option value="질문">질문</option>
+                        <option value="팬아트">팬아트</option>
+                    </select>
+                </div>
+                <div class="cm-field">
+                    <label class="cm-label" for="write-title">제목</label>
+                    <input type="text" class="cm-input" id="write-title" placeholder="제목을 입력하세요" maxlength="100">
+                </div>
+                <div class="cm-field">
+                    <label class="cm-label" for="write-content">내용</label>
+                    <textarea class="cm-textarea" id="write-content" placeholder="내용을 입력하세요&#10;(비속어나 스포일러 주의 태그 없는 스포일러는 삼가주세요)"></textarea>
+                </div>
+            </div>
+            <div class="cm-modal-foot">
+                <button class="btn-cancel" id="write-cancel-btn">취소</button>
+                <button class="btn-submit" id="write-submit-btn">등록</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 게시글 상세 모달 ===== -->
+    <div class="post-detail-modal" id="detail-modal">
+        <div class="post-detail-inner">
+
+            <div class="post-detail-head">
+                <h2 id="detail-title">제목</h2>
+                <div class="post-detail-meta">
+                    <div class="meta-left">
+                        <span>작성자: <strong id="detail-author"></strong></span>
+                        <span id="detail-date"></span>
+                        <span id="detail-category" style="background: var(--primary-light); color: var(--primary-color); padding: 0.1rem 0.5rem; border-radius: 10px; font-size: 0.72rem; font-weight: 800;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="post-detail-body" id="detail-body"></div>
+
+            <div class="post-detail-actions">
+                <button class="btn-post-delete" id="detail-delete-btn" style="display:none;">🗑 삭제</button>
+                <button class="btn-post-close" id="detail-close-btn">✕ 닫기</button>
+            </div>
+
+            <!-- 댓글 섹션 -->
+            <div class="comment-section">
+                <div class="comment-section-title">
+                    댓글 <span id="detail-comment-count">0</span>
+                </div>
+
+                <div id="comment-write-area"></div>
+
+                <div class="comment-list" id="comment-list">
+                    <div class="comment-empty">댓글을 불러오는 중...</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script type="module" src="community.js"></script>
+</body>
+</html>
