@@ -9,9 +9,9 @@
     <style>
         /* 게시글 페이지 전용 스타일 */
         .post-page-container {
-            max-width: 100%;
-            margin: 0;
-            padding: 0;
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
         }
 
         .post-header {
@@ -40,6 +40,8 @@
             background: #f8f9fa;
             padding: 0.6rem 1rem;
             border-radius: 0;
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
         }
 
         .post-meta .meta-left {
@@ -59,8 +61,10 @@
 
         .post-body {
             background: white;
-            border: 1px solid var(--border-color);
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
             border-top: none;
+            border-bottom: none;
             padding: 2rem;
             font-size: 1rem;
             color: #343a40;
@@ -81,13 +85,14 @@
 
         .post-actions {
             background: white;
-            border: 1px solid var(--border-color);
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
             border-top: none;
+            border-bottom: none;
             padding: 0.8rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: none;
         }
 
         .btn-back {
