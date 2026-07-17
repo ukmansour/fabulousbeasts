@@ -444,7 +444,6 @@ function renderUpcomingBirthdays() {
         `;
     }).join('');
 }
-}
 
 function updateCommunityUI() {
     const writeBtn = document.getElementById('write-post-btn');
