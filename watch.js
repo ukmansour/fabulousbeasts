@@ -64,7 +64,7 @@ onAuthStateChanged(auth, async (user) => {
     }
     updateCommentForm();
     if (currentEpisodeNum) {
-        loadLikesAndComments(currentEpisodeNum);
+        loadComments(currentEpisodeNum);
     }
 });
 
@@ -137,38 +137,16 @@ function playVideo(ep, shouldPlay = false) {
     }
 
     displayTitle.textContent = ep.title;
-    displayDesc.textContent = `${ep.num}화 에피소드입니다. 즐겁게 감상하세요.`;
+    displayDesc.textContent = '';
     
     currentEpisodeNum = ep.num;
-    loadLikesAndComments(ep.num);
+    loadComments(ep.num);
 }
 
-async function loadLikesAndComments(episodeNum) {
+async function loadComments(episodeNum) {
     if (!episodeNum) return;
     
-    // 1. 좋아요 정보 조회
-    const uidParam = currentUser ? `&uid=${currentUser.uid}` : '';
-    try {
-        const res = await fetch(`/api/likes?episode=${episodeNum}${uidParam}`);
-        if (res.ok) {
-            const data = await res.json();
-            const likeBtn = document.getElementById('like-btn');
-            const likeCount = document.getElementById('like-count');
-            likeCount.textContent = data.count;
-            
-            if (data.liked) {
-                likeBtn.classList.add('liked');
-                likeBtn.querySelector('.like-icon').textContent = '❤️';
-            } else {
-                likeBtn.classList.remove('liked');
-                likeBtn.querySelector('.like-icon').textContent = '🤍';
-            }
-        }
-    } catch (e) {
-        console.error("좋아요 조회 실패:", e);
-    }
-
-    // 2. 댓글 목록 조회
+    // 댓글 목록 조회
     try {
         const res = await fetch(`/api/comments?episode=${episodeNum}`);
         if (res.ok) {
@@ -218,7 +196,7 @@ async function loadLikesAndComments(episodeNum) {
                                 body: JSON.stringify({ id: parseInt(id, 10), uid: currentUser.uid, role: userRole })
                             });
                             if (dres.ok) {
-                                loadLikesAndComments(episodeNum);
+                                loadComments(episodeNum);
                             } else {
                                 const err = await dres.json();
                                 alert(`삭제 실패: ${err.error}`);
@@ -280,7 +258,7 @@ function updateCommentForm() {
 
             if (res.ok) {
                 textInput.value = '';
-                loadLikesAndComments(currentEpisodeNum);
+                loadComments(currentEpisodeNum);
             } else {
                 const err = await res.json();
                 alert(`댓글 등록 실패: ${err.error}`);
@@ -292,38 +270,7 @@ function updateCommentForm() {
     };
 }
 
-// 좋아요 클릭 이벤트 핸들러 설정
-const likeBtn = document.getElementById('like-btn');
-if (likeBtn) {
-    likeBtn.onclick = async () => {
-        if (!currentUser) {
-            alert("로그인한 사용자만 좋아요를 누를 수 있습니다.");
-            return;
-        }
-        if (!currentEpisodeNum) return;
 
-        try {
-            const res = await fetch('/api/likes', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    episode_num: currentEpisodeNum,
-                    uid: currentUser.uid
-                })
-            });
-
-            if (res.ok) {
-                loadLikesAndComments(currentEpisodeNum);
-            } else {
-                const err = await res.json();
-                alert(`좋아요 실패: ${err.error}`);
-            }
-        } catch (e) {
-            console.error(e);
-            alert("좋아요 처리 도중 오류가 발생했습니다.");
-        }
-    };
-}
 
 seasonSelect.onchange = (e) => renderEpisodes(e.target.value, true); // 시즌 변경 시에는 첫 화 자동 재생
 renderEpisodes("1", false); // 초기 로드 시에는 재생하지 않음
