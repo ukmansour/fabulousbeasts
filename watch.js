@@ -145,6 +145,7 @@ function playVideo(ep, shouldPlay = false) {
     }
     
     currentEpisodeNum = ep.num;
+    updateCommentForm(); // 에피소드 변경 시 댓글 입력창도 업데이트
     loadComments(ep.num);
 }
 
