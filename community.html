@@ -618,6 +618,14 @@
                     <label class="cm-label" for="write-content">내용</label>
                     <textarea class="cm-textarea" id="write-content" placeholder="내용을 입력하세요&#10;(비속어나 스포일러 주의 태그 없는 스포일러는 삼가주세요)"></textarea>
                 </div>
+                <div class="cm-field">
+                    <label class="cm-label" for="write-image">이미지 첨부 (선택)</label>
+                    <input type="file" class="cm-input" id="write-image" accept="image/*" style="padding: 0.4rem 0.8rem;">
+                    <div id="image-preview" style="margin-top: 0.5rem; display: none;">
+                        <img id="preview-img" style="max-width: 100%; max-height: 200px; border-radius: 6px; border: 1px solid #dee2e6;">
+                        <button type="button" id="remove-image-btn" style="margin-top: 0.3rem; font-size: 0.75rem; color: #e03131; background: none; border: 1px solid #e03131; padding: 0.2rem 0.6rem; border-radius: 4px; cursor: pointer;">이미지 제거</button>
+                    </div>
+                </div>
             </div>
             <div class="cm-modal-foot">
                 <button class="btn-cancel" id="write-cancel-btn">취소</button>

@@ -406,6 +406,7 @@ export async function onRequest(context) {
                     author TEXT NOT NULL,
                     title TEXT NOT NULL,
                     content TEXT NOT NULL,
+                    image TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `).run();
@@ -422,7 +423,7 @@ export async function onRequest(context) {
             `).run();
 
             const { results } = await env.DB.prepare(`
-                SELECT p.id, p.uid, p.author, p.title, p.content, strftime('%Y-%m-%dT%H:%M:%SZ', p.created_at) as created_at,
+                SELECT p.id, p.uid, p.author, p.title, p.content, p.image, strftime('%Y-%m-%dT%H:%M:%SZ', p.created_at) as created_at,
                        (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) as comment_count
                 FROM community_posts p
                 ORDER BY p.created_at DESC
@@ -444,17 +445,18 @@ export async function onRequest(context) {
                     author TEXT NOT NULL,
                     title TEXT NOT NULL,
                     content TEXT NOT NULL,
+                    image TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `).run();
 
             const data = await request.json();
-            const { uid, author, title, content } = data;
+            const { uid, author, title, content, image } = data;
             if (!uid || !author || !title || !content) {
                 return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
             }
 
-            await env.DB.prepare("INSERT INTO community_posts (uid, author, title, content) VALUES (?, ?, ?, ?)").bind(uid, author, title, content).run();
+            await env.DB.prepare("INSERT INTO community_posts (uid, author, title, content, image) VALUES (?, ?, ?, ?, ?)").bind(uid, author, title, content, image || null).run();
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });

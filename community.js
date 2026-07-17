@@ -146,6 +146,34 @@ function bindEvents() {
     });
     document.getElementById('write-submit-btn')?.addEventListener('click', submitPost);
 
+    // 이미지 업로드 미리보기
+    const imageInput = document.getElementById('write-image');
+    const previewDiv = document.getElementById('image-preview');
+    const previewImg = document.getElementById('preview-img');
+    const removeBtn = document.getElementById('remove-image-btn');
+
+    if (imageInput) {
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    previewImg.src = ev.target.result;
+                    previewDiv.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            imageInput.value = '';
+            previewDiv.style.display = 'none';
+            previewImg.src = '';
+        });
+    }
+
     // 상세 모달 닫기
     document.getElementById('detail-close-btn')?.addEventListener('click', closeDetailModal);
     document.getElementById('detail-modal')?.addEventListener('click', (e) => {
@@ -237,13 +265,14 @@ function renderPosts() {
         const cat = extractCategory(p.title);
         const commentBadge = p.comment_count > 0
             ? `<span class="comment-count">[${p.comment_count}]</span>` : '';
+        const hasImage = p.image ? '📷 ' : ''; // 이미지 아이콘
 
         return `
             <div class="post-row" data-id="${p.id}">
                 <span class="col-num">${num}</span>
                 <span class="col-title">
                     <span class="notice-badge">${cat}</span>
-                    ${escHtml(displayTitle)}${commentBadge}
+                    ${hasImage}${escHtml(displayTitle)}${commentBadge}
                 </span>
                 <span class="col-author">${escHtml(p.author)}</span>
                 <span class="col-date">${date}</span>
@@ -305,6 +334,9 @@ function openWriteModal() {
     }
     document.getElementById('write-title').value = '';
     document.getElementById('write-content').value = '';
+    document.getElementById('write-image').value = '';
+    document.getElementById('image-preview').style.display = 'none';
+    document.getElementById('preview-img').src = '';
     document.getElementById('write-modal').classList.add('active');
     document.getElementById('write-title').focus();
 }
@@ -322,6 +354,7 @@ async function submitPost() {
     const cat = document.getElementById('write-category').value;
     const rawTitle = document.getElementById('write-title').value.trim();
     const content = document.getElementById('write-content').value.trim();
+    const imageInput = document.getElementById('write-image');
 
     if (!rawTitle) { alert('제목을 입력해 주세요.'); return; }
     if (!content) { alert('내용을 입력해 주세요.'); return; }
@@ -334,16 +367,51 @@ async function submitPost() {
     submitBtn.disabled = true;
     submitBtn.textContent = '등록 중...';
 
-    const payload = {
-        uid: currentUser.uid,
-        author: currentUser.displayName || currentUser.email?.split('@')[0] || '익명 유저',
-        title: title,
-        content: content
-    };
-
-    console.log('게시글 전송 데이터:', payload); // 디버깅용
+    let imageUrl = null;
 
     try {
+        // 이미지 업로드 (있는 경우)
+        if (imageInput.files && imageInput.files[0]) {
+            const file = imageInput.files[0];
+            
+            // 파일 크기 체크 (5MB 제한)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('이미지 크기는 5MB 이하만 가능합니다.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '등록';
+                return;
+            }
+
+            submitBtn.textContent = '이미지 업로드 중...';
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', 'community');
+
+            const uploadRes = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (uploadRes.ok) {
+                const uploadData = await uploadRes.json();
+                imageUrl = uploadData.url;
+            } else {
+                throw new Error('이미지 업로드 실패');
+            }
+        }
+
+        // 게시글 저장
+        submitBtn.textContent = '게시글 등록 중...';
+        const payload = {
+            uid: currentUser.uid,
+            author: currentUser.displayName || currentUser.email?.split('@')[0] || '익명 유저',
+            title: title,
+            content: content,
+            image: imageUrl || ''
+        };
+
+        console.log('게시글 전송 데이터:', payload); // 디버깅용
+
         const res = await fetch('/api/community/posts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -367,7 +435,7 @@ async function submitPost() {
         }
     } catch (e) {
         console.error('게시글 작성 오류:', e);
-        alert('게시글 등록 중 오류가 발생했습니다.');
+        alert('게시글 등록 중 오류가 발생했습니다: ' + e.message);
     } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '등록';
@@ -398,7 +466,23 @@ async function openDetailModal(postId) {
     document.getElementById('detail-author').textContent = post.author;
     document.getElementById('detail-date').textContent = dateStr;
     document.getElementById('detail-category').textContent = cat;
-    document.getElementById('detail-body').textContent = post.content;
+    
+    const bodyEl = document.getElementById('detail-body');
+    bodyEl.innerHTML = '';
+    
+    // 이미지가 있으면 표시
+    if (post.image) {
+        const imgEl = document.createElement('img');
+        imgEl.src = post.image;
+        imgEl.style.cssText = 'max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 1rem; cursor: pointer;';
+        imgEl.onclick = () => window.open(post.image, '_blank');
+        bodyEl.appendChild(imgEl);
+    }
+    
+    // 본문 텍스트
+    const contentEl = document.createElement('div');
+    contentEl.textContent = post.content;
+    bodyEl.appendChild(contentEl);
 
     updateDeleteButtonVisibility();
     renderCommentWriteArea(postId);
