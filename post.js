@@ -131,14 +131,34 @@ function renderPost() {
     
     let bodyHTML = '';
     
-    // 이미지가 있으면 표시
-    if (currentPost.image) {
-        bodyHTML += `
-            <img src="${currentPost.image}" 
-                 alt="게시글 이미지" 
-                 onclick="openImageModal('${currentPost.image}')"
-                 style="cursor: zoom-in; border-radius: 0;">
-        `;
+    // 이미지 표시 (단수형 image와 복수형 images 둘 다 지원)
+    let imageUrls = [];
+    
+    // images 필드가 있으면 (새 방식 - 여러 이미지)
+    if (currentPost.images) {
+        try {
+            imageUrls = JSON.parse(currentPost.images);
+        } catch (e) {
+            console.error('이미지 파싱 오류:', e);
+        }
+    }
+    // image 필드가 있으면 (기존 방식 - 단일 이미지)
+    else if (currentPost.image) {
+        imageUrls = [currentPost.image];
+    }
+    
+    // 이미지들 표시
+    if (imageUrls.length > 0) {
+        bodyHTML += '<div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem;">';
+        imageUrls.forEach(url => {
+            bodyHTML += `
+                <img src="${url}" 
+                     alt="게시글 이미지" 
+                     onclick="openImageModal('${url}')"
+                     style="cursor: zoom-in; border-radius: 0; max-width: 100%;">
+            `;
+        });
+        bodyHTML += '</div>';
     }
     
     bodyHTML += `<div>${escHtml(currentPost.content)}</div>`;
