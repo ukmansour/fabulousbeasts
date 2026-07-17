@@ -227,7 +227,7 @@ function updateCommentForm() {
     if (!currentUser) {
         wrap.innerHTML = `
             <div style="padding: 1.5rem; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; text-align: center; font-size: 0.9rem; color: #495057;">
-                댓글과 좋아요는 <a href="auth.html" style="color: var(--primary-color); font-weight: 800; text-decoration: underline;">로그인</a> 후 이용하실 수 있습니다.
+                댓글은 <a href="auth.html" style="color: var(--primary-color); font-weight: 800; text-decoration: underline;">로그인</a> 후 이용하실 수 있습니다.
             </div>
         `;
         return;
