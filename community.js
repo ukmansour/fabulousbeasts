@@ -102,14 +102,27 @@ document.addEventListener('DOMContentLoaded', () => {
     bindEvents();
     
     // URL 파라미터로 post ID가 있으면 해당 게시글 모달 열기
-    const urlParams = new URLSearchParams(window.location.search);
-    const postId = urlParams.get('post');
+    // /community/123 형식 지원
+    const pathMatch = window.location.pathname.match(/\/community\/(\d+)/);
+    let postId = null;
+    
+    if (pathMatch) {
+        postId = parseInt(pathMatch[1], 10);
+    } else {
+        // 구버전 호환: ?post=123 형식도 지원
+        const urlParams = new URLSearchParams(window.location.search);
+        const postParam = urlParams.get('post');
+        if (postParam) postId = parseInt(postParam, 10);
+    }
+    
     if (postId) {
         // 게시글 로드 후 모달 열기
         setTimeout(() => {
-            openDetailModal(parseInt(postId, 10));
-            // URL에서 파라미터 제거 (깔끔하게)
-            window.history.replaceState({}, document.title, window.location.pathname);
+            openDetailModal(postId);
+            // URL을 /community/ID 형식으로 변경 (이미 그 형식이면 유지)
+            if (!window.location.pathname.match(/\/community\/\d+/)) {
+                window.history.replaceState({}, document.title, `/community/${postId}`);
+            }
         }, 500);
     }
 });
@@ -451,6 +464,9 @@ async function openDetailModal(postId) {
     const modal = document.getElementById('detail-modal');
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    // URL을 /community/ID 형식으로 업데이트
+    window.history.pushState({ postId }, '', `/community/${postId}`);
 
     // 캐시에서 게시글 찾기
     const post = allPosts.find(p => p.id === postId);
@@ -531,6 +547,9 @@ function closeDetailModal() {
     document.getElementById('detail-modal').classList.remove('active');
     document.body.style.overflow = '';
     currentOpenPostId = null;
+    
+    // URL을 /community.html로 되돌림
+    window.history.pushState({}, '', '/community.html');
 }
 
 async function deleteCurrentPost() {
