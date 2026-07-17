@@ -136,8 +136,12 @@ function playVideo(ep, shouldPlay = false) {
         });
     }
 
-    displayTitle.textContent = ep.title;
-    displayDesc.textContent = '';
+    if (displayTitle) {
+        displayTitle.textContent = ep.title;
+    }
+    if (displayDesc) {
+        displayDesc.textContent = '';
+    }
     
     currentEpisodeNum = ep.num;
     loadComments(ep.num);
