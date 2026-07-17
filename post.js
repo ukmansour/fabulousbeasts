@@ -137,7 +137,7 @@ function renderPost() {
             <img src="${currentPost.image}" 
                  alt="게시글 이미지" 
                  onclick="openImageModal('${currentPost.image}')"
-                 style="cursor: zoom-in;">
+                 style="cursor: zoom-in; border-radius: 0;">
         `;
     }
     
@@ -340,7 +340,7 @@ window.openImageModal = function(imageUrl) {
     
     const img = document.createElement('img');
     img.src = imageUrl;
-    img.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 8px;';
+    img.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 0;';
     
     modal.appendChild(img);
     modal.onclick = () => modal.remove();
