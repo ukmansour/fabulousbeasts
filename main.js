@@ -205,11 +205,10 @@ async function syncHomepageImages() {
                     <div class="birthday-banner-card">
                         <div class="birthday-avatar-wrap">
                             <img src="${c.image || 'https://via.placeholder.com/150'}" alt="${c.name}" class="birthday-avatar">
-                            <span class="birthday-badge">🎂</span>
                         </div>
                         <div style="flex: 1;">
-                            <h3 style="margin: 0 0 0.3rem 0; color: #d6336c; font-size: 1.2rem; font-weight: 800;">🎉 오늘(${currentMonth}월 ${currentDate}일)은 ${c.name}의 생일입니다! 🎉</h3>
-                            <p style="margin: 0; color: #495057; font-size: 0.9rem;">${c.name}의 생일을 함께 축하해 주세요! 상세 페이지에서 자세한 프로필을 확인해보세요.</p>
+                            <h3 style="margin: 0 0 0.3rem 0; color: #d6336c; font-size: 1.2rem; font-weight: 800;">오늘(${currentMonth}월 ${currentDate}일)은 ${c.name}의 생일입니다!</h3>
+                            <p style="margin: 0; color: #495057; font-size: 0.9rem;">${c.name}의 생일을 함께 축하해 주세요!</p>
                         </div>
                         <a href="detail.html#${encodeURIComponent(c.id)}" class="birthday-btn">축하하러 가기</a>
                     </div>
@@ -376,37 +375,36 @@ function renderUpcomingBirthdays() {
         return;
     }
 
-    const sorted = bdayChars.map(c => {
+    const closest = bdayChars.map(c => {
         const parsed = parseBirthday(c.birthday);
         if (!parsed) return null;
         const info = getNextBirthdayInfo(parsed.month, parsed.day);
         return { char: c, info };
     }).filter(item => item !== null)
-      .sort((a, b) => a.info.daysLeft - b.info.daysLeft)
-      .slice(0, 4);
+      .sort((a, b) => a.info.daysLeft - b.info.daysLeft)[0];
 
-    if (sorted.length === 0) {
+    if (!closest) {
         container.innerHTML = `<div style="padding: 1rem; text-align: center; color: #888;">다가오는 생일 정보가 없습니다.</div>`;
         return;
     }
 
-    container.innerHTML = sorted.map(item => {
-        const c = item.char;
-        const info = item.info;
-        const ddayText = info.isToday ? 'D-Day' : `D-${info.daysLeft}`;
-        
-        return `
-            <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.2rem; border-bottom: 1px solid #f3f3f5;">
-                <a href="detail.html#${encodeURIComponent(c.id)}" style="font-weight: 700; text-decoration: none; color: var(--text-main); display: flex; align-items: center; gap: 0.6rem; font-size: 0.85rem;">
-                    <img src="${c.image || 'https://via.placeholder.com/50'}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #eee;">
-                    <span>${c.name}</span>
-                </a>
-                <span style="font-weight: 800; color: #d6336c; font-size: 0.75rem; background: #fff0f6; padding: 0.15rem 0.5rem; border-radius: 12px; border: 1px solid #ffc9db; font-family: monospace;">
-                    ${ddayText}
-                </span>
+    const c = closest.char;
+    const info = closest.info;
+    const ddayText = info.isToday ? 'D-Day' : `D-${info.daysLeft}`;
+    const nextDateStr = `${info.nextDate.getMonth() + 1}월 ${info.nextDate.getDate()}일`;
+
+    container.innerHTML = `
+        <a href="detail.html#${encodeURIComponent(c.id)}" style="display: flex; align-items: center; gap: 0.8rem; text-decoration: none; color: inherit; padding: 0.3rem 0;">
+            <img src="${c.image || 'https://via.placeholder.com/50'}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ffc9db;">
+            <div style="flex: 1;">
+                <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-main);">${c.name}</div>
+                <div style="font-size: 0.75rem; color: #868e96;">${nextDateStr}</div>
             </div>
-        `;
-    }).join('');
+            <span style="font-weight: 800; color: #d6336c; font-size: 0.8rem; background: #fff0f6; padding: 0.2rem 0.6rem; border-radius: 12px; border: 1px solid #ffc9db; font-family: monospace;">
+                ${ddayText}
+            </span>
+        </a>
+    `;
 }
 
 function updateCommunityUI() {
@@ -433,30 +431,32 @@ async function loadCommunityPosts() {
             return;
         }
 
-        listEl.innerHTML = posts.map(p => {
+        // 테이블 헤더
+        let tableHTML = `<div style="display: flex; padding: 0.5rem 1rem; background: #f8f9fa; border-bottom: 1px solid #eee; font-size: 0.75rem; font-weight: 800; color: #868e96;">
+            <span style="width: 50px; text-align: center;">번호</span>
+            <span style="flex: 1; padding-left: 0.5rem;">제목</span>
+            <span style="width: 70px; text-align: center;">작성자</span>
+            <span style="width: 80px; text-align: center;">날짜</span>
+        </div>`;
+
+        tableHTML += posts.map(p => {
             const date = new Date(p.created_at);
-            const dateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-            const snippet = p.content.length > 80 ? p.content.substring(0, 80) + '...' : p.content;
+            const dateStr = `${String(date.getMonth()+1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
             
             return `
-                <div class="community-post-item" data-id="${p.id}" style="padding: 1rem; border: 1.5px solid #f1f3f5; border-radius: 8px; background: white; cursor: pointer; transition: all 0.2s ease;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; margin-bottom: 0.4rem;">
-                        <h4 style="margin: 0; font-size: 1rem; font-weight: 800; color: #212529; flex: 1;">
-                            ${p.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
-                            ${p.comment_count > 0 ? `<span style="color: var(--primary-color); font-size: 0.85rem; margin-left: 0.4rem; font-weight: 700;">[${p.comment_count}]</span>` : ''}
-                        </h4>
-                        <span style="font-size: 0.75rem; color: #868e96; white-space: nowrap;">${dateStr}</span>
-                    </div>
-                    <p style="margin: 0 0 0.5rem 0; font-size: 0.85rem; color: #495057; line-height: 1.5; white-space: pre-wrap;">${snippet.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-size: 0.8rem; color: #495057; font-weight: 700;">글쓴이: ${p.author}</span>
-                        ${currentUser && (p.uid === currentUser.uid || userRole === 'admin') ? `
-                            <button class="delete-post-btn" data-id="${p.id}" style="background: none; border: none; color: #e03131; font-weight: 800; font-size: 0.75rem; cursor: pointer; padding: 0.2rem 0.5rem; border-radius: 4px; z-index: 10;">삭제</button>
-                        ` : ''}
-                    </div>
+                <div class="community-post-item" data-id="${p.id}" style="display: flex; align-items: center; padding: 0.55rem 1rem; border-bottom: 1px solid #f3f3f5; cursor: pointer; font-size: 0.85rem; transition: background 0.15s;">
+                    <span style="width: 50px; text-align: center; color: #868e96; font-size: 0.8rem;">${p.id}</span>
+                    <span style="flex: 1; padding-left: 0.5rem; font-weight: 700; color: #212529; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        ${p.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}
+                        ${p.comment_count > 0 ? `<span style="color: var(--primary-color); font-size: 0.8rem; margin-left: 0.3rem;">[${p.comment_count}]</span>` : ''}
+                    </span>
+                    <span style="width: 70px; text-align: center; color: #495057; font-size: 0.8rem;">${p.author}</span>
+                    <span style="width: 80px; text-align: center; color: #868e96; font-size: 0.75rem;">${dateStr}</span>
                 </div>
             `;
         }).join('');
+
+        listEl.innerHTML = tableHTML;
 
         listEl.querySelectorAll('.community-post-item').forEach(item => {
             const id = item.getAttribute('data-id');

@@ -710,3 +710,8 @@ body {
         text-align: center;
     }
 }
+
+/* Community Board */
+.community-post-item:hover {
+    background: #f8f9fa;
+}
