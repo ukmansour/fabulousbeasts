@@ -134,17 +134,30 @@ function renderPost() {
     // 이미지 표시 (단수형 image와 복수형 images 둘 다 지원)
     let imageUrls = [];
     
+    console.log('현재 게시글 데이터:', currentPost);
+    console.log('images 필드:', currentPost.images);
+    console.log('image 필드:', currentPost.image);
+    
     // images 필드가 있으면 (새 방식 - 여러 이미지)
     if (currentPost.images) {
         try {
-            imageUrls = JSON.parse(currentPost.images);
+            // 이미 배열인 경우
+            if (Array.isArray(currentPost.images)) {
+                imageUrls = currentPost.images;
+            } 
+            // 문자열인 경우 파싱
+            else if (typeof currentPost.images === 'string' && currentPost.images.trim()) {
+                imageUrls = JSON.parse(currentPost.images);
+            }
+            console.log('파싱된 이미지 URLs:', imageUrls);
         } catch (e) {
-            console.error('이미지 파싱 오류:', e);
+            console.error('이미지 파싱 오류:', e, '원본 데이터:', currentPost.images);
         }
     }
     // image 필드가 있으면 (기존 방식 - 단일 이미지)
     else if (currentPost.image) {
         imageUrls = [currentPost.image];
+        console.log('단일 이미지 URL:', currentPost.image);
     }
     
     // 이미지들 표시
@@ -165,9 +178,17 @@ function renderPost() {
     let videoUrls = [];
     if (currentPost.videos) {
         try {
-            videoUrls = JSON.parse(currentPost.videos);
+            // 이미 배열인 경우
+            if (Array.isArray(currentPost.videos)) {
+                videoUrls = currentPost.videos;
+            } 
+            // 문자열인 경우 파싱
+            else if (typeof currentPost.videos === 'string' && currentPost.videos.trim()) {
+                videoUrls = JSON.parse(currentPost.videos);
+            }
+            console.log('파싱된 동영상 URLs:', videoUrls);
         } catch (e) {
-            console.error('동영상 파싱 오류:', e);
+            console.error('동영상 파싱 오류:', e, '원본 데이터:', currentPost.videos);
         }
     }
     
