@@ -220,10 +220,17 @@ function getNextBirthdayInfo(month, day) {
 }
 
 async function syncHomepageImages() {
+    console.log('[syncHomepageImages] 시작');
     try {
         const response = await fetch('/api/images');
-        if (!response.ok) return;
+        console.log('[syncHomepageImages] API 응답 상태:', response.status);
+        
+        if (!response.ok) {
+            throw new Error(`API 응답 실패: ${response.status}`);
+        }
+        
         const images = await response.json();
+        console.log('[syncHomepageImages] 받은 데이터 개수:', images.length);
         
         // 1. mergedCharacters 초기화 및 D1 데이터로만 채우기
         // 이제 정적 파일(data.js)의 데이터는 무시하고 오직 데이터베이스(D1) 정보만 사용합니다.
@@ -234,6 +241,8 @@ async function syncHomepageImages() {
             category: item.category || '기타',
             birthday: item.birthday || ''
         }));
+        
+        console.log('[syncHomepageImages] mergedCharacters 개수:', mergedCharacters.length);
 
         // 1.5 오늘 생일인 캐릭터 배너 노출 처리
         const todayBirthdayBanner = document.getElementById('today-birthday-banner');
@@ -295,11 +304,25 @@ async function syncHomepageImages() {
             }).join('');
             
             container.innerHTML = html || '<div style="padding:50px; text-align:center; color:#999;">데이터베이스에 등록된 캐릭터가 없습니다.</div>';
+            console.log('[syncHomepageImages] 렌더링 완료');
         }
     } catch (e) {
-        console.warn("Homepage dynamic render failed:", e);
+        console.error("[syncHomepageImages] 오류 발생:", e);
         const container = document.getElementById('char-grid');
-        if (container) container.innerHTML = '<div style="padding:50px; text-align:center; color:#ff4d4f;">데이터베이스 연결 오류가 발생했습니다.</div>';
+        if (container) {
+            container.innerHTML = `
+                <div style="padding: 4rem 2rem; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                    <h3 style="color: #ff4d4f; margin-bottom: 0.5rem;">데이터를 불러올 수 없습니다</h3>
+                    <p style="color: #666; margin-bottom: 0.5rem;">서버 연결에 문제가 있습니다.</p>
+                    <p style="color: #999; font-size: 0.85rem; margin-bottom: 1.5rem;">에러: ${e.message}</p>
+                    <button onclick="location.reload()" style="padding: 0.8rem 2rem; background: var(--primary-color); color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer;">
+                        새로고침
+                    </button>
+                </div>
+            `;
+        }
+        throw e; // 상위로 에러 전달
     }
 }
 
