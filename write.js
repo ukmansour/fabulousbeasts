@@ -83,7 +83,6 @@ function renderWriteForm() {
                 <select class="write-select" id="write-category">
                     <option value="자유">자유</option>
                     <option value="공지">공지</option>
-                    <option value="감상">감상</option>
                     <option value="질문">질문</option>
                     <option value="팬아트">팬아트</option>
                 </select>
