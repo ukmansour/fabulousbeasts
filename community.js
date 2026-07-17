@@ -99,6 +99,18 @@ onAuthStateChanged(auth, async (user) => {
 document.addEventListener('DOMContentLoaded', () => {
     loadPosts();
     bindEvents();
+    
+    // URL 파라미터로 post ID가 있으면 해당 게시글 모달 열기
+    const urlParams = new URLSearchParams(window.location.search);
+    const postId = urlParams.get('post');
+    if (postId) {
+        // 게시글 로드 후 모달 열기
+        setTimeout(() => {
+            openDetailModal(parseInt(postId, 10));
+            // URL에서 파라미터 제거 (깔끔하게)
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 500);
+    }
 });
 
 function bindEvents() {
@@ -156,7 +168,7 @@ async function loadPosts() {
         console.error(e);
         if (wrap) wrap.innerHTML = `
             <div class="post-empty">
-                <div class="empty-icon">⚠️</div>
+                <div class="empty-icon"></div>
                 <div>게시글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>
             </div>`;
     }
@@ -207,7 +219,7 @@ function renderPosts() {
     if (filteredPosts.length === 0) {
         wrap.innerHTML = `
             <div class="post-empty">
-                <div class="empty-icon">📭</div>
+                <div class="empty-icon"></div>
                 <div>${currentCat !== '전체' ? `[${currentCat}] 카테고리에 ` : ''}게시글이 없습니다.<br>첫 번째 글을 남겨보세요!</div>
             </div>`;
         return;

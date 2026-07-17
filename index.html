@@ -127,54 +127,6 @@
         </aside>
     </div>
 
-    <!-- 게시글 작성 모달 -->
-    <div id="post-write-modal" class="preview-modal" style="z-index: 7000;">
-        <div class="preview-modal-inner" style="max-width: 600px;">
-            <span class="preview-modal-close" id="post-write-close">&times;</span>
-            <h2 style="font-size: 1.3rem; font-weight: 800; margin-bottom: 1.5rem; border-bottom: 2px solid var(--primary-color); padding-bottom: 0.5rem; border-top: none;">새 게시글 작성</h2>
-            <div class="field-group" style="margin-bottom: 1rem;">
-                <label class="field-label">제목</label>
-                <input type="text" id="post-title" class="field-input" placeholder="제목을 입력하세요">
-            </div>
-            <div class="field-group" style="margin-bottom: 1rem;">
-                <label class="field-label">내용</label>
-                <textarea id="post-content" class="field-textarea" style="min-height: 200px;" placeholder="내용을 입력하세요 (비속어나 스포일러는 삼가주세요)"></textarea>
-            </div>
-            <div style="display: flex; justify-content: flex-end; gap: 0.8rem; margin-top: 1.5rem;">
-                <button id="cancel-post-btn" style="background: #e9ecef; color: #495057; border: none; padding: 0.5rem 1.2rem; border-radius: 6px; font-weight: 800; cursor: pointer;">취소</button>
-                <button id="submit-post-btn" style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 6px; font-weight: 800; cursor: pointer;">등록</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 게시글 상세 및 댓글 모달 -->
-    <div id="post-detail-modal" class="preview-modal" style="z-index: 7000;">
-        <div class="preview-modal-inner" style="max-width: 700px; display: flex; flex-direction: column; max-height: 90vh;">
-            <span class="preview-modal-close" id="post-detail-close">&times;</span>
-            <div style="overflow-y: auto; flex: 1; padding-right: 0.5rem;">
-                <!-- 게시글 본문 -->
-                <div id="post-detail-content-wrap" style="border-bottom: 2px solid #eee; padding-bottom: 1.5rem; margin-bottom: 1.5rem;">
-                    <!-- JS가 동적으로 채워줍니다 -->
-                </div>
-                
-                <!-- 댓글 섹션 -->
-                <div style="margin-top: 1.5rem;">
-                    <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; border: none;">댓글 <span id="post-comments-count" style="color: var(--primary-color);">0</span></h3>
-                    
-                    <!-- 댓글 작성 폼 (로그인 시 노출) -->
-                    <div id="post-comment-form-wrap" style="margin-bottom: 1.5rem;">
-                        <!-- JS가 로그인 여부에 따라 노출 -->
-                    </div>
-
-                    <!-- 댓글 목록 -->
-                    <div id="post-comments-list" style="display: flex; flex-direction: column; gap: 1rem;">
-                        <!-- JS가 동적으로 채워줍니다 -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script type="module" src="main.js?v=3"></script>
 </body>
 </html>
