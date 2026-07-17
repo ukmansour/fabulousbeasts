@@ -45,10 +45,39 @@ export async function onRequest(context) {
                 httpMetadata: { contentType: file.type || "image/jpeg" }
             });
 
-            const publicUrl = `https://media.fabulousbeasts.kr/${safeName}`;
+            // Worker를 통해 이미지 서빙 (Custom Domain 대신)
+            const publicUrl = `https://wiki.fabulousbeasts.kr/api/r2/${encodeURIComponent(safeName)}`;
+            
+            console.log('R2 Upload successful:', safeName);
+            
             return new Response(JSON.stringify({ success: true, url: publicUrl }), { headers: corsHeaders });
         } catch (err) {
+            console.error('R2 Upload error:', err);
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // === R2 이미지 조회 ===
+    if (request.method === "GET" && apiPath.startsWith("/r2/")) {
+        try {
+            if (!env.BUCKET) return new Response("R2 BUCKET not bound", { status: 500 });
+
+            const filename = decodeURIComponent(apiPath.replace("/r2/", ""));
+            const object = await env.BUCKET.get(filename);
+
+            if (!object) {
+                return new Response("Image not found", { status: 404 });
+            }
+
+            const headers = new Headers();
+            object.writeHttpMetadata(headers);
+            headers.set("Cache-Control", "public, max-age=31536000"); // 1년 캐시
+            headers.set("Access-Control-Allow-Origin", "*");
+
+            return new Response(object.body, { headers });
+        } catch (err) {
+            console.error('R2 Get error:', err);
+            return new Response("Error loading image", { status: 500 });
         }
     }
 
