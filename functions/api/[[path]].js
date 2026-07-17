@@ -493,6 +493,7 @@ export async function onRequest(context) {
     // 12. GET: 커뮤니티 게시글 목록 조회
     if (request.method === "GET" && apiPath === "/community/posts") {
         try {
+            // 기존 테이블 생성
             await env.DB.prepare(`
                 CREATE TABLE IF NOT EXISTS community_posts (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -501,9 +502,23 @@ export async function onRequest(context) {
                     title TEXT NOT NULL,
                     content TEXT NOT NULL,
                     image TEXT,
+                    images TEXT,
+                    videos TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `).run();
+            
+            // images와 videos 컬럼 추가 (없는 경우에만)
+            try {
+                await env.DB.prepare(`ALTER TABLE community_posts ADD COLUMN images TEXT`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
+            try {
+                await env.DB.prepare(`ALTER TABLE community_posts ADD COLUMN videos TEXT`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
             
             await env.DB.prepare(`
                 CREATE TABLE IF NOT EXISTS community_comments (
@@ -517,7 +532,7 @@ export async function onRequest(context) {
             `).run();
 
             const { results } = await env.DB.prepare(`
-                SELECT p.id, p.uid, p.author, p.title, p.content, p.image, strftime('%Y-%m-%dT%H:%M:%SZ', p.created_at) as created_at,
+                SELECT p.id, p.uid, p.author, p.title, p.content, p.image, p.images, p.videos, strftime('%Y-%m-%dT%H:%M:%SZ', p.created_at) as created_at,
                        (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) as comment_count
                 FROM community_posts p
                 ORDER BY p.created_at DESC
@@ -540,17 +555,31 @@ export async function onRequest(context) {
                     title TEXT NOT NULL,
                     content TEXT NOT NULL,
                     image TEXT,
+                    images TEXT,
+                    videos TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `).run();
+            
+            // images와 videos 컬럼 추가 (없는 경우에만)
+            try {
+                await env.DB.prepare(`ALTER TABLE community_posts ADD COLUMN images TEXT`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
+            try {
+                await env.DB.prepare(`ALTER TABLE community_posts ADD COLUMN videos TEXT`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
 
             const data = await request.json();
-            const { uid, author, title, content, image } = data;
+            const { uid, author, title, content, image, images, videos } = data;
             if (!uid || !author || !title || !content) {
                 return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
             }
 
-            await env.DB.prepare("INSERT INTO community_posts (uid, author, title, content, image) VALUES (?, ?, ?, ?, ?)").bind(uid, author, title, content, image || null).run();
+            await env.DB.prepare("INSERT INTO community_posts (uid, author, title, content, image, images, videos) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(uid, author, title, content, image || null, images || null, videos || null).run();
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
