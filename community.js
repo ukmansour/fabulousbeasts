@@ -302,6 +302,11 @@ function closeWriteModal() {
 }
 
 async function submitPost() {
+    if (!currentUser) {
+        alert('게시글을 작성하려면 로그인이 필요합니다.');
+        return;
+    }
+
     const cat = document.getElementById('write-category').value;
     const rawTitle = document.getElementById('write-title').value.trim();
     const content = document.getElementById('write-content').value.trim();
@@ -317,16 +322,20 @@ async function submitPost() {
     submitBtn.disabled = true;
     submitBtn.textContent = '등록 중...';
 
+    const payload = {
+        uid: currentUser.uid,
+        author: currentUser.displayName || currentUser.email?.split('@')[0] || '익명 유저',
+        title: title,
+        content: content
+    };
+
+    console.log('게시글 전송 데이터:', payload); // 디버깅용
+
     try {
         const res = await fetch('/api/community/posts', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                uid: currentUser.uid,
-                author: currentUser.displayName || '익명 유저',
-                title,
-                content
-            })
+            body: JSON.stringify(payload)
         });
 
         if (res.ok) {
@@ -341,10 +350,11 @@ async function submitPost() {
             applyFilterAndRender();
         } else {
             const err = await res.json();
+            console.error('게시글 작성 실패:', err);
             alert(`등록 실패: ${err.error || '알 수 없는 오류'}`);
         }
     } catch (e) {
-        console.error(e);
+        console.error('게시글 작성 오류:', e);
         alert('게시글 등록 중 오류가 발생했습니다.');
     } finally {
         submitBtn.disabled = false;
@@ -504,6 +514,11 @@ async function loadComments(postId) {
 }
 
 async function submitComment(postId) {
+    if (!currentUser) {
+        alert('댓글을 작성하려면 로그인이 필요합니다.');
+        return;
+    }
+
     const input = document.getElementById('comment-input');
     if (!input) return;
     const content = input.value.trim();
@@ -512,16 +527,20 @@ async function submitComment(postId) {
     const btn = document.getElementById('btn-comment-submit');
     btn.disabled = true;
 
+    const payload = {
+        post_id: postId,
+        uid: currentUser.uid,
+        author: currentUser.displayName || currentUser.email?.split('@')[0] || '익명 유저',
+        content: content
+    };
+
+    console.log('댓글 전송 데이터:', payload); // 디버깅용
+
     try {
         const res = await fetch('/api/community/comments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                post_id: postId,
-                uid: currentUser.uid,
-                author: currentUser.displayName || '익명 유저',
-                content
-            })
+            body: JSON.stringify(payload)
         });
 
         if (res.ok) {
@@ -530,10 +549,12 @@ async function submitComment(postId) {
             // 목록의 댓글 수 갱신
             renderPosts();
         } else {
-            alert('댓글 작성에 실패했습니다.');
+            const errorData = await res.json();
+            console.error('댓글 작성 실패:', errorData);
+            alert(`댓글 작성에 실패했습니다: ${errorData.error || '알 수 없는 오류'}`);
         }
     } catch (e) {
-        console.error(e);
+        console.error('댓글 작성 오류:', e);
         alert('오류가 발생했습니다.');
     } finally {
         btn.disabled = false;
