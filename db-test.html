@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DB 테스트 - 유수언</title>
+    <style>
+        body {
+            font-family: 'Consolas', monospace;
+            padding: 2rem;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .test-box {
+            background: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+        button:hover { background: #1177bb; }
+        .result {
+            background: #1e1e1e;
+            border: 1px solid #3e3e42;
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-size: 0.9rem;
+        }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+    </style>
+</head>
+<body>
+    <h1>🔍 커뮤니티 DB 진단</h1>
+    
+    <div class="test-box">
+        <h3>1. 게시글 API 테스트</h3>
+        <button onclick="testGetPosts()">게시글 목록 조회</button>
+        <div id="result-posts" class="result"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>2. 댓글 API 테스트</h3>
+        <input type="number" id="test-post-id" placeholder="게시글 ID (예: 1)" style="padding: 0.5rem; background: #3c3c3c; border: 1px solid #3e3e42; color: white; border-radius: 4px;">
+        <button onclick="testGetComments()">댓글 조회</button>
+        <div id="result-comments" class="result"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>3. 현재 인증 상태</h3>
+        <button onclick="checkAuth()">인증 확인</button>
+        <div id="result-auth" class="result"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>4. 테스트 댓글 작성</h3>
+        <input type="number" id="comment-post-id" placeholder="게시글 ID" style="padding: 0.5rem; background: #3c3c3c; border: 1px solid #3e3e42; color: white; border-radius: 4px; margin-right: 0.5rem;">
+        <input type="text" id="comment-content" placeholder="댓글 내용" style="padding: 0.5rem; background: #3c3c3c; border: 1px solid #3e3e42; color: white; border-radius: 4px; width: 200px;">
+        <button onclick="testPostComment()">댓글 작성</button>
+        <div id="result-post-comment" class="result"></div>
+    </div>
+
+    <script type="module">
+        import { auth } from './firebase-config.js';
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        let currentUser = null;
+
+        onAuthStateChanged(auth, (user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('result-auth').innerHTML = `<span class="success">✓ 로그인됨</span>\nUID: ${user.uid}\n이름: ${user.displayName || '없음'}\n이메일: ${user.email}`;
+            } else {
+                document.getElementById('result-auth').innerHTML = `<span class="error">✗ 로그인 안 됨</span>\n<a href="auth.html" style="color: #4ec9b0;">로그인하러 가기</a>`;
+            }
+        });
+
+        window.testGetPosts = async function() {
+            const result = document.getElementById('result-posts');
+            result.innerHTML = '로딩 중...';
+            try {
+                const res = await fetch('/api/community/posts');
+                const data = await res.json();
+                if (res.ok) {
+                    result.innerHTML = `<span class="success">✓ 성공 (${res.status})</span>\n\n게시글 수: ${data.length}\n\n` + JSON.stringify(data, null, 2);
+                } else {
+                    result.innerHTML = `<span class="error">✗ 실패 (${res.status})</span>\n\n` + JSON.stringify(data, null, 2);
+                }
+            } catch (e) {
+                result.innerHTML = `<span class="error">✗ 오류</span>\n\n${e.message}`;
+            }
+        };
+
+        window.testGetComments = async function() {
+            const postId = document.getElementById('test-post-id').value;
+            if (!postId) {
+                alert('게시글 ID를 입력하세요');
+                return;
+            }
+            const result = document.getElementById('result-comments');
+            result.innerHTML = '로딩 중...';
+            try {
+                const res = await fetch(`/api/community/comments?post_id=${postId}`);
+                const data = await res.json();
+                if (res.ok) {
+                    result.innerHTML = `<span class="success">✓ 성공 (${res.status})</span>\n\n댓글 수: ${data.length}\n\n` + JSON.stringify(data, null, 2);
+                } else {
+                    result.innerHTML = `<span class="error">✗ 실패 (${res.status})</span>\n\n` + JSON.stringify(data, null, 2);
+                }
+            } catch (e) {
+                result.innerHTML = `<span class="error">✗ 오류</span>\n\n${e.message}`;
+            }
+        };
+
+        window.checkAuth = function() {
+            const result = document.getElementById('result-auth');
+            if (currentUser) {
+                result.innerHTML = `<span class="success">✓ 로그인됨</span>\nUID: ${currentUser.uid}\n이름: ${currentUser.displayName || '없음'}\n이메일: ${currentUser.email}`;
+            } else {
+                result.innerHTML = `<span class="error">✗ 로그인 안 됨</span>\n<a href="auth.html" style="color: #4ec9b0;">로그인하러 가기</a>`;
+            }
+        };
+
+        window.testPostComment = async function() {
+            if (!currentUser) {
+                alert('먼저 로그인하세요!');
+                return;
+            }
+            const postId = document.getElementById('comment-post-id').value;
+            const content = document.getElementById('comment-content').value;
+            if (!postId || !content) {
+                alert('게시글 ID와 댓글 내용을 입력하세요');
+                return;
+            }
+
+            const result = document.getElementById('result-post-comment');
+            result.innerHTML = '전송 중...';
+
+            const payload = {
+                post_id: parseInt(postId, 10),
+                uid: currentUser.uid,
+                author: currentUser.displayName || currentUser.email?.split('@')[0] || '테스터',
+                content: content
+            };
+
+            console.log('전송 데이터:', payload);
+
+            try {
+                const res = await fetch('/api/community/comments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    result.innerHTML = `<span class="success">✓ 댓글 작성 성공! (${res.status})</span>\n\n` + JSON.stringify(data, null, 2);
+                } else {
+                    result.innerHTML = `<span class="error">✗ 댓글 작성 실패 (${res.status})</span>\n\n에러: ${data.error}\n\n전송 데이터:\n` + JSON.stringify(payload, null, 2);
+                }
+            } catch (e) {
+                result.innerHTML = `<span class="error">✗ 오류</span>\n\n${e.message}`;
+            }
+        };
+    </script>
+</body>
+</html>
