@@ -248,27 +248,44 @@ function updateCommentForm() {
             return;
         }
 
+        console.log('=== 댓글 제출 시작 ===');
+        console.log('currentEpisodeNum:', currentEpisodeNum);
+        console.log('currentUser:', currentUser);
+        console.log('content:', content);
+
+        if (!currentEpisodeNum) {
+            alert("에피소드를 먼저 선택해 주세요.");
+            return;
+        }
+
+        const payload = {
+            episode_num: currentEpisodeNum,
+            content: content,
+            author: currentUser.displayName || currentUser.email?.split('@')[0] || '익명 유저',
+            uid: currentUser.uid
+        };
+
+        console.log('전송 데이터:', payload);
+
         try {
             const res = await fetch('/api/comments', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    episode_num: currentEpisodeNum,
-                    content: content,
-                    author: currentUser.displayName || '익명 유저',
-                    uid: currentUser.uid
-                })
+                body: JSON.stringify(payload)
             });
+
+            console.log('API 응답 상태:', res.status);
 
             if (res.ok) {
                 textInput.value = '';
                 loadComments(currentEpisodeNum);
             } else {
                 const err = await res.json();
+                console.error('댓글 등록 실패:', err);
                 alert(`댓글 등록 실패: ${err.error}`);
             }
         } catch (e) {
-            console.error(e);
+            console.error('댓글 등록 오류:', e);
             alert("댓글 등록에 실패했습니다.");
         }
     };
