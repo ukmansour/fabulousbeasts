@@ -610,27 +610,55 @@ async function loadComments(postId) {
 }
 
 async function submitComment(postId) {
+    console.log('=== submitComment 시작 ===');
+    console.log('postId:', postId);
+    console.log('currentUser:', currentUser);
+    
     if (!currentUser) {
         alert('댓글을 작성하려면 로그인이 필요합니다.');
         return;
     }
 
     const input = document.getElementById('comment-input');
-    if (!input) return;
+    if (!input) {
+        console.error('comment-input 요소를 찾을 수 없습니다');
+        return;
+    }
+    
     const content = input.value.trim();
-    if (!content) { alert('댓글 내용을 입력해 주세요.'); return; }
+    console.log('댓글 내용:', content);
+    
+    if (!content) { 
+        alert('댓글 내용을 입력해 주세요.'); 
+        return; 
+    }
 
     const btn = document.getElementById('btn-comment-submit');
-    btn.disabled = true;
+    if (btn) btn.disabled = true;
+
+    // 명시적으로 각 필드 확인
+    const uid = currentUser?.uid;
+    const displayName = currentUser?.displayName;
+    const email = currentUser?.email;
+    const author = displayName || email?.split('@')[0] || '익명 유저';
+
+    console.log('필드 확인:');
+    console.log('- post_id:', postId, typeof postId);
+    console.log('- uid:', uid);
+    console.log('- displayName:', displayName);
+    console.log('- email:', email);
+    console.log('- author:', author);
+    console.log('- content:', content);
 
     const payload = {
         post_id: postId,
-        uid: currentUser.uid,
-        author: currentUser.displayName || currentUser.email?.split('@')[0] || '익명 유저',
+        uid: uid,
+        author: author,
         content: content
     };
 
-    console.log('댓글 전송 데이터:', payload); // 디버깅용
+    console.log('댓글 전송 데이터:', payload);
+    console.log('JSON 문자열:', JSON.stringify(payload));
 
     try {
         const res = await fetch('/api/community/comments', {
@@ -639,21 +667,25 @@ async function submitComment(postId) {
             body: JSON.stringify(payload)
         });
 
+        console.log('API 응답 상태:', res.status);
+
         if (res.ok) {
+            const result = await res.json();
+            console.log('성공 응답:', result);
             input.value = '';
             await loadComments(postId);
-            // 목록의 댓글 수 갱신
             renderPosts();
         } else {
             const errorData = await res.json();
             console.error('댓글 작성 실패:', errorData);
-            alert(`댓글 작성에 실패했습니다: ${errorData.error || '알 수 없는 오류'}`);
+            console.error('실패한 payload:', payload);
+            alert(`댓글 작성에 실패했습니다: ${errorData.error || '알 수 없는 오류'}\n\n전송한 데이터를 콘솔에서 확인하세요.`);
         }
     } catch (e) {
         console.error('댓글 작성 오류:', e);
-        alert('오류가 발생했습니다.');
+        alert('오류가 발생했습니다: ' + e.message);
     } finally {
-        btn.disabled = false;
+        if (btn) btn.disabled = false;
     }
 }
 
