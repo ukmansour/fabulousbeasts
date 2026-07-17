@@ -100,11 +100,10 @@ function renderWriteForm() {
             </div>
 
             <div class="write-field">
-                <label class="write-label" for="write-image">이미지 첨부 (선택)</label>
-                <input type="file" class="write-input" id="write-image" accept="image/*" style="padding: 0.5rem 0.8rem;">
-                <div class="image-preview-wrap" id="image-preview">
-                    <img id="preview-img" alt="미리보기">
-                    <button type="button" id="remove-image-btn" class="btn-remove-image">이미지 제거</button>
+                <label class="write-label" for="write-images">이미지 첨부 (선택, 최대 5장)</label>
+                <input type="file" class="write-input" id="write-images" accept="image/*" multiple style="padding: 0.5rem 0.8rem;">
+                <div class="images-preview-wrap" id="images-preview">
+                    <!-- 미리보기 이미지들이 여기 표시됩니다 -->
                 </div>
             </div>
         </div>
@@ -115,29 +114,58 @@ function renderWriteForm() {
         </div>
     `;
 
-    // 이미지 미리보기
-    const imageInput = document.getElementById('write-image');
-    const previewDiv = document.getElementById('image-preview');
-    const previewImg = document.getElementById('preview-img');
-    const removeBtn = document.getElementById('remove-image-btn');
+    // 이미지 미리보기 (여러 장)
+    const imagesInput = document.getElementById('write-images');
+    const previewDiv = document.getElementById('images-preview');
+    let selectedFiles = [];
 
-    imageInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
+    imagesInput.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files);
+        
+        if (files.length > 5) {
+            alert('이미지는 최대 5장까지 첨부할 수 있습니다.');
+            return;
+        }
+
+        selectedFiles = files;
+        renderImagePreviews();
+    });
+
+    function renderImagePreviews() {
+        if (selectedFiles.length === 0) {
+            previewDiv.style.display = 'none';
+            previewDiv.innerHTML = '';
+            return;
+        }
+
+        previewDiv.style.display = 'flex';
+        previewDiv.innerHTML = '';
+
+        selectedFiles.forEach((file, index) => {
             const reader = new FileReader();
             reader.onload = (ev) => {
-                previewImg.src = ev.target.result;
-                previewDiv.style.display = 'block';
+                const item = document.createElement('div');
+                item.className = 'preview-item';
+                item.innerHTML = `
+                    <img src="${ev.target.result}" alt="미리보기 ${index + 1}">
+                    <button type="button" class="remove-btn" data-index="${index}">×</button>
+                `;
+                
+                item.querySelector('.remove-btn').addEventListener('click', () => {
+                    selectedFiles.splice(index, 1);
+                    renderImagePreviews();
+                    
+                    // input 파일 목록 업데이트
+                    const dt = new DataTransfer();
+                    selectedFiles.forEach(f => dt.items.add(f));
+                    imagesInput.files = dt.files;
+                });
+                
+                previewDiv.appendChild(item);
             };
             reader.readAsDataURL(file);
-        }
-    });
-
-    removeBtn.addEventListener('click', () => {
-        imageInput.value = '';
-        previewDiv.style.display = 'none';
-        previewImg.src = '';
-    });
+        });
+    }
 
     // 제출 버튼
     document.getElementById('submit-btn').addEventListener('click', submitPost);
@@ -153,7 +181,7 @@ async function submitPost() {
     const cat = document.getElementById('write-category').value;
     const rawTitle = document.getElementById('write-title').value.trim();
     const content = document.getElementById('write-content').value.trim();
-    const imageInput = document.getElementById('write-image');
+    const imagesInput = document.getElementById('write-images');
 
     if (!rawTitle) {
         alert('제목을 입력해 주세요.');
@@ -175,47 +203,60 @@ async function submitPost() {
     submitBtn.disabled = true;
     submitBtn.textContent = '등록 중...';
 
-    let imageUrl = null;
+    let imageUrls = [];
 
     try {
-        // 이미지 업로드 (있는 경우)
-        if (imageInput.files && imageInput.files[0]) {
-            const file = imageInput.files[0];
+        // 이미지 업로드 (여러 장)
+        if (imagesInput.files && imagesInput.files.length > 0) {
+            const files = Array.from(imagesInput.files);
             
-            // 파일 크기 체크 (5MB 제한)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('이미지 크기는 5MB 이하만 가능합니다.');
+            if (files.length > 5) {
+                alert('이미지는 최대 5장까지 첨부할 수 있습니다.');
                 submitBtn.disabled = false;
                 submitBtn.textContent = '등록';
                 return;
             }
 
-            submitBtn.textContent = '이미지 업로드 중...';
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('folder', 'community');
+            // 파일 크기 체크 (각 5MB 제한)
+            for (const file of files) {
+                if (file.size > 5 * 1024 * 1024) {
+                    alert(`"${file.name}"의 크기가 5MB를 초과합니다.`);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '등록';
+                    return;
+                }
+            }
 
-            const uploadRes = await fetch('/api/upload', {
-                method: 'POST',
-                body: formData
-            });
+            // 각 이미지 업로드
+            for (let i = 0; i < files.length; i++) {
+                submitBtn.textContent = `이미지 업로드 중... (${i + 1}/${files.length})`;
+                
+                const formData = new FormData();
+                formData.append('file', files[i]);
+                formData.append('folder', 'community');
 
-            if (uploadRes.ok) {
-                const uploadData = await uploadRes.json();
-                imageUrl = uploadData.url;
-            } else {
-                throw new Error('이미지 업로드 실패');
+                const uploadRes = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (uploadRes.ok) {
+                    const uploadData = await uploadRes.json();
+                    imageUrls.push(uploadData.url);
+                } else {
+                    throw new Error(`이미지 ${i + 1} 업로드 실패`);
+                }
             }
         }
 
-        // 게시글 저장
+        // 게시글 저장 (이미지 URL들을 JSON 배열로 저장)
         submitBtn.textContent = '게시글 등록 중...';
         const payload = {
             uid: currentUser.uid,
             author: currentUser.displayName || currentUser.email?.split('@')[0] || '익명 유저',
             title: title,
             content: content,
-            image: imageUrl || ''
+            images: JSON.stringify(imageUrls) // 여러 이미지 URL을 JSON으로 저장
         };
 
         console.log('게시글 전송 데이터:', payload);
