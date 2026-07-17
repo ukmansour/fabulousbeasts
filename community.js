@@ -464,63 +464,6 @@ async function openDetailModal(postId) {
     window.location.href = `/post.html?id=${postId}`;
 }
 
-    // 본문 렌더
-    const displayTitle = stripCategoryTag(post.title);
-    const cat = extractCategory(post.title);
-    const dateStr = formatDateFull(post.created_at);
-
-    document.getElementById('detail-title').textContent = displayTitle;
-    document.getElementById('detail-author').textContent = post.author;
-    document.getElementById('detail-date').textContent = dateStr;
-    document.getElementById('detail-category').textContent = cat;
-    
-    const bodyEl = document.getElementById('detail-body');
-    bodyEl.innerHTML = '';
-    
-    // 이미지가 있으면 표시
-    if (post.image) {
-        console.log('게시글 이미지 URL:', post.image);
-        const imgWrapper = document.createElement('div');
-        imgWrapper.style.cssText = 'position: relative; margin-bottom: 1rem;';
-        
-        const imgEl = document.createElement('img');
-        imgEl.src = post.image;
-        imgEl.alt = '게시글 이미지';
-        imgEl.style.cssText = 'max-width: 100%; height: auto; border-radius: 8px; cursor: zoom-in; display: block;';
-        imgEl.onload = () => console.log('이미지 로드 성공:', post.image);
-        imgEl.onclick = () => {
-            // 이미지 확대 보기 모달
-            const modal = document.createElement('div');
-            modal.style.cssText = 'position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: zoom-out;';
-            const largeImg = document.createElement('img');
-            largeImg.src = post.image;
-            largeImg.style.cssText = 'max-width: 90%; max-height: 90%; border-radius: 8px;';
-            modal.appendChild(largeImg);
-            modal.onclick = () => modal.remove();
-            document.body.appendChild(modal);
-        };
-        imgEl.onerror = () => {
-            console.error('이미지 로드 실패:', post.image);
-            imgEl.style.display = 'none';
-            const errorMsg = document.createElement('div');
-            errorMsg.textContent = '이미지를 불러올 수 없습니다.';
-            errorMsg.style.cssText = 'color: #868e96; font-size: 0.85rem; padding: 1rem; background: #f8f9fa; border-radius: 6px; margin-bottom: 1rem; text-align: center;';
-            imgWrapper.appendChild(errorMsg);
-        };
-        imgWrapper.appendChild(imgEl);
-        bodyEl.appendChild(imgWrapper);
-    }
-    
-    // 본문 텍스트
-    const contentEl = document.createElement('div');
-    contentEl.textContent = post.content;
-    bodyEl.appendChild(contentEl);
-
-    updateDeleteButtonVisibility();
-    renderCommentWriteArea(postId);
-    await loadComments(postId);
-}
-
 function updateDeleteButtonVisibility() {
     const deleteBtn = document.getElementById('detail-delete-btn');
     if (!deleteBtn) return;
