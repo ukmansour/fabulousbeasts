@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글쓰기 - 유수언 커뮤니티</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .write-page-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .write-header {
+            background: var(--primary-color);
+            padding: 1.5rem 2rem;
+            border-radius: 0;
+        }
+
+        .write-header h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            margin: 0;
+        }
+
+        .write-form {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+        }
+
+        .write-field {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .write-field:last-child {
+            border-bottom: none;
+        }
+
+        .write-label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #495057;
+            margin-bottom: 0.6rem;
+        }
+
+        .write-input, .write-textarea, .write-select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1.5px solid var(--border-color);
+            border-radius: 0;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.15s;
+        }
+
+        .write-input:focus, .write-textarea:focus, .write-select:focus {
+            border-color: var(--primary-color);
+        }
+
+        .write-textarea {
+            min-height: 300px;
+            resize: vertical;
+            line-height: 1.7;
+        }
+
+        .write-actions {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-top: none;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.8rem;
+        }
+
+        .btn-cancel {
+            padding: 0.6rem 1.5rem;
+            background: #e9ecef;
+            color: #495057;
+            border: none;
+            border-radius: 0;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-submit {
+            padding: 0.6rem 2rem;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0;
+            font-weight: 800;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+
+        .btn-submit:hover {
+            opacity: 0.9;
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .image-preview-wrap {
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .image-preview-wrap img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 0;
+            border: 1px solid #dee2e6;
+        }
+
+        .btn-remove-image {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #e03131;
+            background: none;
+            border: 1px solid #e03131;
+            padding: 0.3rem 0.8rem;
+            border-radius: 0;
+            cursor: pointer;
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 3rem;
+            color: #868e96;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
+                <span>유수언</span>
+            </a>
+            <nav class="top-nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="index.html#characters" class="nav-link">전체 캐릭터</a>
+                <a href="watch.html" class="nav-link">애니 보기</a>
+                <a href="community.html" class="nav-link" style="border-bottom: 2px solid rgba(255,255,255,0.9);">커뮤니티</a>
+                <span id="user-info"></span>
+            </nav>
+        </div>
+    </header>
+
+    <div class="write-page-container" id="write-container">
+        <div class="loading-message">로그인 상태를 확인하는 중...</div>
+    </div>
+
+    <script type="module" src="write.js"></script>
+</body>
+</html>

@@ -151,14 +151,10 @@ function bindEvents() {
         }
     });
 
-    // 글쓰기 모달
-    document.getElementById('btn-open-write')?.addEventListener('click', openWriteModal);
-    document.getElementById('write-modal-close')?.addEventListener('click', closeWriteModal);
-    document.getElementById('write-cancel-btn')?.addEventListener('click', closeWriteModal);
-    document.getElementById('write-modal')?.addEventListener('click', (e) => {
-        if (e.target === document.getElementById('write-modal')) closeWriteModal();
+    // 글쓰기 버튼 - 별도 페이지로 이동
+    document.getElementById('btn-open-write')?.addEventListener('click', () => {
+        window.location.href = 'write.html';
     });
-    document.getElementById('write-submit-btn')?.addEventListener('click', submitPost);
 
     // 이미지 업로드 미리보기
     const imageInput = document.getElementById('write-image');
@@ -340,7 +336,8 @@ function updatePostCountLabel() {
     if (label) label.textContent = `총 ${filteredPosts.length}개`;
 }
 
-// ===== 글쓰기 모달 =====
+// ===== 글쓰기 모달 (현재 사용 안 함 - write.html로 대체) =====
+/*
 function openWriteModal() {
     if (!currentUser) {
         if (confirm('로그인 후 이용해 주세요.\n\n로그인 페이지로 이동하시겠습니까?')) {
@@ -457,6 +454,7 @@ async function submitPost() {
         submitBtn.textContent = '등록';
     }
 }
+*/
 
 // ===== 상세 모달 =====
 async function openDetailModal(postId) {
