@@ -97,6 +97,13 @@ onAuthStateChanged(auth, async (user) => {
     }
     updateCommunityUI();
 });
+    } else {
+        currentUser = null;
+        userRole = 'guest';
+        info.innerHTML = `<a href="auth.html" class="nav-link">로그인</a>`;
+    }
+    updateCommunityUI();
+});
 
 async function initHome() {
     initSearch();
