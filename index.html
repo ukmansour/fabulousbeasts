@@ -25,27 +25,27 @@
                 <span id="user-info" style="display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;white-space:nowrap;"></span>
             </nav>
         </div>
-        
-        <!-- 공지사항 배너 (검색바 바로 아래) -->
-        <div id="top-announcement-banner" style="display: none; background: linear-gradient(135deg, #ffcccc, #ffe0e0); border-top: 2px solid #ff4444; border-bottom: 2px solid #ff4444; padding: 0.9rem 1.5rem; box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);">
-            <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 0.8rem;">
-                <span style="font-size: 1.4rem; flex-shrink: 0; animation: pulse 2s infinite;">📢</span>
-                <div style="flex: 1;">
-                    <span style="font-weight: 900; color: #cc0000; font-size: 0.9rem; margin-right: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; background: #ffffff; padding: 0.2rem 0.5rem; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">공지</span>
-                    <span id="top-announcement-content" style="font-size: 0.95rem; color: #000; line-height: 1.6; font-weight: 700;">
-                        불러오는 중...
-                    </span>
-                </div>
+    </header>
+    
+    <!-- 공지사항 배너 (헤더 바로 아래, sticky) -->
+    <div id="top-announcement-banner" style="display: none; background: linear-gradient(135deg, #ffcccc, #ffe0e0); border-bottom: 2px solid #ff4444; padding: 0.9rem 1.5rem; box-shadow: 0 0 15px rgba(255, 68, 68, 0.3); position: sticky; top: 50px; z-index: 1999;">
+        <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 0.8rem;">
+            <span style="font-size: 1.4rem; flex-shrink: 0; animation: pulse 2s infinite;">📢</span>
+            <div style="flex: 1;">
+                <span style="font-weight: 900; color: #cc0000; font-size: 0.9rem; margin-right: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; background: #ffffff; padding: 0.2rem 0.5rem; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">공지</span>
+                <span id="top-announcement-content" style="font-size: 0.95rem; color: #000; line-height: 1.6; font-weight: 700;">
+                    불러오는 중...
+                </span>
             </div>
         </div>
-        
-        <style>
-            @keyframes pulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.1); }
-            }
-        </style>
-    </header>
+    </div>
+    
+    <style>
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+    </style>
 
     <div class="wiki-outer-container">
         <main class="wiki-article">
