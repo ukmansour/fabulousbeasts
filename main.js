@@ -170,6 +170,8 @@ async function loadSettings() {
         const newsEl = document.getElementById('home-news');
         const announcementBanner = document.getElementById('announcement-banner');
         const announcementContent = document.getElementById('announcement-content');
+        const topAnnouncementBanner = document.getElementById('top-announcement-banner');
+        const topAnnouncementContent = document.getElementById('top-announcement-content');
         
         // 사이드바 공지
         if (noticeEl && settings.notice) {
@@ -181,12 +183,21 @@ async function loadSettings() {
             newsEl.innerHTML = settings.news.replace(/\n/g, '<br>');
         }
         
-        // 상단 공지 배너
+        // 메인 콘텐츠 상단 공지 배너
         if (announcementBanner && announcementContent && settings.notice) {
             announcementContent.innerHTML = settings.notice.replace(/\n/g, '<br>');
             announcementBanner.style.display = 'block';
         } else if (announcementBanner && !settings.notice) {
             announcementBanner.style.display = 'none';
+        }
+        
+        // 헤더 바로 아래 공지 배너 (좁은 형태)
+        if (topAnnouncementBanner && topAnnouncementContent && settings.notice) {
+            // 줄바꿈을 공백으로 변경하여 한 줄로 표시
+            topAnnouncementContent.innerHTML = settings.notice.replace(/\n/g, ' ');
+            topAnnouncementBanner.style.display = 'block';
+        } else if (topAnnouncementBanner && !settings.notice) {
+            topAnnouncementBanner.style.display = 'none';
         }
     } catch (e) {
         console.warn("Failed to load site settings:", e);
