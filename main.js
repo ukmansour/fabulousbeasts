@@ -168,8 +168,6 @@ async function loadSettings() {
         
         const noticeEl = document.getElementById('home-notice');
         const newsEl = document.getElementById('home-news');
-        const announcementBanner = document.getElementById('announcement-banner');
-        const announcementContent = document.getElementById('announcement-content');
         const topAnnouncementBanner = document.getElementById('top-announcement-banner');
         const topAnnouncementContent = document.getElementById('top-announcement-content');
         
@@ -181,14 +179,6 @@ async function loadSettings() {
         // 최근 소식
         if (newsEl && settings.news) {
             newsEl.innerHTML = settings.news.replace(/\n/g, '<br>');
-        }
-        
-        // 메인 콘텐츠 상단 공지 배너
-        if (announcementBanner && announcementContent && settings.notice) {
-            announcementContent.innerHTML = settings.notice.replace(/\n/g, '<br>');
-            announcementBanner.style.display = 'block';
-        } else if (announcementBanner && !settings.notice) {
-            announcementBanner.style.display = 'none';
         }
         
         // 헤더 바로 아래 공지 배너 (좁은 형태)
