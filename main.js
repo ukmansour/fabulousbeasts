@@ -168,12 +168,25 @@ async function loadSettings() {
         
         const noticeEl = document.getElementById('home-notice');
         const newsEl = document.getElementById('home-news');
+        const announcementBanner = document.getElementById('announcement-banner');
+        const announcementContent = document.getElementById('announcement-content');
         
+        // 사이드바 공지
         if (noticeEl && settings.notice) {
             noticeEl.innerHTML = settings.notice.replace(/\n/g, '<br>');
         }
+        
+        // 최근 소식
         if (newsEl && settings.news) {
             newsEl.innerHTML = settings.news.replace(/\n/g, '<br>');
+        }
+        
+        // 상단 공지 배너
+        if (announcementBanner && announcementContent && settings.notice) {
+            announcementContent.innerHTML = settings.notice.replace(/\n/g, '<br>');
+            announcementBanner.style.display = 'block';
+        } else if (announcementBanner && !settings.notice) {
+            announcementBanner.style.display = 'none';
         }
     } catch (e) {
         console.warn("Failed to load site settings:", e);
