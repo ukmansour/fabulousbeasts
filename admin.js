@@ -33,7 +33,11 @@ window.addEventListener('adminTabSwitch', (e) => {
 
 onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
-    if (!user) { location.href = 'auth.html'; return; }
+    if (!user) { 
+        alert('로그인이 필요합니다.');
+        location.href = 'auth.html'; 
+        return; 
+    }
     currentUser = user;
 
     // [읽기 최적화] 헤더에 표시할 이름은 Auth에서 가져옵니다 (DB 읽기 0)
@@ -49,7 +53,7 @@ onAuthStateChanged(auth, async (user) => {
                 e.preventDefault();
                 if (confirm("로그아웃하시습니까?")) {
                     sessionStorage.removeItem(`role_${user.uid}`);
-                    auth.signOut().then(() => location.reload());
+                    auth.signOut().then(() => location.href = 'index.html');
                 }
             };
         }
@@ -63,72 +67,37 @@ onAuthStateChanged(auth, async (user) => {
             return;
         }
 
-        // [읽기 최적화] 세션 캐시 확인
+        // [권한 확인] 일반 사용자는 Firestore에서 역할 확인
         const userSnap = await getDocSafe(doc(db, "users", user.uid));
         if (userSnap.exists() && userSnap.data().role === 'admin') {
             sessionStorage.setItem(`role_${user.uid}`, 'admin');
             renderAdminPage();
             renderWikiAdminPage();
         } else {
-            showRecoveryUI();
+            // 관리자가 아닌 경우 접근 차단
+            document.body.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 2rem; text-align: center;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🚫</div>
+                    <h1 style="font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 0.5rem;">접근 권한이 없습니다</h1>
+                    <p style="color: #666; font-size: 1rem; margin-bottom: 2rem;">이 페이지는 관리자만 접근할 수 있습니다.</p>
+                    <a href="index.html" style="padding: 0.8rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem;">홈으로 돌아가기</a>
+                </div>
+            `;
+            return;
         }
     } catch (e) {
         console.error(e);
-        showRecoveryUI();
+        // 오류 발생 시에도 접근 차단
+        document.body.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 2rem; text-align: center;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div>
+                <h1 style="font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 0.5rem;">오류가 발생했습니다</h1>
+                <p style="color: #666; font-size: 1rem; margin-bottom: 2rem;">권한을 확인할 수 없습니다.</p>
+                <a href="index.html" style="padding: 0.8rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem;">홈으로 돌아가기</a>
+            </div>
+        `;
     }
 });
-
-function showRecoveryUI() {
-    contentArea.innerHTML = `
-        <div style="text-align:center; padding:3rem; background:#f9f9f9; border:2px solid #555; max-width:500px; margin:2rem auto;">
-            <h2 style="color:#333; text-transform:uppercase; letter-spacing:1px;">ADMIN RECOVERY</h2>
-            <p style="margin-top:1rem; color:#666; font-size:0.9rem;">ENTER SECURITY CODE TO ACTIVATE ADMINISTRATIVE PRIVILEGES.</p>
-            <input type="password" id="recovery-code" placeholder="SECURITY CODE" 
-                style="margin-top:1.5rem; padding:0.6rem 1rem; border:1px solid #ccc; border-radius:0; font-size:1rem; width:200px; display:block; margin-left:auto; margin-right:auto; font-family:monospace; text-align:center;">
-            <button id="recovery-btn" 
-                style="margin-top:1rem; padding:0.8rem 2rem; background:#333; color:white; border:none; border-radius:0; font-weight:bold; cursor:pointer; font-size:1rem; text-transform:uppercase;">
-                ACTIVATE
-            </button>
-        </div>
-    `;
-
-    document.getElementById('recovery-btn').onclick = async () => {
-        const code = document.getElementById('recovery-code').value;
-        if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
-
-        try {
-            // 1. Firestore 업데이트 (updateDoc이 아닌 첫 생성이므로 setDoc 사용 가능하지만 여기서는 merge 권장)
-            const userRef = doc(db, "users", currentUser.uid);
-            await setDoc(userRef, {
-                uid: currentUser.uid,
-                name: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "익명"),
-                email: currentUser.email || "",
-                role: 'admin',
-                isBanned: false,
-                updatedAt: serverTimestamp()
-            }, { merge: true });
-            
-            // 2. Cloudflare D1 업데이트
-            await fetch('/api/user/role', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    uid: currentUser.uid,
-                    role: 'admin',
-                    name: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "익명"),
-                    email: currentUser.email || "",
-                    isBanned: false,
-                    secret: code
-                })
-            });
-
-            alert("관리자 권한이 활성화되었습니다!");
-            location.reload();
-        } catch (e) {
-            alert("활성화 실패: " + e.message);
-        }
-    };
-}
 
 let unsubscribeUsers = null;
 
