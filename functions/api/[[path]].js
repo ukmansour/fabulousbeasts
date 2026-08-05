@@ -516,6 +516,8 @@ export async function onRequest(context) {
     // 12. GET: 커뮤니티 게시글 목록 조회
     if (request.method === "GET" && apiPath === "/community/posts") {
         try {
+            console.log('[API] Loading community posts...');
+            
             // 기존 테이블 생성
             await env.DB.prepare(`
                 CREATE TABLE IF NOT EXISTS community_posts (
@@ -530,6 +532,8 @@ export async function onRequest(context) {
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `).run();
+            
+            console.log('[API] Tables created');
             
             // images와 videos 컬럼 추가 (없는 경우에만)
             try {
@@ -554,6 +558,8 @@ export async function onRequest(context) {
                 )
             `).run();
 
+            console.log('[API] Fetching posts...');
+            
             // 게시글 조회 (먼저)
             const { results: posts } = await env.DB.prepare(`
                 SELECT 
@@ -572,6 +578,8 @@ export async function onRequest(context) {
                 ORDER BY p.created_at DESC
             `).all();
             
+            console.log(`[API] Found ${posts.length} posts`);
+            
             // 각 게시글의 댓글 수를 따로 조회
             for (const post of posts) {
                 const commentResult = await env.DB.prepare(
@@ -580,9 +588,12 @@ export async function onRequest(context) {
                 post.comment_count = commentResult ? commentResult.count : 0;
             }
             
+            console.log('[API] Comment counts added, returning results');
+            
             return new Response(JSON.stringify(posts), { headers: corsHeaders });
         } catch (err) {
-            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+            console.error('[API ERROR]', err);
+            return new Response(JSON.stringify({ error: err.message, stack: err.stack }), { status: 500, headers: corsHeaders });
         }
     }
 
