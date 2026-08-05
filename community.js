@@ -276,6 +276,15 @@ function renderPosts() {
         const commentBadge = p.comment_count > 0
             ? `<span class="comment-count">[${p.comment_count}]</span>` : '';
         const hasImage = p.image ? '📷 ' : ''; // 이미지 아이콘
+        
+        // 아바타 표시
+        let avatarHTML;
+        if (p.avatar) {
+            avatarHTML = `<img src="${p.avatar}" style="width: 20px; height: 20px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 0.3rem;">`;
+        } else {
+            const initial = (p.author || '?')[0].toUpperCase();
+            avatarHTML = `<span style="display: inline-flex; width: 20px; height: 20px; border-radius: 50%; background: var(--primary-light); color: var(--primary-color); align-items: center; justify-content: center; font-weight: 700; font-size: 0.65rem; vertical-align: middle; margin-right: 0.3rem;">${initial}</span>`;
+        }
 
         return `
             <div class="post-row" data-id="${p.id}">
@@ -284,7 +293,7 @@ function renderPosts() {
                     <span class="notice-badge">${cat}</span>
                     ${hasImage}${escHtml(displayTitle)}${commentBadge}
                 </span>
-                <span class="col-author">${escHtml(p.author)}</span>
+                <span class="col-author">${avatarHTML}${escHtml(p.author)}</span>
                 <span class="col-date">${date}</span>
                 <span class="col-views">${p.comment_count ?? 0}</span>
             </div>`;

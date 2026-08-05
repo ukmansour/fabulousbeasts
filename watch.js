@@ -174,6 +174,9 @@ async function loadComments(episodeNum) {
                 
                 const canDelete = currentUser && (c.uid === currentUser.uid || userRole === 'admin');
                 
+                // 디버깅: 아바타 확인
+                console.log('댓글 데이터:', c.author, 'avatar:', c.avatar);
+                
                 // 아바타 표시
                 let avatarHTML;
                 if (c.avatar) {
