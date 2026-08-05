@@ -158,6 +158,11 @@ async function renderAdminPage() {
 
             html += `
                 <div style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1rem; ${index !== users.length - 1 ? 'border-bottom:1px solid #ccc;' : ''} transition:background 0.1s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
+                    <!-- 아바타 이미지 -->
+                    <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid #ddd; flex-shrink: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="window.changeUserAvatar('${u.uid}', '${displayName}')">
+                        ${u.avatar ? `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">` : `<span style="font-size: 1.5rem; color: #999;">👤</span>`}
+                    </div>
+                    
                     <div style="flex:1; min-width:0; display:flex; align-items:center; gap:1.2rem;">
                         <span style="font-size:0.9rem; font-weight:800; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:120px;">${displayName}</span>
                         <span style="font-size:0.8rem; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; font-family:monospace;">${u.email || '이메일 없음'}</span>
@@ -289,6 +294,75 @@ window.changeUserRole = async (uid, newRole) => {
     } catch (e) {
         alert("오류 발생: " + e.message);
     }
+};
+
+// [추가] 유저 아바타 변경 함수
+window.changeUserAvatar = async (uid, displayName) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // 파일 크기 체크 (2MB 제한)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('이미지 크기는 2MB 이하여야 합니다.');
+            return;
+        }
+        
+        const code = prompt(`${displayName}의 프로필 사진을 변경하시겠습니까?\n\n보안 코드를 입력하세요:`);
+        if (code !== "9889") { 
+            alert("보안 코드가 틀렸습니다."); 
+            return; 
+        }
+        
+        try {
+            // 이미지 업로드
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', 'avatars');
+            
+            const uploadRes = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!uploadRes.ok) throw new Error('이미지 업로드 실패');
+            
+            const uploadData = await uploadRes.json();
+            const avatarUrl = uploadData.url;
+            
+            // Firestore 업데이트
+            const userRef = doc(db, "users", uid);
+            await updateDoc(userRef, {
+                avatar: avatarUrl,
+                updatedAt: serverTimestamp()
+            });
+            
+            // D1 동기화
+            const res = await fetch('/api/user/role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    uid, 
+                    avatar: avatarUrl,
+                    secret: code 
+                })
+            });
+            
+            if (!res.ok) throw new Error('D1 동기화 실패');
+            
+            alert(`${displayName}의 프로필 사진이 변경되었습니다!`);
+            // onSnapshot이 실시간으로 화면을 갱신
+        } catch (e) {
+            console.error(e);
+            alert("프로필 사진 변경 실패: " + e.message);
+        }
+    };
+    
+    input.click();
 };
 
 // [추가] 공지/소식 관리 탭 렌더링

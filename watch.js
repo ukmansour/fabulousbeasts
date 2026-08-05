@@ -174,10 +174,19 @@ async function loadComments(episodeNum) {
                 
                 const canDelete = currentUser && (c.uid === currentUser.uid || userRole === 'admin');
                 
+                // 아바타 표시
+                let avatarHTML;
+                if (c.avatar) {
+                    avatarHTML = `<img src="${c.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`;
+                } else {
+                    const initial = (c.author || '유').substring(0, 1).toUpperCase();
+                    avatarHTML = `${initial}`;
+                }
+                
                 return `
                     <div class="comment-item" style="padding: 1.2rem; border: 1px solid #f1f1f1; border-radius: 8px; background: white; display: flex; gap: 1rem; position: relative;">
-                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; flex-shrink: 0; border: 1.5px solid var(--border-color);">
-                            ${(c.author || '유').substring(0, 1).toUpperCase()}
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; flex-shrink: 0; border: 1.5px solid var(--border-color); overflow: hidden;">
+                            ${avatarHTML}
                         </div>
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem;">

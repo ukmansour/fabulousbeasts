@@ -280,6 +280,13 @@ export async function onRequest(context) {
     // 4. User Role 관련
     if (request.method === "GET" && apiPath === "/users") {
         try {
+            // avatar 컬럼 추가 (없는 경우에만)
+            try {
+                await env.DB.prepare(`ALTER TABLE users ADD COLUMN avatar TEXT`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
+            
             const { results } = await env.DB.prepare("SELECT * FROM users ORDER BY updated_at DESC").all();
             return new Response(JSON.stringify(results), { headers: corsHeaders });
         } catch (err) {
@@ -295,21 +302,22 @@ export async function onRequest(context) {
 
     if (request.method === "POST" && apiPath === "/user/role") {
         try {
-            const { uid, role, name, nickname, email, isBanned, secret } = await request.json();
+            const { uid, role, name, nickname, email, isBanned, avatar, secret } = await request.json();
             
-            // 보안 코드(9889)가 있는 경우에만 권한(role)과 차단 여부를 수정할 수 있습니다.
+            // 보안 코드(9889)가 있는 경우에만 권한(role), 차단 여부, 아바타를 수정할 수 있습니다.
             if (secret === "9889") {
                 await env.DB.prepare(`
-                    INSERT INTO users (uid, role, name, nickname, email, is_banned, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                    INSERT INTO users (uid, role, name, nickname, email, is_banned, avatar, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                     ON CONFLICT(uid) DO UPDATE SET 
                         role = excluded.role, 
                         name = excluded.name,
                         nickname = excluded.nickname, 
                         email = excluded.email, 
                         is_banned = excluded.is_banned,
+                        avatar = excluded.avatar,
                         updated_at = CURRENT_TIMESTAMP
-                `).bind(uid, role || "member", name || nickname || "", nickname || "", email || "", isBanned ? 1 : 0).run();
+                `).bind(uid, role || "member", name || nickname || "", nickname || "", email || "", isBanned ? 1 : 0, avatar || null).run();
             } else {
                 // 보안 코드가 없는 경우 (단순 가입/동기화), 기존 권한을 유지하며 정보만 업데이트합니다.
                 await env.DB.prepare(`
@@ -366,7 +374,22 @@ export async function onRequest(context) {
                 )
             `).run();
 
-            const { results } = await env.DB.prepare("SELECT id, episode_num, uid, author, content, strftime('%Y-%m-%dT%H:%M:%SZ', created_at) as created_at FROM video_comments WHERE episode_num = ? ORDER BY created_at DESC").bind(episode).all();
+            // 댓글과 사용자 아바타를 JOIN하여 조회
+            const { results } = await env.DB.prepare(`
+                SELECT 
+                    c.id, 
+                    c.episode_num, 
+                    c.uid, 
+                    c.author, 
+                    c.content, 
+                    strftime('%Y-%m-%dT%H:%M:%SZ', c.created_at) as created_at,
+                    u.avatar
+                FROM video_comments c
+                LEFT JOIN users u ON c.uid = u.uid
+                WHERE c.episode_num = ? 
+                ORDER BY c.created_at DESC
+            `).bind(episode).all();
+            
             return new Response(JSON.stringify(results), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
@@ -531,10 +554,22 @@ export async function onRequest(context) {
                 )
             `).run();
 
+            // 게시글과 사용자 아바타를 JOIN하여 조회
             const { results } = await env.DB.prepare(`
-                SELECT p.id, p.uid, p.author, p.title, p.content, p.image, p.images, p.videos, strftime('%Y-%m-%dT%H:%M:%SZ', p.created_at) as created_at,
-                       (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) as comment_count
+                SELECT 
+                    p.id, 
+                    p.uid, 
+                    p.author, 
+                    p.title, 
+                    p.content, 
+                    p.image, 
+                    p.images, 
+                    p.videos, 
+                    strftime('%Y-%m-%dT%H:%M:%SZ', p.created_at) as created_at,
+                    (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) as comment_count,
+                    u.avatar
                 FROM community_posts p
+                LEFT JOIN users u ON p.uid = u.uid
                 ORDER BY p.created_at DESC
             `).all();
             
@@ -629,7 +664,22 @@ export async function onRequest(context) {
                 )
             `).run();
 
-            const { results } = await env.DB.prepare("SELECT id, post_id, uid, author, content, strftime('%Y-%m-%dT%H:%M:%SZ', created_at) as created_at FROM community_comments WHERE post_id = ? ORDER BY created_at ASC").bind(postId).all();
+            // 댓글과 사용자 아바타를 JOIN하여 조회
+            const { results } = await env.DB.prepare(`
+                SELECT 
+                    c.id, 
+                    c.post_id, 
+                    c.uid, 
+                    c.author, 
+                    c.content, 
+                    strftime('%Y-%m-%dT%H:%M:%SZ', c.created_at) as created_at,
+                    u.avatar
+                FROM community_comments c
+                LEFT JOIN users u ON c.uid = u.uid
+                WHERE c.post_id = ? 
+                ORDER BY c.created_at ASC
+            `).bind(postId).all();
+            
             return new Response(JSON.stringify(results), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });

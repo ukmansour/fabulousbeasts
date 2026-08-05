@@ -208,13 +208,25 @@ function renderPost() {
     
     bodyHTML += `<div>${escHtml(currentPost.content)}</div>`;
     
+    // 작성자 아바타 표시
+    let authorAvatarHTML;
+    if (currentPost.avatar) {
+        authorAvatarHTML = `<img src="${currentPost.avatar}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; vertical-align: middle; margin-right: 0.5rem; border: 1.5px solid var(--border-color);">`;
+    } else {
+        const initial = (currentPost.author || '?')[0].toUpperCase();
+        authorAvatarHTML = `<span style="display: inline-flex; width: 32px; height: 32px; border-radius: 50%; background: var(--primary-light); color: var(--primary-color); align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; vertical-align: middle; margin-right: 0.5rem; border: 1.5px solid var(--border-color);">${initial}</span>`;
+    }
+    
     container.innerHTML = `
         <div class="post-header">
             <h1>${escHtml(displayTitle)}</h1>
             <div class="post-meta">
                 <div class="meta-left">
                     <span class="post-category">${cat}</span>
-                    <span>작성자: <strong>${escHtml(currentPost.author)}</strong></span>
+                    <span style="display: inline-flex; align-items: center;">
+                        ${authorAvatarHTML}
+                        <strong>${escHtml(currentPost.author)}</strong>
+                    </span>
                     <span>${dateStr}</span>
                 </div>
             </div>
@@ -281,11 +293,20 @@ async function loadComments() {
         }
 
         list.innerHTML = comments.map(c => {
-            const initial = (c.author || '?')[0].toUpperCase();
             const canDel = currentUser && (currentUser.uid === c.uid || userRole === 'admin');
+            
+            // 아바타 표시
+            let avatarHTML;
+            if (c.avatar) {
+                avatarHTML = `<img src="${c.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`;
+            } else {
+                const initial = (c.author || '?')[0].toUpperCase();
+                avatarHTML = `<span style="font-size: 1.2rem;">${initial}</span>`;
+            }
+            
             return `
                 <div class="comment-item">
-                    <div class="comment-avatar">${initial}</div>
+                    <div class="comment-avatar">${avatarHTML}</div>
                     <div class="comment-body">
                         <div class="comment-header">
                             <span class="comment-author">${escHtml(c.author)}</span>
