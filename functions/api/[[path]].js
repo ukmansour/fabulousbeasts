@@ -554,8 +554,8 @@ export async function onRequest(context) {
                 )
             `).run();
 
-            // 게시글과 사용자 아바타를 JOIN하여 조회
-            const { results } = await env.DB.prepare(`
+            // 게시글 조회 (먼저)
+            const { results: posts } = await env.DB.prepare(`
                 SELECT 
                     p.id, 
                     p.uid, 
@@ -566,14 +566,21 @@ export async function onRequest(context) {
                     p.images, 
                     p.videos, 
                     strftime('%Y-%m-%dT%H:%M:%SZ', p.created_at) as created_at,
-                    (SELECT COUNT(*) FROM community_comments c WHERE c.post_id = p.id) as comment_count,
                     u.avatar
                 FROM community_posts p
                 LEFT JOIN users u ON p.uid = u.uid
                 ORDER BY p.created_at DESC
             `).all();
             
-            return new Response(JSON.stringify(results), { headers: corsHeaders });
+            // 각 게시글의 댓글 수를 따로 조회
+            for (const post of posts) {
+                const commentResult = await env.DB.prepare(
+                    "SELECT COUNT(*) as count FROM community_comments WHERE post_id = ?"
+                ).bind(post.id).first();
+                post.comment_count = commentResult ? commentResult.count : 0;
+            }
+            
+            return new Response(JSON.stringify(posts), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
         }
