@@ -341,18 +341,31 @@ window.changeUserAvatar = async (uid, displayName) => {
                 updatedAt: serverTimestamp()
             });
             
+            // 현재 유저 정보 가져오기 (D1 동기화를 위해)
+            const userDoc = await getDoc(userRef);
+            const userData = userDoc.data();
+            
             // D1 동기화
             const res = await fetch('/api/user/role', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     uid, 
+                    role: userData.role || 'member',
+                    name: userData.displayName || displayName,
+                    nickname: userData.displayName || displayName,
+                    email: userData.email || '',
+                    isBanned: userData.isBanned || false,
                     avatar: avatarUrl,
                     secret: code 
                 })
             });
             
-            if (!res.ok) throw new Error('D1 동기화 실패');
+            if (!res.ok) {
+                const errorData = await res.json();
+                console.error('D1 동기화 실패:', errorData);
+                throw new Error('D1 동기화 실패: ' + (errorData.error || '알 수 없는 오류'));
+            }
             
             alert(`${displayName}의 프로필 사진이 변경되었습니다!`);
             // onSnapshot이 실시간으로 화면을 갱신
