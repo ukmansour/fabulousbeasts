@@ -518,6 +518,27 @@ export async function onRequest(context) {
         try {
             console.log('[API] Loading community posts...');
             
+            // users 테이블 생성 및 avatar 컬럼 확인
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS users (
+                    uid TEXT PRIMARY KEY,
+                    role TEXT DEFAULT 'member',
+                    name TEXT,
+                    nickname TEXT,
+                    email TEXT,
+                    is_banned INTEGER DEFAULT 0,
+                    avatar TEXT,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+            
+            // avatar 컬럼 추가 (없는 경우에만)
+            try {
+                await env.DB.prepare(`ALTER TABLE users ADD COLUMN avatar TEXT`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
+            
             // 기존 테이블 생성
             await env.DB.prepare(`
                 CREATE TABLE IF NOT EXISTS community_posts (
