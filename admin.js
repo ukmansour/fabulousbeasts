@@ -1,6 +1,7 @@
 import { db, auth } from './firebase-config.js';
 import { 
     doc, 
+    getDoc,
     updateDoc, 
     serverTimestamp, 
     collection, 
