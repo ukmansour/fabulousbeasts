@@ -390,6 +390,11 @@ export async function onRequest(context) {
                 ORDER BY c.created_at DESC
             `).bind(episode).all();
             
+            console.log('[댓글 조회]', episode, '댓글 수:', results.length);
+            results.forEach(r => {
+                console.log(`  - ${r.author} (uid: ${r.uid}), avatar: ${r.avatar}`);
+            });
+            
             return new Response(JSON.stringify(results), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
