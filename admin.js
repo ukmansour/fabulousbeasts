@@ -1,7 +1,6 @@
 import { db, auth } from './firebase-config.js';
 import { 
     doc, 
-    getDoc,
     updateDoc, 
     serverTimestamp, 
     collection, 
@@ -342,9 +341,18 @@ window.changeUserAvatar = async (uid, displayName) => {
                 updatedAt: serverTimestamp()
             });
             
-            // 현재 유저 정보 가져오기 (D1 동기화를 위해)
-            const userDoc = await getDoc(userRef);
-            const userData = userDoc.data();
+            // D1에서 기존 유저 정보 가져오기
+            const userInfoRes = await fetch(`/api/user/${uid}`);
+            let role = 'member';
+            let name = displayName;
+            let email = '';
+            
+            if (userInfoRes.ok) {
+                const userInfo = await userInfoRes.json();
+                role = userInfo.role || 'member';
+                name = userInfo.name || displayName;
+                email = userInfo.email || '';
+            }
             
             // D1 동기화
             const res = await fetch('/api/user/role', {
@@ -352,11 +360,11 @@ window.changeUserAvatar = async (uid, displayName) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
                     uid, 
-                    role: userData.role || 'member',
-                    name: userData.displayName || displayName,
-                    nickname: userData.displayName || displayName,
-                    email: userData.email || '',
-                    isBanned: userData.isBanned || false,
+                    role: role,
+                    name: name,
+                    nickname: name,
+                    email: email,
+                    isBanned: false,
                     avatar: avatarUrl,
                     secret: code 
                 })
