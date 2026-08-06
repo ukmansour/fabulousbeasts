@@ -296,7 +296,11 @@ export async function onRequest(context) {
 
     if (request.method === "GET" && apiPath.startsWith("/user/")) {
         const uid = apiPath.split("/").pop();
-        const result = await env.DB.prepare("SELECT role FROM users WHERE uid = ?").bind(uid).first();
+        
+        // 디버깅: 모든 필드 반환
+        const result = await env.DB.prepare("SELECT * FROM users WHERE uid = ?").bind(uid).first();
+        console.log('[GET /user/]', uid, '결과:', result);
+        
         return new Response(JSON.stringify(result || { role: "member" }), { headers: corsHeaders });
     }
 
