@@ -3,6 +3,7 @@ import { doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestor
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
 import { getFavorites, toggleFavorite, isFavorite } from './favorites.js';
+import { createShareButtons } from './share.js';
 
 // URL 처리
 const fullHash = decodeURIComponent(location.hash.substring(1));
@@ -515,6 +516,12 @@ function addFavoriteButtonToTitle(charId, charName) {
     };
     
     wrapper.appendChild(btn);
+    
+    // 공유 버튼 추가
+    const shareDiv = document.createElement('div');
+    shareDiv.style.cssText = 'display: inline-flex; align-items: center; gap: 0.5rem;';
+    shareDiv.innerHTML = createShareButtons(window.location.href, charName);
+    wrapper.appendChild(shareDiv);
     
     const titleEl = document.getElementById('display-name');
     if (titleEl && titleEl.parentElement) {

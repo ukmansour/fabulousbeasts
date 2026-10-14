@@ -1,0 +1,26 @@
+{
+  "name": "유수언 - 신수들의 기록소",
+  "short_name": "유수언",
+  "description": "유수언(有兽焉) 팬사이트 - 캐릭터, 애니메이션, 커뮤니티",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3d5ba9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/192px-YouShouTransparent2.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/512px-YouShouTransparent2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["entertainment", "lifestyle"],
+  "lang": "ko-KR"
+}

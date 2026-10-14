@@ -4,8 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>유수언 - 신수들의 기록소</title>
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://wiki.fabulousbeasts.kr/">
+    <meta property="og:title" content="유수언 - 신수들의 기록소">
+    <meta property="og:description" content="유수언(有兽焉) 팬사이트 - 캐릭터, 애니메이션, 커뮤니티">
+    <meta property="og:image" content="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://wiki.fabulousbeasts.kr/">
+    <meta property="twitter:title" content="유수언 - 신수들의 기록소">
+    <meta property="twitter:description" content="유수언(有兽焉) 팬사이트 - 캐릭터, 애니메이션, 커뮤니티">
+    <meta property="twitter:image" content="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png">
+    
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#3d5ba9">
+    <link rel="apple-touch-icon" href="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/192px-YouShouTransparent2.png">
 </head>
 <body>
     <header class="site-header">
@@ -216,5 +234,16 @@
     <script type="module" src="favorites.js"></script>
     <script type="module" src="theme.js"></script>
     <script type="module" src="main.js?v=4"></script>
+    
+    <!-- PWA Service Worker 등록 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Service Worker 등록 성공:', reg.scope))
+                    .catch(err => console.log('❌ Service Worker 등록 실패:', err));
+            });
+        }
+    </script>
 </body>
 </html>

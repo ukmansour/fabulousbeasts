@@ -2,6 +2,7 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { isLiked, toggleLike } from './likes.js';
+import { createShareButtons } from './share.js';
 
 let currentUser = null;
 let userRole = 'guest';
@@ -242,6 +243,12 @@ function renderPost() {
                 <span id="like-text">${isLiked(currentPostId) ? '추천 취소' : '추천하기'}</span>
             </button>
             <span class="post-like-count" id="like-count-display"></span>
+        </div>
+        
+        <!-- 공유 섹션 -->
+        <div class="share-section">
+            <span class="share-label">공유하기</span>
+            ${createShareButtons(window.location.href, currentPost.title)}
         </div>
         
         <div class="post-actions">
