@@ -1020,10 +1020,9 @@ export async function onRequest(context) {
             // 관리자들에게 알림 생성
             const admins = await env.DB.prepare("SELECT uid FROM users WHERE role = 'admin'").all();
             for (const admin of admins.results) {
-                await env.DB.prepare(`
-                    INSERT INTO notifications (recipient_uid, sender_uid, sender_name, type, content, link)
-                    VALUES (?, ?, ?, 'contact', ?, '/admin.html')
-                `).bind(admin.uid, uid, author, `${author}님이 문의를 남겼습니다: ${message.substring(0, 50)}...`).run();
+                await env.DB.prepare("INSERT INTO notifications (recipient_uid, sender_uid, sender_name, type, content, link) VALUES (?, ?, ?, 'contact', ?, '/admin.html')")
+                    .bind(admin.uid, uid, author, `${author}님이 문의를 남겼습니다: ${message.substring(0, 50)}...`)
+                    .run();
             }
             
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
