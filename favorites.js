@@ -1,4 +1,4 @@
-// 캐릭터 즐겨찾기 관리
+﻿// 캐릭터 즐겨찾기 관리
 const FAVORITES_KEY = 'character_favorites';
 
 // 즐겨찾기 목록 가져오기
@@ -75,7 +75,7 @@ export function createFavoriteButton(characterId, characterName) {
             onclick="handleFavoriteClick('${characterId}', '${characterName}')"
             title="${isFav ? '즐겨찾기 해제' : '즐겨찾기 추가'}"
         >
-            ${isFav ? '⭐' : '☆'}
+            ${isFav ? '★' : '☆'}
         </button>
     `;
 }
@@ -89,7 +89,7 @@ window.handleFavoriteClick = function(characterId, characterName) {
     buttons.forEach(btn => {
         if (btn.classList.contains('favorite-btn')) {
             btn.classList.toggle('active', isNowFavorite);
-            btn.textContent = isNowFavorite ? '⭐' : '☆';
+            btn.textContent = isNowFavorite ? '★' : '☆';
             btn.title = isNowFavorite ? '즐겨찾기 해제' : '즐겨찾기 추가';
         }
     });

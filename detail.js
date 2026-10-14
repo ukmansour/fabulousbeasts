@@ -1,4 +1,4 @@
-import { db, auth, getDocSafe } from './firebase-config.js';
+﻿import { db, auth, getDocSafe } from './firebase-config.js';
 import { doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
@@ -508,11 +508,11 @@ function addFavoriteButtonToTitle(charId, charName) {
     
     const btn = document.createElement('button');
     btn.className = `detail-favorite-btn ${isFav ? 'active' : ''}`;
-    btn.innerHTML = `<span style="font-size: 1.2rem;">${isFav ? '⭐' : '☆'}</span> ${isFav ? '즐겨찾기 해제' : '즐겨찾기 추가'}`;
+    btn.innerHTML = `<span style="font-size: 1.2rem;">${isFav ? '★' : '☆'}</span> ${isFav ? '즐겨찾기 해제' : '즐겨찾기 추가'}`;
     btn.onclick = function() {
         const nowFav = toggleFavorite(charId, charName);
         btn.className = `detail-favorite-btn ${nowFav ? 'active' : ''}`;
-        btn.innerHTML = `<span style="font-size: 1.2rem;">${nowFav ? '⭐' : '☆'}</span> ${nowFav ? '즐겨찾기 해제' : '즐겨찾기 추가'}`;
+        btn.innerHTML = `<span style="font-size: 1.2rem;">${nowFav ? '★' : '☆'}</span> ${nowFav ? '즐겨찾기 해제' : '즐겨찾기 추가'}`;
     };
     
     wrapper.appendChild(btn);

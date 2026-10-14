@@ -74,7 +74,7 @@ async function loadUserPosts() {
         console.error('게시글 로드 오류:', err);
         document.getElementById('posts-list').innerHTML = `
             <div class="empty-state">
-                <div class="empty-icon">⚠️</div>
+                <div class="empty-icon">!</div>
                 <p>게시글을 불러오지 못했습니다.</p>
             </div>
         `;
@@ -98,7 +98,7 @@ async function loadUserComments() {
         console.error('댓글 로드 오류:', err);
         document.getElementById('comments-list').innerHTML = `
             <div class="empty-state">
-                <div class="empty-icon">⚠️</div>
+                <div class="empty-icon">!</div>
                 <p>댓글을 불러오지 못했습니다.</p>
             </div>
         `;
@@ -116,7 +116,7 @@ function renderPosts() {
     if (userPosts.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <div class="empty-icon">📝</div>
+                <div class="empty-icon">-</div>
                 <p>작성한 게시글이 없습니다.</p>
             </div>
         `;
@@ -140,7 +140,7 @@ function renderComments() {
     if (userComments.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <div class="empty-icon">💬</div>
+                <div class="empty-icon">-</div>
                 <p>작성한 댓글이 없습니다.</p>
             </div>
         `;
@@ -162,7 +162,7 @@ function renderFavorites(favorites) {
     if (favorites.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
-                <div class="empty-icon">⭐</div>
+                <div class="empty-icon">★</div>
                 <p>즐겨찾기한 캐릭터가 없습니다.</p>
             </div>
         `;
@@ -175,7 +175,7 @@ function renderFavorites(favorites) {
         
         return `
             <div class="activity-item" onclick="location.href='detail.html?id=${char.id}'">
-                <div class="activity-title">⭐ ${char.korName || char.name}</div>
+                <div class="activity-title">★ ${char.korName || char.name}</div>
                 <div class="activity-meta">즐겨찾기 추가: ${new Date(fav.timestamp).toLocaleDateString()}</div>
             </div>
         `;

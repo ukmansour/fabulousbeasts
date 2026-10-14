@@ -12,7 +12,7 @@ export function shareToFacebook(url) {
 export function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => {
-            showToast('✅ 링크가 클립보드에 복사되었습니다!');
+            showToast('[성공] 링크가 클립보드에 복사되었습니다!');
         }).catch(() => {
             fallbackCopyToClipboard(text);
         });
@@ -31,9 +31,9 @@ function fallbackCopyToClipboard(text) {
     
     try {
         document.execCommand('copy');
-        showToast('✅ 링크가 클립보드에 복사되었습니다!');
+        showToast('[성공] 링크가 클립보드에 복사되었습니다!');
     } catch (err) {
-        showToast('❌ 복사 실패. 수동으로 복사해주세요.');
+        showToast('[실패] 복사 실패. 수동으로 복사해주세요.');
     }
     
     document.body.removeChild(textArea);

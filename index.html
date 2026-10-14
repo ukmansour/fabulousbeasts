@@ -41,14 +41,14 @@
                 <a href="watch.html" class="nav-link">애니 보기</a>
                 <a href="community.html" class="nav-link">커뮤니티</a>
                 <a href="relationships.html" class="nav-link">관계도</a>
-                <a href="search.html" class="nav-link">🔍 검색</a>
+                <a href="search.html" class="nav-link">검색</a>
                 
                 <!-- 테마 토글 버튼 -->
-                <button class="theme-toggle-btn" onclick="window.toggleThemeGlobal()" title="다크 모드로 전환">🌙</button>
+                <button class="theme-toggle-btn" onclick="window.toggleThemeGlobal()" title="다크 모드로 전환">◐</button>
                 
                 <!-- 알림 벨 -->
                 <div class="notification-bell" id="notification-bell" onclick="toggleNotificationDropdown()">
-                    <span class="notification-bell-icon">🔔</span>
+                    <span class="notification-bell-icon">●</span>
                     <span class="notification-badge" id="notification-badge">0</span>
                     
                     <!-- 알림 드롭다운 -->
@@ -74,7 +74,7 @@
     <!-- 공지사항 배너 (헤더 바로 아래, sticky) -->
     <div id="top-announcement-banner" style="display: none; background: linear-gradient(135deg, #ffcccc, #ffe0e0); border-bottom: 2px solid #ff4444; padding: 0.9rem 1.5rem; box-shadow: 0 0 15px rgba(255, 68, 68, 0.3); position: sticky; top: 50px; z-index: 1999;">
         <div style="max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 0.8rem;">
-            <span style="font-size: 1.4rem; flex-shrink: 0; animation: pulse 2s infinite;">📢</span>
+            <span style="font-size: 1.4rem; flex-shrink: 0; animation: pulse 2s infinite;">■</span>
             <div style="flex: 1;">
                 <span style="font-weight: 900; color: #cc0000; font-size: 0.9rem; margin-right: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; background: #ffffff; padding: 0.2rem 0.5rem; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);">공지</span>
                 <span id="top-announcement-content" style="font-size: 0.95rem; color: #000; line-height: 1.6; font-weight: 700;">
@@ -160,7 +160,7 @@
                 <!-- 즐겨찾기 섹션 -->
                 <div id="favorites-section" style="display: none;">
                     <div class="favorites-section">
-                        <h2><span>⭐</span> 내 즐겨찾기</h2>
+                        <h2><span>★</span> 내 즐겨찾기</h2>
                         <div id="favorites-grid"></div>
                     </div>
                 </div>
@@ -241,8 +241,8 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('✅ Service Worker 등록 성공:', reg.scope))
-                    .catch(err => console.log('❌ Service Worker 등록 실패:', err));
+                    .then(reg => console.log('[SUCCESS] Service Worker 등록 성공:', reg.scope))
+                    .catch(err => console.log('[ERROR] Service Worker 등록 실패:', err));
             });
         }
     </script>

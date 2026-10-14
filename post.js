@@ -16,7 +16,7 @@ currentPostId = parseInt(urlParams.get('id'), 10);
 if (!currentPostId || isNaN(currentPostId)) {
     document.getElementById('post-content').innerHTML = `
         <div class="error">
-            <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem;">❌ 잘못된 접근</h2>
+            <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem;">잘못된 접근</h2>
             <p>게시글을 찾을 수 없습니다.</p>
             <a href="community.html" class="btn-back" style="margin-top: 1rem; display: inline-block;">커뮤니티로 돌아가기</a>
         </div>
@@ -45,7 +45,7 @@ onAuthStateChanged(auth, async (user) => {
                     if (snap.exists()) {
                         const data = snap.data();
                         if (data.isBanned) {
-                            alert('⚠️ 차단된 계정입니다.');
+                            alert('경고: 차단된 계정입니다.');
                             signOut(auth);
                             return;
                         }
@@ -98,7 +98,7 @@ async function loadPost() {
         if (!currentPost) {
             container.innerHTML = `
                 <div class="error">
-                    <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem;">❌ 게시글을 찾을 수 없습니다</h2>
+                    <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem;">게시글을 찾을 수 없습니다</h2>
                     <p>삭제되었거나 존재하지 않는 게시글입니다.</p>
                     <a href="community.html" class="btn-back" style="margin-top: 1rem; display: inline-block;">커뮤니티로 돌아가기</a>
                 </div>
@@ -113,7 +113,7 @@ async function loadPost() {
         console.error(e);
         container.innerHTML = `
             <div class="error">
-                <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem;">❌ 오류 발생</h2>
+                <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem;">오류 발생</h2>
                 <p>게시글을 불러오는 중 오류가 발생했습니다.</p>
                 <a href="community.html" class="btn-back" style="margin-top: 1rem; display: inline-block;">커뮤니티로 돌아가기</a>
             </div>
@@ -239,7 +239,7 @@ function renderPost() {
         <!-- 좋아요 섹션 -->
         <div class="post-like-section">
             <button class="post-like-btn ${isLiked(currentPostId) ? 'liked' : ''}" onclick="handlePostLike()">
-                <span class="like-icon">${isLiked(currentPostId) ? '❤️' : '🤍'}</span>
+                <span class="like-icon">${isLiked(currentPostId) ? '♥' : '♡'}</span>
                 <span id="like-text">${isLiked(currentPostId) ? '추천 취소' : '추천하기'}</span>
             </button>
             <span class="post-like-count" id="like-count-display"></span>

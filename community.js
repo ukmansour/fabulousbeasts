@@ -50,7 +50,7 @@ onAuthStateChanged(auth, async (user) => {
                     if (snap.exists()) {
                         const data = snap.data();
                         if (data.isBanned) {
-                            alert('⚠️ 차단된 계정입니다.');
+                            alert('경고: 차단된 계정입니다.');
                             signOut(auth);
                             return;
                         }
@@ -213,7 +213,7 @@ async function loadPosts() {
         allPosts = await res.json();
         
         const loadTime = Math.round(performance.now() - startTime);
-        console.log(`✅ 커뮤니티 게시글 로드 완료: ${allPosts.length}개, ${loadTime}ms`);
+        console.log(`[SUCCESS] 커뮤니티 게시글 로드 완료: ${allPosts.length}개, ${loadTime}ms`);
         
         applyFilterAndRender();
     } catch (e) {
