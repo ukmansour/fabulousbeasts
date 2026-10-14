@@ -638,20 +638,27 @@ export async function onRequest(context) {
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `).run();
+            
+            // 성능 향상을 위한 인덱스 생성
+            try {
+                await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_community_posts_created ON community_posts(created_at DESC)`).run();
+                await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_community_comments_post ON community_comments(post_id)`).run();
+                await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_users_uid ON users(uid)`).run();
+                console.log('[API] Indexes created/verified');
+            } catch (e) {
+                console.warn('[API] Index creation warning:', e.message);
+            }
 
             console.log('[API] Fetching posts...');
             
             // 게시글과 댓글 수를 한 번에 조회 (성능 개선)
+            // 목록에서는 content 제외 (데이터 전송량 감소)
             const { results: posts } = await env.DB.prepare(`
                 SELECT 
                     p.id, 
                     p.uid, 
                     p.author, 
                     p.title, 
-                    p.content, 
-                    p.image, 
-                    p.images, 
-                    p.videos, 
                     strftime('%Y-%m-%dT%H:%M:%SZ', p.created_at) as created_at,
                     u.avatar,
                     COUNT(c.id) as comment_count
@@ -660,6 +667,7 @@ export async function onRequest(context) {
                 LEFT JOIN community_comments c ON c.post_id = p.id
                 GROUP BY p.id
                 ORDER BY p.created_at DESC
+                LIMIT 100
             `).all();
             
             console.log(`[API] Found ${posts.length} posts`);

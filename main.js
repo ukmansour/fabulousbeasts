@@ -475,13 +475,20 @@ async function loadCommunityPosts() {
     const listEl = document.getElementById('community-posts-list');
     if (!listEl) return;
 
+    // 로딩 표시
+    listEl.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #888;">⏳ 게시글을 불러오는 중...</div>`;
+
     try {
+        const startTime = performance.now();
         const res = await fetch('/api/community/posts');
         if (!res.ok) {
             listEl.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #888;">게시글을 불러올 수 없습니다.</div>`;
             return;
         }
         const posts = await res.json();
+        const loadTime = Math.round(performance.now() - startTime);
+        console.log(`✅ 홈 커뮤니티 게시글 로드: ${posts.length}개, ${loadTime}ms`);
+        
         if (posts.length === 0) {
             listEl.innerHTML = `<div style="padding: 2rem; text-align: center; color: #888; font-size: 0.95rem; background: #fafafa; border-radius: 8px; border: 1px dashed #eee;">첫 번째 커뮤니티 글을 남겨보세요!</div>`;
             return;
@@ -526,7 +533,7 @@ async function loadCommunityPosts() {
         });
 
     } catch (err) {
-        console.error(err);
+        console.error('❌ 커뮤니티 게시글 로드 실패:', err);
         listEl.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #888;">오류가 발생했습니다.</div>`;
     }
 }

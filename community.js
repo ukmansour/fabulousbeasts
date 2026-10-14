@@ -197,16 +197,29 @@ function bindEvents() {
 // ===== 게시글 로드 =====
 async function loadPosts() {
     const wrap = document.getElementById('post-list-wrap');
+    
+    // 로딩 인디케이터 표시
+    if (wrap) wrap.innerHTML = `
+        <div class="post-empty">
+            <div class="empty-icon">⏳</div>
+            <div>게시글을 불러오는 중...</div>
+        </div>`;
+    
     try {
+        const startTime = performance.now();
         const res = await fetch('/api/community/posts');
         if (!res.ok) throw new Error('fetch failed');
         allPosts = await res.json();
+        
+        const loadTime = Math.round(performance.now() - startTime);
+        console.log(`✅ 커뮤니티 게시글 로드 완료: ${allPosts.length}개, ${loadTime}ms`);
+        
         applyFilterAndRender();
     } catch (e) {
-        console.error(e);
+        console.error('❌ 게시글 로드 실패:', e);
         if (wrap) wrap.innerHTML = `
             <div class="post-empty">
-                <div class="empty-icon"></div>
+                <div class="empty-icon">⚠️</div>
                 <div>게시글을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>
             </div>`;
     }
