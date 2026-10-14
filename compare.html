@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문서 비교 - 유수언</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        .compare-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .compare-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .compare-header h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .compare-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .compare-panel {
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+        
+        .compare-panel-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .compare-select {
+            width: 100%;
+            padding: 0.6rem;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            background: white;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .compare-content {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 1rem;
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .diff-line {
+            padding: 0.2rem 0.5rem;
+            margin: 0;
+        }
+        
+        .diff-added {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .diff-removed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .diff-unchanged {
+            color: var(--text-secondary);
+        }
+        
+        .compare-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .compare-btn {
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .compare-btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .compare-btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .compare-btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .compare-btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .compare-empty {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-tertiary);
+        }
+        
+        @media (max-width: 900px) {
+            .compare-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
+                <span>유수언</span>
+            </a>
+            <nav class="top-nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="community.html" class="nav-link">커뮤니티</a>
+                <button class="theme-toggle-btn" onclick="window.toggleThemeGlobal()" title="다크 모드로 전환">🌙</button>
+                <span id="user-info"></span>
+            </nav>
+        </div>
+    </header>
+
+    <div class="compare-container">
+        <div class="compare-header">
+            <h1>📊 문서 비교</h1>
+            <p style="color: var(--text-secondary);">두 버전의 문서를 비교하여 변경사항을 확인할 수 있습니다.</p>
+        </div>
+
+        <div class="compare-grid">
+            <div class="compare-panel">
+                <div class="compare-panel-title">이전 버전</div>
+                <select class="compare-select" id="version-old">
+                    <option value="">버전을 선택하세요</option>
+                </select>
+                <div class="compare-content" id="content-old">
+                    <div class="compare-empty">
+                        <p>버전을 선택하면 내용이 표시됩니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="compare-panel">
+                <div class="compare-panel-title">새 버전</div>
+                <select class="compare-select" id="version-new">
+                    <option value="">버전을 선택하세요</option>
+                </select>
+                <div class="compare-content" id="content-new">
+                    <div class="compare-empty">
+                        <p>버전을 선택하면 내용이 표시됩니다.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="compare-actions">
+            <button class="compare-btn compare-btn-primary" onclick="showDiff()">변경사항 보기</button>
+            <button class="compare-btn compare-btn-secondary" onclick="window.history.back()">돌아가기</button>
+        </div>
+    </div>
+
+    <script type="module" src="theme.js"></script>
+    <script type="module" src="compare.js"></script>
+</body>
+</html>
