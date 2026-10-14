@@ -440,6 +440,43 @@ export async function onRequest(context) {
             }
 
             await env.DB.prepare("INSERT INTO video_comments (episode_num, uid, author, content, parent_id) VALUES (?, ?, ?, ?, ?)").bind(episode_num, uid, author, content, parent_id || null).run();
+            
+            // 대댓글인 경우 원댓글 작성자에게 알림 생성
+            if (parent_id) {
+                try {
+                    const parentComment = await env.DB.prepare("SELECT uid, author FROM video_comments WHERE id = ?").bind(parent_id).first();
+                    if (parentComment && parentComment.uid !== uid) { // 자기 자신에게는 알림 안 보냄
+                        await env.DB.prepare(`
+                            CREATE TABLE IF NOT EXISTS notifications (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                recipient_uid TEXT NOT NULL,
+                                sender_uid TEXT NOT NULL,
+                                sender_name TEXT NOT NULL,
+                                type TEXT NOT NULL,
+                                content TEXT NOT NULL,
+                                link TEXT,
+                                is_read INTEGER DEFAULT 0,
+                                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                            )
+                        `).run();
+                        
+                        await env.DB.prepare(`
+                            INSERT INTO notifications (recipient_uid, sender_uid, sender_name, type, content, link)
+                            VALUES (?, ?, ?, 'reply', ?, ?)
+                        `).bind(
+                            parentComment.uid,
+                            uid,
+                            author,
+                            `${author}님이 회차 ${episode_num}화 댓글에 답글을 남겼습니다`,
+                            `/watch.html?episode=${episode_num}`
+                        ).run();
+                    }
+                } catch (e) {
+                    console.error('알림 생성 실패:', e);
+                    // 알림 생성 실패해도 댓글은 등록됨
+                }
+            }
+            
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
@@ -604,7 +641,7 @@ export async function onRequest(context) {
 
             console.log('[API] Fetching posts...');
             
-            // 게시글 조회 (먼저)
+            // 게시글과 댓글 수를 한 번에 조회 (성능 개선)
             const { results: posts } = await env.DB.prepare(`
                 SELECT 
                     p.id, 
@@ -616,23 +653,16 @@ export async function onRequest(context) {
                     p.images, 
                     p.videos, 
                     strftime('%Y-%m-%dT%H:%M:%SZ', p.created_at) as created_at,
-                    u.avatar
+                    u.avatar,
+                    COUNT(c.id) as comment_count
                 FROM community_posts p
                 LEFT JOIN users u ON p.uid = u.uid
+                LEFT JOIN community_comments c ON c.post_id = p.id
+                GROUP BY p.id
                 ORDER BY p.created_at DESC
             `).all();
             
             console.log(`[API] Found ${posts.length} posts`);
-            
-            // 각 게시글의 댓글 수를 따로 조회
-            for (const post of posts) {
-                const commentResult = await env.DB.prepare(
-                    "SELECT COUNT(*) as count FROM community_comments WHERE post_id = ?"
-                ).bind(post.id).first();
-                post.comment_count = commentResult ? commentResult.count : 0;
-            }
-            
-            console.log('[API] Comment counts added, returning results');
             
             return new Response(JSON.stringify(posts), { headers: corsHeaders });
         } catch (err) {
@@ -786,6 +816,47 @@ export async function onRequest(context) {
             }
 
             await env.DB.prepare("INSERT INTO community_comments (post_id, uid, author, content, parent_id) VALUES (?, ?, ?, ?, ?)").bind(post_id, uid, author, content, parent_id || null).run();
+            
+            // 대댓글인 경우 원댓글 작성자에게 알림 생성
+            if (parent_id) {
+                try {
+                    const parentComment = await env.DB.prepare("SELECT uid, author FROM community_comments WHERE id = ?").bind(parent_id).first();
+                    if (parentComment && parentComment.uid !== uid) { // 자기 자신에게는 알림 안 보냄
+                        await env.DB.prepare(`
+                            CREATE TABLE IF NOT EXISTS notifications (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                recipient_uid TEXT NOT NULL,
+                                sender_uid TEXT NOT NULL,
+                                sender_name TEXT NOT NULL,
+                                type TEXT NOT NULL,
+                                content TEXT NOT NULL,
+                                link TEXT,
+                                is_read INTEGER DEFAULT 0,
+                                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                            )
+                        `).run();
+                        
+                        // 게시글 제목 가져오기
+                        const post = await env.DB.prepare("SELECT title FROM community_posts WHERE id = ?").bind(post_id).first();
+                        const postTitle = post ? post.title : '게시글';
+                        
+                        await env.DB.prepare(`
+                            INSERT INTO notifications (recipient_uid, sender_uid, sender_name, type, content, link)
+                            VALUES (?, ?, ?, 'reply', ?, ?)
+                        `).bind(
+                            parentComment.uid,
+                            uid,
+                            author,
+                            `${author}님이 "${postTitle}" 댓글에 답글을 남겼습니다`,
+                            `/post.html?id=${post_id}`
+                        ).run();
+                    }
+                } catch (e) {
+                    console.error('알림 생성 실패:', e);
+                    // 알림 생성 실패해도 댓글은 등록됨
+                }
+            }
+            
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
@@ -835,3 +906,122 @@ export async function onRequest(context) {
 
     return new Response(JSON.stringify({ error: `Not Found: ${path}` }), { status: 404, headers: corsHeaders });
 }
+
+    // 18. GET: 알림 목록 조회
+    if (request.method === "GET" && apiPath === "/notifications") {
+        const uid = url.searchParams.get("uid");
+        if (!uid) return new Response(JSON.stringify({ error: "Missing uid parameter" }), { status: 400, headers: corsHeaders });
+        
+        try {
+            // 알림 테이블 생성
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    recipient_uid TEXT NOT NULL,
+                    sender_uid TEXT NOT NULL,
+                    sender_name TEXT NOT NULL,
+                    type TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    link TEXT,
+                    is_read INTEGER DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+            
+            // 최근 30일 이내 알림만 조회
+            const { results } = await env.DB.prepare(`
+                SELECT * FROM notifications 
+                WHERE recipient_uid = ? 
+                AND datetime(created_at) > datetime('now', '-30 days')
+                ORDER BY created_at DESC 
+                LIMIT 50
+            `).bind(uid).all();
+            
+            return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+    
+    // 19. POST: 알림 읽음 처리
+    if (request.method === "POST" && apiPath === "/notifications/read") {
+        try {
+            const data = await request.json();
+            const { id, uid } = data;
+            if (!id || !uid) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+            
+            // 본인의 알림만 읽음 처리
+            await env.DB.prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND recipient_uid = ?").bind(id, uid).run();
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+    
+    // 20. POST: 모든 알림 읽음 처리
+    if (request.method === "POST" && apiPath === "/notifications/read-all") {
+        try {
+            const data = await request.json();
+            const { uid } = data;
+            if (!uid) {
+                return new Response(JSON.stringify({ error: "Missing uid" }), { status: 400, headers: corsHeaders });
+            }
+            
+            await env.DB.prepare("UPDATE notifications SET is_read = 1 WHERE recipient_uid = ?").bind(uid).run();
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+    
+    // 21. GET: 읽지 않은 알림 개수
+    if (request.method === "GET" && apiPath === "/notifications/unread-count") {
+        const uid = url.searchParams.get("uid");
+        if (!uid) return new Response(JSON.stringify({ error: "Missing uid parameter" }), { status: 400, headers: corsHeaders });
+        
+        try {
+            const result = await env.DB.prepare("SELECT COUNT(*) as count FROM notifications WHERE recipient_uid = ? AND is_read = 0").bind(uid).first();
+            return new Response(JSON.stringify({ count: result ? result.count : 0 }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+    
+    // 22. POST: 관리자 문의
+    if (request.method === "POST" && apiPath === "/contact") {
+        try {
+            // 문의 테이블 생성
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS contact_messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    uid TEXT NOT NULL,
+                    author TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+            
+            const data = await request.json();
+            const { uid, author, message } = data;
+            if (!uid || !author || !message) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+            
+            await env.DB.prepare("INSERT INTO contact_messages (uid, author, message) VALUES (?, ?, ?)").bind(uid, author, message).run();
+            
+            // 관리자들에게 알림 생성
+            const admins = await env.DB.prepare("SELECT uid FROM users WHERE role = 'admin'").all();
+            for (const admin of admins.results) {
+                await env.DB.prepare(`
+                    INSERT INTO notifications (recipient_uid, sender_uid, sender_name, type, content, link)
+                    VALUES (?, ?, ?, 'contact', ?, '/admin.html')
+                `).bind(admin.uid, uid, author, `${author}님이 문의를 남겼습니다: ${message.substring(0, 50)}...`).run();
+            }
+            
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
