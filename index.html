@@ -23,6 +23,9 @@
                 <a href="watch.html" class="nav-link">애니 보기</a>
                 <a href="community.html" class="nav-link">커뮤니티</a>
                 
+                <!-- 테마 토글 버튼 -->
+                <button class="theme-toggle-btn" onclick="window.toggleThemeGlobal()" title="다크 모드로 전환">🌙</button>
+                
                 <!-- 알림 벨 -->
                 <div class="notification-bell" id="notification-bell" onclick="toggleNotificationDropdown()">
                     <span class="notification-bell-icon">🔔</span>
@@ -134,6 +137,14 @@
                     </div>
                 </div>
 
+                <!-- 즐겨찾기 섹션 -->
+                <div id="favorites-section" style="display: none;">
+                    <div class="favorites-section">
+                        <h2><span>⭐</span> 내 즐겨찾기</h2>
+                        <div id="favorites-grid"></div>
+                    </div>
+                </div>
+
                 <h2 id="characters">전체 목록</h2>
                 <div id="char-grid">
                     <!-- [동적 렌더링] 모든 캐릭터 데이터를 D1에서 읽어와 실시간으로 생성합니다. -->
@@ -201,6 +212,8 @@
     </div>
 
     <script type="module" src="notifications.js"></script>
+    <script type="module" src="favorites.js"></script>
+    <script type="module" src="theme.js"></script>
     <script type="module" src="main.js?v=4"></script>
 </body>
 </html>

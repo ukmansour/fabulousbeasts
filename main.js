@@ -1,8 +1,8 @@
 import { CHARACTERS, CATEGORIES } from './data.js';
 import { db, auth, getDocSafe } from './firebase-config.js';
 import { doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFavorites, toggleFavorite } from './favorites.js';
 
 let mergedCharacters = []; // [수정] 초기 상태를 빈 배열로 설정하여 정적 데이터(data.js) 노출을 차단합니다.
 let recentChangesTimer = null;
@@ -296,6 +296,9 @@ async function syncHomepageImages() {
         // 1.8 다가오는 생일 렌더링
         renderUpcomingBirthdays();
 
+        // 1.9 즐겨찾기 섹션 렌더링
+        renderFavorites();
+
         // 2. 전체 목록(char-grid) 동적 렌더링
         const container = document.getElementById('char-grid');
         if (container) {
@@ -319,6 +322,13 @@ async function syncHomepageImages() {
             
             container.innerHTML = html || '<div style="padding:50px; text-align:center; color:#999;">데이터베이스에 등록된 캐릭터가 없습니다.</div>';
             console.log('[syncHomepageImages] 렌더링 완료');
+            
+            // 즐겨찾기 버튼 추가
+            setTimeout(() => {
+                if (window.addFavoriteButtonsToCards) {
+                    window.addFavoriteButtonsToCards();
+                }
+            }, 100);
         }
     } catch (e) {
         console.error("[syncHomepageImages] 오류 발생:", e);
@@ -556,3 +566,89 @@ function initSearch() {
 window.addEventListener('load', () => {
     initHome();
 });
+
+
+// 즐겨찾기 섹션 렌더링
+function renderFavorites() {
+    const section = document.getElementById('favorites-section');
+    const grid = document.getElementById('favorites-grid');
+    
+    if (!section || !grid) return;
+    
+    const favorites = getFavorites();
+    
+    if (favorites.length === 0) {
+        section.style.display = 'none';
+        return;
+    }
+    
+    section.style.display = 'block';
+    
+    // 즐겨찾기한 캐릭터 정보 가져오기
+    const favoriteCharacters = favorites.map(fav => {
+        const char = mergedCharacters.find(c => c.id === fav.id);
+        return char ? { ...char, favoriteId: fav.id } : null;
+    }).filter(c => c !== null);
+    
+    if (favoriteCharacters.length === 0) {
+        grid.innerHTML = `
+            <div class="favorites-empty">
+                <div class="favorites-empty-icon">⭐</div>
+                <p>즐겨찾기한 캐릭터가 없습니다.</p>
+                <p style="font-size: 0.85rem; color: #bbb;">캐릭터 카드의 ☆를 눌러 즐겨찾기에 추가하세요!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    grid.className = 'favorites-grid';
+    grid.innerHTML = favoriteCharacters.map(char => `
+        <div class="favorite-item" onclick="location.href='detail.html#${char.id}'">
+            <button 
+                class="favorite-item-remove" 
+                onclick="event.stopPropagation(); window.handleFavoriteClick('${char.id}', '${char.name || char.id}')"
+                title="즐겨찾기 해제"
+            >×</button>
+            <div class="favorite-item-name">${char.name || char.id}</div>
+            <img src="${char.image || 'https://via.placeholder.com/150'}" 
+                 alt="${char.name || char.id}" 
+                 style="width: 100%; height: 100px; object-fit: cover; border-radius: 6px; margin-top: 0.5rem;">
+        </div>
+    `).join('');
+}
+
+// 즐겨찾기 변경 이벤트 리스너
+window.addEventListener('favoritesChanged', () => {
+    renderFavorites();
+});
+
+// 캐릭터 카드에 즐겨찾기 버튼 추가
+window.addFavoriteButtonsToCards = function() {
+    const cards = document.querySelectorAll('.char-card-mini');
+    cards.forEach(card => {
+        const href = card.getAttribute('href');
+        if (!href) return;
+        
+        const charId = href.replace('detail.html#', '');
+        const char = mergedCharacters.find(c => c.id === charId);
+        if (!char) return;
+        
+        // 이미 버튼이 있으면 스킵
+        if (card.querySelector('.favorite-btn')) return;
+        
+        const isFav = getFavorites().some(f => f.id === charId);
+        
+        const btn = document.createElement('button');
+        btn.className = `favorite-btn character-card ${isFav ? 'active' : ''}`;
+        btn.innerHTML = isFav ? '⭐' : '☆';
+        btn.title = isFav ? '즐겨찾기 해제' : '즐겨찾기 추가';
+        btn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.handleFavoriteClick(charId, char.name || charId);
+        };
+        
+        card.style.position = 'relative';
+        card.appendChild(btn);
+    });
+};

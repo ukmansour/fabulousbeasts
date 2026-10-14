@@ -1025,3 +1025,423 @@ body {
 .contact-submit-btn:hover {
     background: #2d5aa8;
 }
+
+
+/* ========== 즐겨찾기 시스템 ========== */
+.favorite-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.3rem;
+    transition: transform 0.2s;
+    line-height: 1;
+}
+
+.favorite-btn:hover {
+    transform: scale(1.2);
+}
+
+.favorite-btn.active {
+    animation: favoriteAdded 0.3s ease;
+}
+
+@keyframes favoriteAdded {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.3); }
+}
+
+/* 캐릭터 카드 내 즐겨찾기 버튼 */
+.character-card .favorite-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 10;
+}
+
+/* 즐겨찾기 섹션 (메인 페이지) */
+.favorites-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #fff9e6, #fffaf0);
+    border: 2px solid #ffd700;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.1);
+}
+
+.favorites-section h2 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+    color: #d97706;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.favorite-item {
+    background: white;
+    border: 2px solid #fbbf24;
+    border-radius: 8px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.favorite-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 16px rgba(251, 191, 36, 0.3);
+    border-color: #f59e0b;
+}
+
+.favorite-item-name {
+    font-weight: 700;
+    color: #333;
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+}
+
+.favorite-item-remove {
+    position: absolute;
+    top: 0.3rem;
+    right: 0.3rem;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.favorite-item:hover .favorite-item-remove {
+    opacity: 1;
+}
+
+.favorites-empty {
+    text-align: center;
+    color: #999;
+    padding: 2rem;
+    font-size: 0.9rem;
+}
+
+.favorites-empty-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+/* 토스트 메시지 */
+.toast-message {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    pointer-events: none;
+}
+
+.toast-message.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 상세 페이지 즐겨찾기 버튼 */
+.detail-favorite-btn {
+    background: linear-gradient(135deg, #fbbf24, #f59e0b);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+    box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+}
+
+.detail-favorite-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+}
+
+.detail-favorite-btn.active {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+    .favorites-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 0.8rem;
+    }
+    
+    .favorites-section {
+        padding: 1rem;
+    }
+}
+
+
+/* ========== 다크모드 ========== */
+:root {
+    /* 라이트 모드 기본 변수 */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #e9ecef;
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --text-tertiary: #868e96;
+    --border-color: #dee2e6;
+    --shadow: rgba(0, 0, 0, 0.1);
+    --shadow-hover: rgba(0, 0, 0, 0.15);
+}
+
+.dark-mode {
+    /* 다크 모드 변수 */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #242424;
+    --bg-tertiary: #2d2d2d;
+    --text-primary: #e8e8e8;
+    --text-secondary: #b8b8b8;
+    --text-tertiary: #888888;
+    --border-color: #404040;
+    --shadow: rgba(0, 0, 0, 0.3);
+    --shadow-hover: rgba(0, 0, 0, 0.5);
+    --primary-light: #2d4a7c;
+}
+
+.dark-mode body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+.dark-mode .site-header {
+    background: #0f0f0f;
+    border-bottom-color: #333;
+}
+
+.dark-mode .wiki-article,
+.dark-mode .wiki-sidebar,
+.dark-mode .sidebar-box {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+.dark-mode .char-card-mini,
+.dark-mode .character-card {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+.dark-mode .char-card-mini:hover {
+    background: var(--bg-tertiary);
+    box-shadow: 0 6px 16px var(--shadow-hover);
+}
+
+.dark-mode .wiki-content h2,
+.dark-mode .wiki-content h3,
+.dark-mode .category-title {
+    color: var(--text-primary);
+    border-bottom-color: var(--border-color);
+}
+
+.dark-mode .infobox {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+.dark-mode .infobox-header {
+    background: linear-gradient(135deg, #2d4a7c, #1e3a5f);
+}
+
+.dark-mode .search-input {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.dark-mode .search-results {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+.dark-mode .search-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.dark-mode .community-post-item:hover,
+.dark-mode .post-row:hover {
+    background: var(--bg-tertiary);
+}
+
+.dark-mode .post-table-header,
+.dark-mode .cm-modal-body,
+.dark-mode .comment-item {
+    background: var(--bg-tertiary);
+}
+
+.dark-mode .cm-modal,
+.dark-mode .post-detail-inner {
+    background: var(--bg-secondary);
+}
+
+.dark-mode .wiki-tabs-wrapper,
+.dark-mode .wiki-tab {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+.dark-mode .wiki-tab.active {
+    background: var(--bg-secondary);
+}
+
+.dark-mode .notification-dropdown {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+.dark-mode .notification-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.dark-mode .contact-modal-content {
+    background: var(--bg-secondary);
+}
+
+.dark-mode .contact-modal-body textarea {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.dark-mode .favorites-section {
+    background: linear-gradient(135deg, #2d2416, #3a2f1a);
+    border-color: #665500;
+}
+
+.dark-mode .favorite-item {
+    background: var(--bg-tertiary);
+    border-color: #665500;
+}
+
+.dark-mode .video-info,
+.dark-mode .episode-list-wrap {
+    background: var(--bg-secondary);
+    border-color: var(--border-color);
+}
+
+.dark-mode .ep-item {
+    border-bottom-color: var(--border-color);
+}
+
+.dark-mode .ep-item:hover {
+    background: var(--bg-tertiary);
+}
+
+.dark-mode .comments-section h3 {
+    color: var(--text-primary);
+}
+
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.dark-mode code {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+.dark-mode pre {
+    background: var(--bg-tertiary);
+    border-color: var(--border-color);
+}
+
+/* 테마 토글 버튼 */
+.theme-toggle-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.3rem 0.5rem;
+    transition: transform 0.2s;
+    line-height: 1;
+    border-radius: 50%;
+}
+
+.theme-toggle-btn:hover {
+    transform: scale(1.15);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* 상단 바에 테마 토글 버튼 배치 */
+.top-nav .theme-toggle-btn {
+    margin-left: 0.5rem;
+}
+
+/* 다크모드에서 이미지 밝기 조정 (선택적) */
+.dark-mode img:not(.logo img) {
+    opacity: 0.9;
+}
+
+.dark-mode .char-card-mini img,
+.dark-mode .character-card img {
+    opacity: 0.95;
+}
+
+/* 링크 색상 조정 */
+.dark-mode a {
+    color: #6ba3ff;
+}
+
+.dark-mode a:hover {
+    color: #8db8ff;
+}
+
+/* 그림자 효과 조정 */
+.dark-mode .wiki-article,
+.dark-mode .sidebar-box,
+.dark-mode .char-card-mini {
+    box-shadow: 0 2px 8px var(--shadow);
+}

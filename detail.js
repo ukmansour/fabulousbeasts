@@ -2,6 +2,7 @@ import { db, auth, getDocSafe } from './firebase-config.js';
 import { doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
+import { getFavorites, toggleFavorite, isFavorite } from './favorites.js';
 
 // URL 처리
 const fullHash = decodeURIComponent(location.hash.substring(1));
@@ -141,7 +142,12 @@ async function loadDetail() {
                 
                 const nameToDisplay = data.name || charId;
                 const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
-                if (displayNameArea) displayNameArea.textContent = finalTitle;
+                if (displayNameArea) {
+                    displayNameArea.textContent = finalTitle;
+                    
+                    // 즐겨찾기 버튼 추가
+                    addFavoriteButtonToTitle(charId, nameToDisplay);
+                }
                 document.title = `${finalTitle} - 유수언`;
                 renderPage(data);
             } else {
@@ -485,3 +491,36 @@ window.onhashchange = () => {
     location.reload();
 };
 loadDetail();
+
+
+// 캐릭터 상세 페이지 제목에 즐겨찾기 버튼 추가
+function addFavoriteButtonToTitle(charId, charName) {
+    // 이미 버튼이 있으면 제거
+    const existing = document.querySelector('.detail-favorite-wrapper');
+    if (existing) existing.remove();
+    
+    const isFav = isFavorite(charId);
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = 'detail-favorite-wrapper';
+    wrapper.style.cssText = 'display: inline-flex; align-items: center; gap: 0.8rem; margin-left: 1rem;';
+    
+    const btn = document.createElement('button');
+    btn.className = `detail-favorite-btn ${isFav ? 'active' : ''}`;
+    btn.innerHTML = `<span style="font-size: 1.2rem;">${isFav ? '⭐' : '☆'}</span> ${isFav ? '즐겨찾기 해제' : '즐겨찾기 추가'}`;
+    btn.onclick = function() {
+        const nowFav = toggleFavorite(charId, charName);
+        btn.className = `detail-favorite-btn ${nowFav ? 'active' : ''}`;
+        btn.innerHTML = `<span style="font-size: 1.2rem;">${nowFav ? '⭐' : '☆'}</span> ${nowFav ? '즐겨찾기 해제' : '즐겨찾기 추가'}`;
+    };
+    
+    wrapper.appendChild(btn);
+    
+    const titleEl = document.getElementById('display-name');
+    if (titleEl && titleEl.parentElement) {
+        titleEl.parentElement.style.display = 'flex';
+        titleEl.parentElement.style.alignItems = 'center';
+        titleEl.parentElement.style.flexWrap = 'wrap';
+        titleEl.parentElement.appendChild(wrapper);
+    }
+}
