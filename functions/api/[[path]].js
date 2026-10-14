@@ -870,22 +870,6 @@ export async function onRequest(context) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
         }
     }
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            `).run();
-
-            const data = await request.json();
-            const { post_id, uid, author, content } = data;
-            if (!post_id || !uid || !author || !content) {
-                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
-            }
-
-            await env.DB.prepare("INSERT INTO community_comments (post_id, uid, author, content) VALUES (?, ?, ?, ?)").bind(post_id, uid, author, content).run();
-            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
-        } catch (err) {
-            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
-        }
-    }
 
     // 17. POST: 특정 게시글 댓글 삭제
     if (request.method === "POST" && apiPath === "/community/comments/delete") {
