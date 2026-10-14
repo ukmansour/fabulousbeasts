@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>통합 검색 - 유수언</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        .search-page-container {
+            max-width: 900px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .search-page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .search-page-header h1 {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+        }
+        
+        .search-input-large {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            font-size: 1.1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+        
+        .search-input-large:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(61, 91, 169, 0.1);
+        }
+        
+        .search-filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-chip {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .filter-chip:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .filter-chip.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .search-results-section {
+            margin-bottom: 2rem;
+        }
+        
+        .search-results-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .search-result-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .search-result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-hover);
+            border-color: var(--primary-color);
+        }
+        
+        .search-result-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.3rem;
+        }
+        
+        .search-result-snippet {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        .search-result-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .search-empty {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-tertiary);
+        }
+        
+        .search-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
+                <span>유수언</span>
+            </a>
+            <nav class="top-nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="index.html#characters" class="nav-link">전체 캐릭터</a>
+                <a href="watch.html" class="nav-link">애니 보기</a>
+                <a href="community.html" class="nav-link">커뮤니티</a>
+                <a href="relationships.html" class="nav-link">관계도</a>
+                
+                <button class="theme-toggle-btn" onclick="window.toggleThemeGlobal()" title="다크 모드로 전환">🌙</button>
+                
+                <div class="notification-bell" id="notification-bell" onclick="toggleNotificationDropdown()">
+                    <span class="notification-bell-icon">🔔</span>
+                    <span class="notification-badge" id="notification-badge">0</span>
+                    <div class="notification-dropdown" id="notification-dropdown">
+                        <div class="notification-header">
+                            <h3>알림</h3>
+                            <button class="notification-mark-all" onclick="markAllAsRead(); event.stopPropagation();">모두 읽음</button>
+                        </div>
+                        <div class="notification-list" id="notification-list">
+                            <div style="padding: 2rem; text-align: center; color: #999;">알림이 없습니다</div>
+                        </div>
+                        <div class="notification-footer">
+                            <button class="notification-contact-btn" onclick="openContactModal(); event.stopPropagation();">관리자 문의</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <span id="user-info" style="display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;white-space:nowrap;"></span>
+            </nav>
+        </div>
+    </header>
+
+    <div class="search-page-container">
+        <div class="search-page-header">
+            <h1>🔍 통합 검색</h1>
+            <input type="text" class="search-input-large" id="search-query" placeholder="캐릭터, 게시글, 문서를 검색하세요...">
+        </div>
+
+        <div class="search-filters">
+            <div class="filter-chip active" data-filter="all">전체</div>
+            <div class="filter-chip" data-filter="characters">캐릭터</div>
+            <div class="filter-chip" data-filter="posts">게시글</div>
+            <div class="filter-chip" data-filter="documents">문서</div>
+        </div>
+
+        <div id="search-results-container"></div>
+    </div>
+
+    <!-- 관리자 문의 모달 -->
+    <div class="contact-modal" id="contact-modal">
+        <div class="contact-modal-content">
+            <div class="contact-modal-header">
+                <h2>관리자 문의</h2>
+                <button class="contact-modal-close" onclick="closeContactModal()">×</button>
+            </div>
+            <div class="contact-modal-body">
+                <textarea id="contact-message" placeholder="관리자에게 전달할 메시지를 입력하세요..."></textarea>
+            </div>
+            <div class="contact-modal-footer">
+                <button class="contact-cancel-btn" onclick="closeContactModal()">취소</button>
+                <button class="contact-submit-btn" onclick="submitContact()">전송</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="notifications.js"></script>
+    <script type="module" src="theme.js"></script>
+    <script type="module" src="search-page.js"></script>
+</body>
+</html>
