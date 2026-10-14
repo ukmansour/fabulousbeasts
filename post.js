@@ -1,6 +1,7 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { isLiked, toggleLike } from './likes.js';
 
 let currentUser = null;
 let userRole = 'guest';
@@ -233,6 +234,15 @@ function renderPost() {
         </div>
         
         <div class="post-body">${bodyHTML}</div>
+        
+        <!-- 좋아요 섹션 -->
+        <div class="post-like-section">
+            <button class="post-like-btn ${isLiked(currentPostId) ? 'liked' : ''}" onclick="handlePostLike()">
+                <span class="like-icon">${isLiked(currentPostId) ? '❤️' : '🤍'}</span>
+                <span id="like-text">${isLiked(currentPostId) ? '추천 취소' : '추천하기'}</span>
+            </button>
+            <span class="post-like-count" id="like-count-display"></span>
+        </div>
         
         <div class="post-actions">
             <a href="community.html" class="btn-back">← 목록으로</a>
@@ -528,4 +538,42 @@ function formatDateFull(isoStr) {
     if (!isoStr) return '-';
     const d = new Date(isoStr.endsWith('Z') ? isoStr : isoStr + 'Z');
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+
+// 좋아요 처리
+window.handlePostLike = function() {
+    const liked = toggleLike(currentPostId);
+    
+    // 버튼 업데이트
+    const btn = document.querySelector('.post-like-btn');
+    const icon = document.querySelector('.like-icon');
+    const text = document.getElementById('like-text');
+    
+    if (btn && icon && text) {
+        btn.classList.toggle('liked', liked);
+        icon.textContent = liked ? '❤️' : '🤍';
+        text.textContent = liked ? '추천 취소' : '추천하기';
+    }
+    
+    // 토스트 메시지
+    const message = liked ? '❤️ 게시글을 추천했습니다' : '추천을 취소했습니다';
+    showToast(message);
+};
+
+function showToast(message) {
+    const existing = document.querySelector('.toast-message');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.className = 'toast-message';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 2500);
 }
