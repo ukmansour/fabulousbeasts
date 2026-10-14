@@ -25,7 +25,7 @@
                 
                 <!-- 알림 벨 -->
                 <div class="notification-bell" id="notification-bell" onclick="toggleNotificationDropdown()">
-                    <span class="notification-bell-icon">🔔</span>
+                    <span class="notification-bell-icon">알림</span>
                     <span class="notification-badge" id="notification-badge">0</span>
                     
                     <!-- 알림 드롭다운 -->
@@ -38,7 +38,7 @@
                             <div style="padding: 2rem; text-align: center; color: #999;">알림이 없습니다</div>
                         </div>
                         <div class="notification-footer">
-                            <button class="notification-contact-btn" onclick="openContactModal(); event.stopPropagation();">관리자 문의</button>
+                            <button class="notification-contact-btn" onclick="openContactModal(); event.stopPropagation();">관리자와 대화</button>
                         </div>
                     </div>
                 </div>
@@ -187,11 +187,11 @@
     <div class="contact-modal" id="contact-modal">
         <div class="contact-modal-content">
             <div class="contact-modal-header">
-                <h2>관리자 문의</h2>
+                <h2>관리자와 대화</h2>
                 <button class="contact-modal-close" onclick="closeContactModal()">×</button>
             </div>
             <div class="contact-modal-body">
-                <textarea id="contact-message" placeholder="관리자에게 전달할 메시지를 입력하세요..."></textarea>
+                <textarea id="contact-message" placeholder="hodu 님에게 전달할 메시지를 입력하세요..."></textarea>
             </div>
             <div class="contact-modal-footer">
                 <button class="contact-cancel-btn" onclick="closeContactModal()">취소</button>

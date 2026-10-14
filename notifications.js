@@ -222,20 +222,33 @@ window.submitContact = async function() {
     try {
         const token = await currentUser.getIdToken();
         
+        // hodu 사용자의 UID를 가져오기 위해 먼저 사용자 정보 조회
+        const usersResponse = await fetch('/api/users');
+        const users = await usersResponse.json();
+        const hoduUser = users.find(u => u.nickname === 'hodu');
+        
+        if (!hoduUser) {
+            alert('관리자(hodu) 계정을 찾을 수 없습니다.');
+            return;
+        }
+        
         const response = await fetch('/api/contact', {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({ 
+                message,
+                recipient_uid: hoduUser.uid  // hodu의 UID 전달
+            })
         });
         
         if (!response.ok) {
             throw new Error('문의 전송 실패');
         }
         
-        alert('관리자에게 문의가 전송되었습니다.');
+        alert('hodu 님에게 메시지가 전송되었습니다.');
         closeContactModal();
     } catch (error) {
         console.error('문의 전송 오류:', error);
