@@ -1,32 +1,4 @@
-﻿<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>캐릭터 정보 - 유수언</title>
-    <link rel="stylesheet" href="style.css?v=4">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
-</head>
-<body>
-    <header class="site-header">
-        <div class="header-content">
-            <a href="index.html" class="logo">
-                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
-                <span>유수언</span>
-            </a>
-            <div class="search-container">
-                <input type="text" class="search-input" id="global-search" placeholder="문서 검색...">
-                <div class="search-results" id="search-results"></div>
-            </div>
-            <nav class="top-nav">
-                <a href="index.html" class="nav-link">홈</a>
-                <a href="watch.html" class="nav-link">애니 보기</a>
-                <a href="relationships.html" class="nav-link">관계도</a>
-                
-                <!-- 테마 토글 버튼 -->
-                <button class="theme-toggle-btn" onclick="window.toggleThemeGlobal()" title="다크 모드로 전환">◐</button>
-                
-                <!-- 알림 벨 -->
+﻿<!-- 알림 벨 -->
                 <div class="notification-bell" id="notification-bell" onclick="toggleNotificationDropdown()">
                     <span class="notification-bell-icon">●</span>
                     <span class="notification-badge" id="notification-badge">0</span>
@@ -117,7 +89,6 @@
 
     <script type="module" src="notifications.js"></script>
     <script type="module" src="favorites.js"></script>
-    <script type="module" src="theme.js"></script>
     <script type="module" src="share.js"></script>
     <script type="module" src="detail.js?v=4"></script>
 </body>

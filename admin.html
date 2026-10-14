@@ -1,42 +1,4 @@
-﻿<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>관리자 설정 - 유수언</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
-    <style>
-        .admin-container { max-width: 1000px; margin: 2rem auto; padding: 0 1rem; }
-        .admin-tabs { display: flex; gap: 4px; margin-bottom: 0; border-bottom: 2px solid #555; }
-        .admin-tab { padding: 0.8rem 1.8rem; cursor: pointer; font-weight: 700; border: 1px solid #ccc; border-bottom: none; background: #e1e1e1; color: #333; font-size: 0.9rem; transition: background 0.1s; }
-        .admin-tab.active { background: white; color: #000; border: 2px solid #555; border-bottom: none; margin-bottom: -2px; z-index: 10; }
-        .admin-tab:hover:not(.active) { background: #d1d1d1; }
-        .tab-panel { border: 2px solid #555; border-top: none; background: white; padding: 2rem; }
-        .tab-panel.active { display: block; }
-        .admin-btn { padding: 0.6rem 1.2rem; background: #444; color: white; border: 1px solid #222; border-radius: 2px; font-weight: 700; cursor: pointer; font-size: 0.85rem; }
-        .admin-btn:hover { background: #333; }
-        .loading { text-align: center; padding: 3rem; color: #666; font-family: monospace; }
-    </style>
-</head>
-<body>
-    <header class="site-header">
-        <div class="header-content">
-            <a href="index.html" class="logo">
-                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
-                <span>유수언</span>
-            </a>
-            <nav class="top-nav">
-                <a href="index.html" class="nav-link">홈</a>
-                <a href="relationships.html" class="nav-link">관계도</a>
-                
-                <!-- 테마 토글 버튼 -->
-                <button class="theme-toggle-btn" onclick="window.toggleThemeGlobal()" title="다크 모드로 전환">◐</button>
-                
-                <!-- 알림 벨 -->
+﻿<!-- 알림 벨 -->
                 <div class="notification-bell" id="notification-bell" onclick="toggleNotificationDropdown()">
                     <span class="notification-bell-icon">●</span>
                     <span class="notification-badge" id="notification-badge">0</span>
@@ -131,7 +93,6 @@
     </div>
 
     <script type="module" src="notifications.js"></script>
-    <script type="module" src="theme.js"></script>
     <script type="module" src="admin.js?v=5"></script>
 </body>
 </html>
