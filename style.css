@@ -1628,3 +1628,100 @@ body {
     font-weight: 700;
     color: var(--text-secondary);
 }
+
+
+/* ========== 게시글 태그 시스템 ========== */
+.post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+}
+
+.post-tag {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.post-tag:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.post-tag.tag-discussion {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.post-tag.tag-question {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.post-tag.tag-fanart {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.post-tag.tag-notice {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.post-tag.tag-episode {
+    background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+}
+
+/* 태그 필터 영역 */
+.tags-filter-bar {
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tags-filter-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+}
+
+.tag-filter-chip {
+    padding: 0.4rem 0.8rem;
+    background: white;
+    border: 2px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.75rem;
+    font-weight: 700;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tag-filter-chip:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.tag-filter-chip.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+.dark-mode .tag-filter-chip {
+    background: var(--bg-tertiary);
+}
+
+.dark-mode .tag-filter-chip.active {
+    background: var(--primary-color);
+}
