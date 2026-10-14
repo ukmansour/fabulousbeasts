@@ -999,23 +999,6 @@ export async function onRequest(context) {
             }
             
             await env.DB.prepare("INSERT INTO contact_messages (uid, author, message) VALUES (?, ?, ?)").bind(uid, author, message).run();
-            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
-        } catch (err) {
-            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
-        }
-    }
-
-    return new Response(JSON.stringify({ error: `Not Found: ${path}` }), { status: 404, headers: corsHeaders });
-}
-            `).run();
-            
-            const data = await request.json();
-            const { uid, author, message } = data;
-            if (!uid || !author || !message) {
-                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
-            }
-            
-            await env.DB.prepare("INSERT INTO contact_messages (uid, author, message) VALUES (?, ?, ?)").bind(uid, author, message).run();
             
             // 관리자들에게 알림 생성
             const admins = await env.DB.prepare("SELECT uid FROM users WHERE role = 'admin'").all();
@@ -1031,3 +1014,6 @@ export async function onRequest(context) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
         }
     }
+
+    return new Response(JSON.stringify({ error: "Not Found: " + path }), { status: 404, headers: corsHeaders });
+}
