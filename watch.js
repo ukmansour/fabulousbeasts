@@ -159,51 +159,37 @@ async function loadComments(episodeNum) {
     try {
         const res = await fetch(`/api/comments?episode=${episodeNum}`);
         if (res.ok) {
-            const comments = await res.json();
-            document.getElementById('comments-count').textContent = comments.length;
+            const allComments = await res.json();
+            
+            // 부모 댓글만 카운트
+            const parentComments = allComments.filter(c => !c.parent_id);
+            document.getElementById('comments-count').textContent = parentComments.length;
+            
             const commentsList = document.getElementById('comments-list');
             
-            if (comments.length === 0) {
+            if (allComments.length === 0) {
                 commentsList.innerHTML = `<div style="padding: 2rem; text-align: center; color: #888; font-size: 0.95rem; background: #fafafa; border-radius: 8px; border: 1px dashed #eee;">첫 번째 댓글을 남겨보세요!</div>`;
                 return;
             }
 
-            commentsList.innerHTML = comments.map(c => {
-                const date = new Date(c.created_at);
-                const localDateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+            // 댓글을 계층 구조로 렌더링
+            let html = '';
+            allComments.forEach(c => {
+                if (c.parent_id) return; // 대댓글은 건너뜀 (부모 댓글에서 렌더링)
                 
-                const canDelete = currentUser && (c.uid === currentUser.uid || userRole === 'admin');
-                
-                // 디버깅: 아바타 확인
-                console.log('댓글 데이터:', c.author, 'avatar:', c.avatar);
-                
-                // 아바타 표시
-                let avatarHTML;
-                if (c.avatar) {
-                    avatarHTML = `<img src="${c.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`;
-                } else {
-                    const initial = (c.author || '유').substring(0, 1).toUpperCase();
-                    avatarHTML = `${initial}`;
-                }
-                
-                return `
-                    <div class="comment-item" style="padding: 1.2rem; border: 1px solid #f1f1f1; border-radius: 8px; background: white; display: flex; gap: 1rem; position: relative;">
-                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-light); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.95rem; flex-shrink: 0; border: 1.5px solid var(--border-color); overflow: hidden;">
-                            ${avatarHTML}
-                        </div>
-                        <div style="flex: 1;">
-                            <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem;">
-                                <strong style="font-size: 0.9rem; color: #212529;">${c.author}</strong>
-                                <span style="font-size: 0.75rem; color: #868e96;">${localDateStr}</span>
-                            </div>
-                            <p style="margin: 0; font-size: 0.9rem; color: #495057; line-height: 1.6; white-space: pre-wrap;">${c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
-                        </div>
-                        ${canDelete ? `
-                            <button class="delete-comment-btn" data-id="${c.id}" style="align-self: flex-start; background: none; border: none; color: #e03131; cursor: pointer; font-size: 0.8rem; font-weight: 800; padding: 0.2rem 0.5rem; border-radius: 4px; transition: background 0.2s;">삭제</button>
-                        ` : ''}
-                    </div>
-                `;
-            }).join('');
+                html += renderComment(c, allComments);
+            });
+            
+            commentsList.innerHTML = html;
+
+            // 답글 버튼 이벤트 바인딩
+            commentsList.querySelectorAll('.reply-comment-btn').forEach(btn => {
+                btn.onclick = () => {
+                    const commentId = parseInt(btn.getAttribute('data-id'), 10);
+                    const authorName = btn.getAttribute('data-author');
+                    showReplyForm(commentId, authorName);
+                };
+            });
 
             // 삭제 버튼 이벤트 바인딩
             commentsList.querySelectorAll('.delete-comment-btn').forEach(btn => {
@@ -232,6 +218,86 @@ async function loadComments(episodeNum) {
         }
     } catch (e) {
         console.error("댓글 조회 실패:", e);
+    }
+}
+
+function renderComment(c, allComments, isReply = false) {
+    const date = new Date(c.created_at);
+    const localDateStr = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    
+    const canDelete = currentUser && (c.uid === currentUser.uid || userRole === 'admin');
+    
+    // 아바타 표시
+    let avatarHTML;
+    if (c.avatar) {
+        avatarHTML = `<img src="${c.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`;
+    } else {
+        const initial = (c.author || '유').substring(0, 1).toUpperCase();
+        avatarHTML = `${initial}`;
+    }
+    
+    const marginLeft = isReply ? 'margin-left: 3rem;' : '';
+    const avatarSize = isReply ? '32px' : '40px';
+    
+    let html = `
+        <div class="comment-item" style="padding: 1.2rem; border: 1px solid #f1f1f1; border-radius: 8px; background: white; display: flex; gap: 1rem; position: relative; ${marginLeft} margin-bottom: 0.8rem;">
+            <div style="width: ${avatarSize}; height: ${avatarSize}; border-radius: 50%; background: var(--primary-light); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.85rem; flex-shrink: 0; border: 1.5px solid var(--border-color); overflow: hidden;">
+                ${avatarHTML}
+            </div>
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.4rem;">
+                    <strong style="font-size: 0.9rem; color: #212529;">${c.author}</strong>
+                    <span style="font-size: 0.75rem; color: #868e96;">${localDateStr}</span>
+                </div>
+                <p style="margin: 0 0 0.5rem 0; font-size: 0.9rem; color: #495057; line-height: 1.6; white-space: pre-wrap;">${c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+                <div style="display: flex; gap: 0.5rem;">
+                    ${currentUser && !isReply ? `<button class="reply-comment-btn" data-id="${c.id}" data-author="${c.author}" style="background: none; border: none; color: #868e96; cursor: pointer; font-size: 0.8rem; font-weight: 700; padding: 0; transition: color 0.2s;">답글</button>` : ''}
+                    ${canDelete ? `<button class="delete-comment-btn" data-id="${c.id}" style="background: none; border: none; color: #e03131; cursor: pointer; font-size: 0.8rem; font-weight: 800; padding: 0; transition: color 0.2s;">삭제</button>` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 대댓글 렌더링
+    const replies = allComments.filter(reply => reply.parent_id === c.id);
+    replies.forEach(reply => {
+        html += renderComment(reply, allComments, true);
+    });
+    
+    return html;
+}
+
+let replyToCommentId = null;
+
+function showReplyForm(commentId, authorName) {
+    replyToCommentId = commentId;
+    const input = document.getElementById('comment-input');
+    if (input) {
+        input.placeholder = `@${authorName}에게 답글 작성...`;
+        input.focus();
+        
+        // 답글 취소 버튼 추가
+        const submitBtn = document.getElementById('comment-submit-btn');
+        if (submitBtn && !document.getElementById('cancel-reply-btn')) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.id = 'cancel-reply-btn';
+            cancelBtn.textContent = '답글 취소';
+            cancelBtn.style.cssText = 'padding: 0.6rem 1.2rem; background: #868e96; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 0.85rem;';
+            cancelBtn.onclick = cancelReply;
+            submitBtn.parentElement.insertBefore(cancelBtn, submitBtn);
+        }
+    }
+}
+
+function cancelReply() {
+    replyToCommentId = null;
+    const input = document.getElementById('comment-input');
+    if (input) {
+        input.placeholder = '이 회차에 대한 따뜻한 댓글을 남겨보세요...';
+    }
+    const cancelBtn = document.getElementById('cancel-reply-btn');
+    if (cancelBtn) {
+        cancelBtn.remove();
     }
 }
 
@@ -279,7 +345,8 @@ function updateCommentForm() {
             episode_num: currentEpisodeNum,
             content: content,
             author: currentUser.displayName || currentUser.email?.split('@')[0] || '익명 유저',
-            uid: currentUser.uid
+            uid: currentUser.uid,
+            parent_id: replyToCommentId // 답글인 경우 부모 댓글 ID
         };
 
         console.log('전송 데이터:', payload);
@@ -295,6 +362,10 @@ function updateCommentForm() {
 
             if (res.ok) {
                 textInput.value = '';
+                replyToCommentId = null; // 답글 상태 초기화
+                const cancelBtn = document.getElementById('cancel-reply-btn');
+                if (cancelBtn) cancelBtn.remove();
+                textInput.placeholder = '이 회차에 대한 따뜻한 댓글을 남겨보세요...';
                 loadComments(currentEpisodeNum);
             } else {
                 const err = await res.json();

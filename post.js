@@ -283,44 +283,112 @@ async function loadComments() {
     try {
         const res = await fetch(`/api/community/comments?post_id=${currentPostId}`);
         if (!res.ok) throw new Error('fetch failed');
-        const comments = await res.json();
+        const allComments = await res.json();
 
-        if (countEl) countEl.textContent = comments.length;
+        // 부모 댓글만 카운트
+        const parentComments = allComments.filter(c => !c.parent_id);
+        if (countEl) countEl.textContent = parentComments.length;
 
-        if (comments.length === 0) {
+        if (allComments.length === 0) {
             list.innerHTML = `<div class="comment-empty">아직 댓글이 없습니다. 첫 댓글을 남겨보세요!</div>`;
             return;
         }
 
-        list.innerHTML = comments.map(c => {
-            const canDel = currentUser && (currentUser.uid === c.uid || userRole === 'admin');
-            
-            // 아바타 표시
-            let avatarHTML;
-            if (c.avatar) {
-                avatarHTML = `<img src="${c.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`;
-            } else {
-                const initial = (c.author || '?')[0].toUpperCase();
-                avatarHTML = `<span style="font-size: 1.2rem;">${initial}</span>`;
-            }
-            
-            return `
-                <div class="comment-item">
-                    <div class="comment-avatar">${avatarHTML}</div>
-                    <div class="comment-body">
-                        <div class="comment-header">
-                            <span class="comment-author">${escHtml(c.author)}</span>
-                            <span class="comment-time">${formatDateFull(c.created_at)}</span>
-                            ${canDel ? `<button class="btn-comment-delete" onclick="deleteComment(${c.id})">삭제</button>` : ''}
-                        </div>
-                        <div class="comment-content">${escHtml(c.content)}</div>
-                    </div>
-                </div>`;
-        }).join('');
+        // 댓글을 계층 구조로 렌더링
+        let html = '';
+        allComments.forEach(c => {
+            if (c.parent_id) return; // 대댓글은 건너뜀
+            html += renderComment(c, allComments);
+        });
+        
+        list.innerHTML = html;
+        
+        // 답글 버튼 이벤트 바인딩
+        list.querySelectorAll('.reply-comment-btn').forEach(btn => {
+            btn.onclick = () => {
+                const commentId = parseInt(btn.getAttribute('data-id'), 10);
+                const authorName = btn.getAttribute('data-author');
+                showReplyForm(commentId, authorName);
+            };
+        });
 
     } catch (e) {
         console.error(e);
         list.innerHTML = `<div class="comment-empty">댓글을 불러오지 못했습니다.</div>`;
+    }
+}
+
+function renderComment(c, allComments, isReply = false) {
+    const canDel = currentUser && (currentUser.uid === c.uid || userRole === 'admin');
+    
+    // 아바타 표시
+    let avatarHTML;
+    if (c.avatar) {
+        avatarHTML = `<img src="${c.avatar}" style="width: 100%; height: 100%; object-fit: cover;">`;
+    } else {
+        const initial = (c.author || '?')[0].toUpperCase();
+        avatarHTML = `<span style="font-size: 1.2rem;">${initial}</span>`;
+    }
+    
+    const marginLeft = isReply ? 'margin-left: 3rem;' : '';
+    const avatarSize = isReply ? '32px' : '40px';
+    
+    let html = `
+        <div class="comment-item" style="${marginLeft}">
+            <div class="comment-avatar" style="width: ${avatarSize}; height: ${avatarSize};">${avatarHTML}</div>
+            <div class="comment-body">
+                <div class="comment-header">
+                    <span class="comment-author">${escHtml(c.author)}</span>
+                    <span class="comment-time">${formatDateFull(c.created_at)}</span>
+                    ${canDel ? `<button class="btn-comment-delete" onclick="deleteComment(${c.id})">삭제</button>` : ''}
+                </div>
+                <div class="comment-content">${escHtml(c.content)}</div>
+                <div class="comment-actions">
+                    ${currentUser && !isReply ? `<button class="reply-comment-btn" data-id="${c.id}" data-author="${c.author}">답글</button>` : ''}
+                </div>
+            </div>
+        </div>`;
+    
+    // 대댓글 렌더링
+    const replies = allComments.filter(reply => reply.parent_id === c.id);
+    replies.forEach(reply => {
+        html += renderComment(reply, allComments, true);
+    });
+    
+    return html;
+}
+
+let replyToCommentId = null;
+
+function showReplyForm(commentId, authorName) {
+    replyToCommentId = commentId;
+    const input = document.getElementById('comment-input');
+    if (input) {
+        input.placeholder = `@${authorName}에게 답글 작성...`;
+        input.focus();
+        
+        // 답글 취소 버튼 추가
+        const submitBtn = document.querySelector('.btn-comment-submit');
+        if (submitBtn && !document.getElementById('cancel-reply-btn')) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.id = 'cancel-reply-btn';
+            cancelBtn.className = 'btn-cancel-reply';
+            cancelBtn.textContent = '답글 취소';
+            cancelBtn.onclick = cancelReply;
+            submitBtn.parentElement.insertBefore(cancelBtn, submitBtn);
+        }
+    }
+}
+
+function cancelReply() {
+    replyToCommentId = null;
+    const input = document.getElementById('comment-input');
+    if (input) {
+        input.placeholder = '따뜻한 댓글을 남겨보세요...';
+    }
+    const cancelBtn = document.getElementById('cancel-reply-btn');
+    if (cancelBtn) {
+        cancelBtn.remove();
     }
 }
 
@@ -345,7 +413,8 @@ window.submitComment = async function() {
         post_id: currentPostId,
         uid: currentUser.uid,
         author: currentUser.displayName || currentUser.email?.split('@')[0] || '익명 유저',
-        content: content
+        content: content,
+        parent_id: replyToCommentId // 답글인 경우 부모 댓글 ID
     };
 
     try {
@@ -357,6 +426,10 @@ window.submitComment = async function() {
 
         if (res.ok) {
             input.value = '';
+            replyToCommentId = null; // 답글 상태 초기화
+            const cancelBtn = document.getElementById('cancel-reply-btn');
+            if (cancelBtn) cancelBtn.remove();
+            input.placeholder = '따뜻한 댓글을 남겨보세요...';
             await loadComments();
         } else {
             const err = await res.json();

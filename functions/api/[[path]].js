@@ -374,9 +374,17 @@ export async function onRequest(context) {
                     uid TEXT NOT NULL,
                     author TEXT NOT NULL,
                     content TEXT NOT NULL,
+                    parent_id INTEGER,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `).run();
+            
+            // parent_id 컬럼 추가 (없는 경우에만)
+            try {
+                await env.DB.prepare(`ALTER TABLE video_comments ADD COLUMN parent_id INTEGER`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
 
             // 댓글과 사용자 아바타를 JOIN하여 조회
             const { results } = await env.DB.prepare(`
@@ -385,19 +393,17 @@ export async function onRequest(context) {
                     c.episode_num, 
                     c.uid, 
                     c.author, 
-                    c.content, 
+                    c.content,
+                    c.parent_id,
                     strftime('%Y-%m-%dT%H:%M:%SZ', c.created_at) as created_at,
                     u.avatar
                 FROM video_comments c
                 LEFT JOIN users u ON c.uid = u.uid
                 WHERE c.episode_num = ? 
-                ORDER BY c.created_at DESC
+                ORDER BY COALESCE(c.parent_id, c.id), c.created_at ASC
             `).bind(episode).all();
             
             console.log('[댓글 조회]', episode, '댓글 수:', results.length);
-            results.forEach(r => {
-                console.log(`  - ${r.author} (uid: ${r.uid}), avatar: ${r.avatar}`);
-            });
             
             return new Response(JSON.stringify(results), { headers: corsHeaders });
         } catch (err) {
@@ -415,17 +421,25 @@ export async function onRequest(context) {
                     uid TEXT NOT NULL,
                     author TEXT NOT NULL,
                     content TEXT NOT NULL,
+                    parent_id INTEGER,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `).run();
+            
+            // parent_id 컬럼 추가 (없는 경우에만)
+            try {
+                await env.DB.prepare(`ALTER TABLE video_comments ADD COLUMN parent_id INTEGER`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
 
             const data = await request.json();
-            const { episode_num, content, author, uid } = data;
+            const { episode_num, content, author, uid, parent_id } = data;
             if (!episode_num || !content || !author || !uid) {
                 return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
             }
 
-            await env.DB.prepare("INSERT INTO video_comments (episode_num, uid, author, content) VALUES (?, ?, ?, ?)").bind(episode_num, uid, author, content).run();
+            await env.DB.prepare("INSERT INTO video_comments (episode_num, uid, author, content, parent_id) VALUES (?, ?, ?, ?, ?)").bind(episode_num, uid, author, content, parent_id || null).run();
             return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
@@ -708,9 +722,17 @@ export async function onRequest(context) {
                     uid TEXT NOT NULL,
                     author TEXT NOT NULL,
                     content TEXT NOT NULL,
+                    parent_id INTEGER,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `).run();
+            
+            // parent_id 컬럼 추가 (없는 경우에만)
+            try {
+                await env.DB.prepare(`ALTER TABLE community_comments ADD COLUMN parent_id INTEGER`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
 
             // 댓글과 사용자 아바타를 JOIN하여 조회
             const { results } = await env.DB.prepare(`
@@ -719,13 +741,14 @@ export async function onRequest(context) {
                     c.post_id, 
                     c.uid, 
                     c.author, 
-                    c.content, 
+                    c.content,
+                    c.parent_id,
                     strftime('%Y-%m-%dT%H:%M:%SZ', c.created_at) as created_at,
                     u.avatar
                 FROM community_comments c
                 LEFT JOIN users u ON c.uid = u.uid
                 WHERE c.post_id = ? 
-                ORDER BY c.created_at ASC
+                ORDER BY COALESCE(c.parent_id, c.id), c.created_at ASC
             `).bind(postId).all();
             
             return new Response(JSON.stringify(results), { headers: corsHeaders });
@@ -744,6 +767,30 @@ export async function onRequest(context) {
                     uid TEXT NOT NULL,
                     author TEXT NOT NULL,
                     content TEXT NOT NULL,
+                    parent_id INTEGER,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+            
+            // parent_id 컬럼 추가 (없는 경우에만)
+            try {
+                await env.DB.prepare(`ALTER TABLE community_comments ADD COLUMN parent_id INTEGER`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
+
+            const data = await request.json();
+            const { post_id, uid, author, content, parent_id } = data;
+            if (!post_id || !uid || !author || !content) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+
+            await env.DB.prepare("INSERT INTO community_comments (post_id, uid, author, content, parent_id) VALUES (?, ?, ?, ?, ?)").bind(post_id, uid, author, content, parent_id || null).run();
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
             `).run();
