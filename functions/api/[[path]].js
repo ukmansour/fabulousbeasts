@@ -896,9 +896,6 @@ export async function onRequest(context) {
         }
     }
 
-    return new Response(JSON.stringify({ error: `Not Found: ${path}` }), { status: 404, headers: corsHeaders });
-}
-
     // 18. GET: 알림 목록 조회
     if (request.method === "GET" && apiPath === "/notifications") {
         const uid = url.searchParams.get("uid");
@@ -993,6 +990,23 @@ export async function onRequest(context) {
                     message TEXT NOT NULL,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
+            `).run();
+            
+            const data = await request.json();
+            const { uid, author, message } = data;
+            if (!uid || !author || !message) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+            
+            await env.DB.prepare("INSERT INTO contact_messages (uid, author, message) VALUES (?, ?, ?)").bind(uid, author, message).run();
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    return new Response(JSON.stringify({ error: `Not Found: ${path}` }), { status: 404, headers: corsHeaders });
+}
             `).run();
             
             const data = await request.json();
