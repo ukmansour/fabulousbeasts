@@ -496,38 +496,6 @@ loadDetail();
 
 // 캐릭터 상세 페이지 제목에 즐겨찾기 버튼 추가
 function addFavoriteButtonToTitle(charId, charName) {
-    // 이미 버튼이 있으면 제거
-    const existing = document.querySelector('.detail-favorite-wrapper');
-    if (existing) existing.remove();
-    
-    const isFav = isFavorite(charId);
-    
-    const wrapper = document.createElement('div');
-    wrapper.className = 'detail-favorite-wrapper';
-    wrapper.style.cssText = 'display: inline-flex; align-items: center; gap: 0.8rem; margin-left: 1rem;';
-    
-    const btn = document.createElement('button');
-    btn.className = `detail-favorite-btn ${isFav ? 'active' : ''}`;
-    btn.innerHTML = `<span style="font-size: 1.2rem;">${isFav ? '★' : '☆'}</span> ${isFav ? '즐겨찾기 해제' : '즐겨찾기 추가'}`;
-    btn.onclick = function() {
-        const nowFav = toggleFavorite(charId, charName);
-        btn.className = `detail-favorite-btn ${nowFav ? 'active' : ''}`;
-        btn.innerHTML = `<span style="font-size: 1.2rem;">${nowFav ? '★' : '☆'}</span> ${nowFav ? '즐겨찾기 해제' : '즐겨찾기 추가'}`;
-    };
-    
-    wrapper.appendChild(btn);
-    
-    // 공유 버튼 추가
-    const shareDiv = document.createElement('div');
-    shareDiv.style.cssText = 'display: inline-flex; align-items: center; gap: 0.5rem;';
-    shareDiv.innerHTML = createShareButtons(window.location.href, charName);
-    wrapper.appendChild(shareDiv);
-    
-    const titleEl = document.getElementById('display-name');
-    if (titleEl && titleEl.parentElement) {
-        titleEl.parentElement.style.display = 'flex';
-        titleEl.parentElement.style.alignItems = 'center';
-        titleEl.parentElement.style.flexWrap = 'wrap';
-        titleEl.parentElement.appendChild(wrapper);
-    }
+    // 즐겨찾기 기능 비활성화됨
+    return;
 }

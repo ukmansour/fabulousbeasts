@@ -624,31 +624,6 @@ window.addEventListener('favoritesChanged', () => {
 
 // 캐릭터 카드에 즐겨찾기 버튼 추가
 window.addFavoriteButtonsToCards = function() {
-    const cards = document.querySelectorAll('.char-card-mini');
-    cards.forEach(card => {
-        const href = card.getAttribute('href');
-        if (!href) return;
-        
-        const charId = href.replace('detail.html#', '');
-        const char = mergedCharacters.find(c => c.id === charId);
-        if (!char) return;
-        
-        // 이미 버튼이 있으면 스킵
-        if (card.querySelector('.favorite-btn')) return;
-        
-        const isFav = getFavorites().some(f => f.id === charId);
-        
-        const btn = document.createElement('button');
-        btn.className = `favorite-btn character-card ${isFav ? 'active' : ''}`;
-        btn.innerHTML = isFav ? '★' : '☆';
-        btn.title = isFav ? '즐겨찾기 해제' : '즐겨찾기 추가';
-        btn.onclick = function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            window.handleFavoriteClick(charId, char.name || charId);
-        };
-        
-        card.style.position = 'relative';
-        card.appendChild(btn);
-    });
+    // 즐겨찾기 기능 비활성화됨
+    return;
 };
