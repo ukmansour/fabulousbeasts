@@ -27,6 +27,35 @@ export async function onRequest(context) {
         return new Response(null, { headers: corsHeaders });
     }
 
+    // === 자막 다운로드 프록시 ===
+    if (request.method === "GET" && apiPath.startsWith("/subtitle/")) {
+        try {
+            const subtitlePath = decodeURIComponent(apiPath.replace("/subtitle/", ""));
+            const githubUrl = `https://raw.githubusercontent.com/ukmansour/fabulousbeasts/main/${subtitlePath}`;
+            
+            console.log('[Subtitle Download]', subtitlePath);
+            
+            const response = await fetch(githubUrl);
+            if (!response.ok) {
+                return new Response("Subtitle not found", { status: 404 });
+            }
+            
+            const content = await response.text();
+            const fileName = subtitlePath.split('/').pop();
+            
+            return new Response(content, {
+                headers: {
+                    "Content-Type": "text/plain; charset=utf-8",
+                    "Content-Disposition": `attachment; filename="${encodeURIComponent(fileName)}"`,
+                    "Access-Control-Allow-Origin": "*"
+                }
+            });
+        } catch (err) {
+            console.error('Subtitle download error:', err);
+            return new Response("Error downloading subtitle: " + err.message, { status: 500 });
+        }
+    }
+
     // === R2 이미지 업로드 ===
     if (request.method === "POST" && apiPath === "/upload") {
         try {

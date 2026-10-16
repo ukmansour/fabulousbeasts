@@ -36,7 +36,7 @@ async function fetchSubtitles() {
                 return {
                     name: fileName,
                     path: item.path,
-                    url: `https://github.com/${GITHUB_OWNER}/${GITHUB_REPO}/raw/${GITHUB_BRANCH}/${item.path}`,
+                    url: `/api/subtitle/${item.path}`,
                     episode: episodeNum,
                     season: season
                 };
