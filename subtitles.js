@@ -95,7 +95,7 @@ function renderSubtitles(files) {
                     ${seasonFiles.map(file => `
                         <div class="subtitle-item">
                             <span class="subtitle-name">${file.name}</span>
-                            <a href="${file.url}" download="${file.name}" class="download-btn">다운로드</a>
+                            <button onclick="downloadFile('${file.url}', '${file.name}')" class="download-btn">다운로드</button>
                         </div>
                     `).join('')}
                 </div>
@@ -105,6 +105,29 @@ function renderSubtitles(files) {
     
     container.innerHTML = html;
 }
+
+// 파일 다운로드 함수
+async function downloadFile(url, fileName) {
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+        console.error('다운로드 실패:', error);
+        alert('다운로드 실패: ' + error.message);
+    }
+}
+
+// 전역으로 노출
+window.downloadFile = downloadFile;
 
 // 초기화
 document.addEventListener('DOMContentLoaded', () => {
