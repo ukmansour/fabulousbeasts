@@ -15,33 +15,42 @@ async function fetchSubtitles() {
             throw new Error('GitHub API 응답 오류');
         }
         
-        // .ass 파일만 필터링하고 "유수언 시즌n화.ass" 패턴인 것만 선택
-        const subtitleFiles = data.tree
-            .filter(item => item.path.endsWith('.ass') && /유수언\s*시즌\s*\d+화\.ass/i.test(item.path))
+        // .ass 파일만 필터링
+        const allAssFiles = data.tree.filter(item => item.path.endsWith('.ass'));
+        console.log('모든 .ass 파일:', allAssFiles.map(f => f.path));
+        
+        // "유수언" 또는 "시즌"이 포함되고 숫자가 있는 .ass 파일 찾기
+        const subtitleFiles = allAssFiles
+            .filter(item => {
+                const fileName = item.path.split('/').pop();
+                return /유수언|시즌/i.test(fileName) && /\d+/.test(fileName);
+            })
             .map(item => {
                 const fileName = item.path.split('/').pop();
-                // "유수언 시즌3화.ass" 형식에서 숫자 추출
-                const match = fileName.match(/시즌\s*(\d+)화/i);
-                const episodeNum = match ? parseInt(match[1]) : 0;
+                // 파일명에서 숫자 추출 (여러 패턴 지원)
+                const match = fileName.match(/(\d+)화|시즌\s*(\d+)|제\s*(\d+)|ep\s*(\d+)/i);
+                const episodeNum = match ? parseInt(match[1] || match[2] || match[3] || match[4]) : 0;
                 const season = Math.ceil(episodeNum / 13); // 13화마다 시즌 구분
                 
                 return {
                     name: fileName,
                     path: item.path,
-                    url: `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${item.path}`,
+                    url: `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}/${encodeURIComponent(item.path)}`,
                     episode: episodeNum,
                     season: season
                 };
             })
             .sort((a, b) => a.episode - b.episode); // 오름차순 정렬
         
+        console.log('필터링된 자막 파일:', subtitleFiles);
         renderSubtitles(subtitleFiles);
     } catch (error) {
         console.error('자막 파일 로드 실패:', error);
         document.getElementById('subtitles-list').innerHTML = `
             <div style="text-align: center; padding: 4rem; color: #e74c3c;">
                 <h3 style="font-size: 1.3rem; margin-bottom: 1rem;">자막 파일을 불러올 수 없습니다</h3>
-                <p style="color: #666;">잠시 후 다시 시도해주세요.</p>
+                <p style="color: #666;">오류: ${error.message}</p>
+                <p style="color: #999; font-size: 0.9rem; margin-top: 1rem;">브라우저 콘솔을 확인해주세요.</p>
             </div>
         `;
     }
