@@ -130,26 +130,6 @@
                 <a href="watch.html" class="nav-link">애니 보기</a>
                 <a href="community.html" class="nav-link">커뮤니티</a>
                 
-                <!-- 알림 벨 -->
-                <div class="notification-bell" id="notification-bell" onclick="toggleNotificationDropdown()">
-                    <span class="notification-bell-icon">알림</span>
-                    <span class="notification-badge" id="notification-badge">0</span>
-                    
-                    <!-- 알림 드롭다운 -->
-                    <div class="notification-dropdown" id="notification-dropdown">
-                        <div class="notification-header">
-                            <h3>알림</h3>
-                            <button class="notification-mark-all" onclick="markAllAsRead(); event.stopPropagation();">모두 읽음</button>
-                        </div>
-                        <div class="notification-list" id="notification-list">
-                            <div style="padding: 2rem; text-align: center; color: #999;">알림이 없습니다</div>
-                        </div>
-                        <div class="notification-footer">
-                            <button class="notification-contact-btn" onclick="openContactModal(); event.stopPropagation();">관리자와 대화</button>
-                        </div>
-                    </div>
-                </div>
-                
                 <span id="user-info" style="display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;white-space:nowrap;"></span>
             </nav>
         </div>
@@ -161,24 +141,6 @@
         </div>
     </div>
 
-    <!-- 관리자 문의 모달 -->
-    <div class="contact-modal" id="contact-modal">
-        <div class="contact-modal-content">
-            <div class="contact-modal-header">
-                <h2>관리자와 대화</h2>
-                <button class="contact-modal-close" onclick="closeContactModal()">×</button>
-            </div>
-            <div class="contact-modal-body">
-                <textarea id="contact-message" placeholder="hodu 님에게 전달할 메시지를 입력하세요..."></textarea>
-            </div>
-            <div class="contact-modal-footer">
-                <button class="contact-cancel-btn" onclick="closeContactModal()">취소</button>
-                <button class="contact-submit-btn" onclick="submitContact()">전송</button>
-            </div>
-        </div>
-    </div>
-
-    <script type="module" src="notifications.js"></script>
     <script type="module" src="subtitles.js"></script>
 </body>
 </html>
