@@ -22,15 +22,16 @@ async function fetchSubtitles() {
         // "유수언" 또는 "시즌"이 포함되고 숫자가 있는 .ass 파일 찾기
         const subtitleFiles = allAssFiles
             .filter(item => {
-                const fileName = item.path.split('/').pop();
-                return /유수언|시즌/i.test(fileName) && /\d+/.test(fileName);
+                const path = item.path;
+                // "유수언" 포함하고 "화.ass"로 끝나는 파일
+                return /유수언/i.test(path) && /\d+화\.ass$/i.test(path);
             })
             .map(item => {
                 const fileName = item.path.split('/').pop();
-                // 파일명에서 숫자 추출 (여러 패턴 지원)
-                const match = fileName.match(/(\d+)화|시즌\s*(\d+)|제\s*(\d+)|ep\s*(\d+)/i);
-                const episodeNum = match ? parseInt(match[1] || match[2] || match[3] || match[4]) : 0;
-                const season = Math.ceil(episodeNum / 13); // 13화마다 시즌 구분
+                // 파일명에서 숫자 추출 (n화.ass 형식)
+                const match = fileName.match(/(\d+)화\.ass$/i);
+                const episodeNum = match ? parseInt(match[1]) : 0;
+                const season = Math.ceil(episodeNum / 12); // 12화마다 시즌 구분
                 
                 return {
                     name: fileName,
