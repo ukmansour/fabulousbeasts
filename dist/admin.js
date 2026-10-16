@@ -33,7 +33,11 @@ window.addEventListener('adminTabSwitch', (e) => {
 
 onAuthStateChanged(auth, async (user) => {
     const info = document.getElementById('user-info');
-    if (!user) { location.href = 'auth.html'; return; }
+    if (!user) { 
+        alert('로그인이 필요합니다.');
+        location.href = 'auth.html'; 
+        return; 
+    }
     currentUser = user;
 
     // [읽기 최적화] 헤더에 표시할 이름은 Auth에서 가져옵니다 (DB 읽기 0)
@@ -49,7 +53,7 @@ onAuthStateChanged(auth, async (user) => {
                 e.preventDefault();
                 if (confirm("로그아웃하시습니까?")) {
                     sessionStorage.removeItem(`role_${user.uid}`);
-                    auth.signOut().then(() => location.reload());
+                    auth.signOut().then(() => location.href = 'index.html');
                 }
             };
         }
@@ -63,72 +67,37 @@ onAuthStateChanged(auth, async (user) => {
             return;
         }
 
-        // [읽기 최적화] 세션 캐시 확인
+        // [권한 확인] 일반 사용자는 Firestore에서 역할 확인
         const userSnap = await getDocSafe(doc(db, "users", user.uid));
         if (userSnap.exists() && userSnap.data().role === 'admin') {
             sessionStorage.setItem(`role_${user.uid}`, 'admin');
             renderAdminPage();
             renderWikiAdminPage();
         } else {
-            showRecoveryUI();
+            // 관리자가 아닌 경우 접근 차단
+            document.body.innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 2rem; text-align: center;">
+                    <div style="font-size: 4rem; margin-bottom: 1rem;">🚫</div>
+                    <h1 style="font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 0.5rem;">접근 권한이 없습니다</h1>
+                    <p style="color: #666; font-size: 1rem; margin-bottom: 2rem;">이 페이지는 관리자만 접근할 수 있습니다.</p>
+                    <a href="index.html" style="padding: 0.8rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem;">홈으로 돌아가기</a>
+                </div>
+            `;
+            return;
         }
     } catch (e) {
         console.error(e);
-        showRecoveryUI();
+        // 오류 발생 시에도 접근 차단
+        document.body.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 2rem; text-align: center;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div>
+                <h1 style="font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 0.5rem;">오류가 발생했습니다</h1>
+                <p style="color: #666; font-size: 1rem; margin-bottom: 2rem;">권한을 확인할 수 없습니다.</p>
+                <a href="index.html" style="padding: 0.8rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem;">홈으로 돌아가기</a>
+            </div>
+        `;
     }
 });
-
-function showRecoveryUI() {
-    contentArea.innerHTML = `
-        <div style="text-align:center; padding:3rem; background:#f9f9f9; border:2px solid #555; max-width:500px; margin:2rem auto;">
-            <h2 style="color:#333; text-transform:uppercase; letter-spacing:1px;">ADMIN RECOVERY</h2>
-            <p style="margin-top:1rem; color:#666; font-size:0.9rem;">ENTER SECURITY CODE TO ACTIVATE ADMINISTRATIVE PRIVILEGES.</p>
-            <input type="password" id="recovery-code" placeholder="SECURITY CODE" 
-                style="margin-top:1.5rem; padding:0.6rem 1rem; border:1px solid #ccc; border-radius:0; font-size:1rem; width:200px; display:block; margin-left:auto; margin-right:auto; font-family:monospace; text-align:center;">
-            <button id="recovery-btn" 
-                style="margin-top:1rem; padding:0.8rem 2rem; background:#333; color:white; border:none; border-radius:0; font-weight:bold; cursor:pointer; font-size:1rem; text-transform:uppercase;">
-                ACTIVATE
-            </button>
-        </div>
-    `;
-
-    document.getElementById('recovery-btn').onclick = async () => {
-        const code = document.getElementById('recovery-code').value;
-        if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
-
-        try {
-            // 1. Firestore 업데이트 (updateDoc이 아닌 첫 생성이므로 setDoc 사용 가능하지만 여기서는 merge 권장)
-            const userRef = doc(db, "users", currentUser.uid);
-            await setDoc(userRef, {
-                uid: currentUser.uid,
-                name: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "익명"),
-                email: currentUser.email || "",
-                role: 'admin',
-                isBanned: false,
-                updatedAt: serverTimestamp()
-            }, { merge: true });
-            
-            // 2. Cloudflare D1 업데이트
-            await fetch('/api/user/role', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    uid: currentUser.uid,
-                    role: 'admin',
-                    name: currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : "익명"),
-                    email: currentUser.email || "",
-                    isBanned: false,
-                    secret: code
-                })
-            });
-
-            alert("관리자 권한이 활성화되었습니다!");
-            location.reload();
-        } catch (e) {
-            alert("활성화 실패: " + e.message);
-        }
-    };
-}
 
 let unsubscribeUsers = null;
 
@@ -189,6 +158,11 @@ async function renderAdminPage() {
 
             html += `
                 <div style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1rem; ${index !== users.length - 1 ? 'border-bottom:1px solid #ccc;' : ''} transition:background 0.1s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
+                    <!-- 아바타 이미지 -->
+                    <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid #ddd; flex-shrink: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="window.changeUserAvatar('${u.uid}', '${displayName}')">
+                        ${u.avatar ? `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">` : `<span style="font-size: 1.5rem; color: #999;">👤</span>`}
+                    </div>
+                    
                     <div style="flex:1; min-width:0; display:flex; align-items:center; gap:1.2rem;">
                         <span style="font-size:0.9rem; font-weight:800; color:#000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:120px;">${displayName}</span>
                         <span style="font-size:0.8rem; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; font-family:monospace;">${u.email || '이메일 없음'}</span>
@@ -320,6 +294,97 @@ window.changeUserRole = async (uid, newRole) => {
     } catch (e) {
         alert("오류 발생: " + e.message);
     }
+};
+
+// [추가] 유저 아바타 변경 함수
+window.changeUserAvatar = async (uid, displayName) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        // 파일 크기 체크 (2MB 제한)
+        if (file.size > 2 * 1024 * 1024) {
+            alert('이미지 크기는 2MB 이하여야 합니다.');
+            return;
+        }
+        
+        const code = prompt(`${displayName}의 프로필 사진을 변경하시겠습니까?\n\n보안 코드를 입력하세요:`);
+        if (code !== "9889") { 
+            alert("보안 코드가 틀렸습니다."); 
+            return; 
+        }
+        
+        try {
+            // 이미지 업로드
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('folder', 'avatars');
+            
+            const uploadRes = await fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!uploadRes.ok) throw new Error('이미지 업로드 실패');
+            
+            const uploadData = await uploadRes.json();
+            const avatarUrl = uploadData.url;
+            
+            // Firestore 업데이트
+            const userRef = doc(db, "users", uid);
+            await updateDoc(userRef, {
+                avatar: avatarUrl,
+                updatedAt: serverTimestamp()
+            });
+            
+            // D1에서 기존 유저 정보 가져오기
+            const userInfoRes = await fetch(`/api/user/${uid}`);
+            let role = 'member';
+            let name = displayName;
+            let email = '';
+            
+            if (userInfoRes.ok) {
+                const userInfo = await userInfoRes.json();
+                role = userInfo.role || 'member';
+                name = userInfo.name || displayName;
+                email = userInfo.email || '';
+            }
+            
+            // D1 동기화
+            const res = await fetch('/api/user/role', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    uid, 
+                    role: role,
+                    name: name,
+                    nickname: name,
+                    email: email,
+                    isBanned: false,
+                    avatar: avatarUrl,
+                    secret: code 
+                })
+            });
+            
+            if (!res.ok) {
+                const errorData = await res.json();
+                console.error('D1 동기화 실패:', errorData);
+                throw new Error('D1 동기화 실패: ' + (errorData.error || '알 수 없는 오류'));
+            }
+            
+            alert(`${displayName}의 프로필 사진이 변경되었습니다!`);
+            // onSnapshot이 실시간으로 화면을 갱신
+        } catch (e) {
+            console.error(e);
+            alert("프로필 사진 변경 실패: " + e.message);
+        }
+    };
+    
+    input.click();
 };
 
 // [추가] 공지/소식 관리 탭 렌더링

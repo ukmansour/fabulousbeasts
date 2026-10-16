@@ -1,7 +1,9 @@
-import { db, auth, getDocSafe } from './firebase-config.js';
+﻿import { db, auth, getDocSafe } from './firebase-config.js';
 import { doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { CHARACTERS } from './data.js';
+import { getFavorites, toggleFavorite, isFavorite } from './favorites.js';
+import { createShareButtons } from './share.js';
 
 // URL 처리
 const fullHash = decodeURIComponent(location.hash.substring(1));
@@ -141,7 +143,12 @@ async function loadDetail() {
                 
                 const nameToDisplay = data.name || charId;
                 const finalTitle = isGalleryPage ? `${nameToDisplay} (갤러리)` : nameToDisplay;
-                if (displayNameArea) displayNameArea.textContent = finalTitle;
+                if (displayNameArea) {
+                    displayNameArea.textContent = finalTitle;
+                    
+                    // 즐겨찾기 버튼 추가
+                    addFavoriteButtonToTitle(charId, nameToDisplay);
+                }
                 document.title = `${finalTitle} - 유수언`;
                 renderPage(data);
             } else {
@@ -485,3 +492,10 @@ window.onhashchange = () => {
     location.reload();
 };
 loadDetail();
+
+
+// 캐릭터 상세 페이지 제목에 즐겨찾기 버튼 추가
+function addFavoriteButtonToTitle(charId, charName) {
+    // 즐겨찾기 기능 비활성화됨
+    return;
+}
