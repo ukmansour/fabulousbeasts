@@ -257,6 +257,21 @@ async function syncHomepageImages() {
         }));
         
         console.log('[syncHomepageImages] mergedCharacters 개수:', mergedCharacters.length);
+        
+        // 1.2 카테고리 순서 정보 가져오기
+        let categoryOrders = {};
+        let characterOrders = {};
+        try {
+            const orderResponse = await fetch('/api/order');
+            if (orderResponse.ok) {
+                const orderData = await orderResponse.json();
+                categoryOrders = orderData.categoryOrders || {};
+                characterOrders = orderData.characterOrders || {};
+                console.log('[syncHomepageImages] 순서 정보 로드:', categoryOrders);
+            }
+        } catch (e) {
+            console.warn('[syncHomepageImages] 순서 정보 로드 실패:', e);
+        }
 
         // 1.5 오늘 생일인 캐릭터 배너 노출 처리
         const todayBirthdayBanner = document.getElementById('today-birthday-banner');
@@ -302,15 +317,35 @@ async function syncHomepageImages() {
         // 2. 전체 목록(char-grid) 동적 렌더링
         const container = document.getElementById('char-grid');
         if (container) {
-            const html = CATEGORIES.map(cat => {
+            // 2.1 모든 카테고리 추출 및 중복 제거
+            const allCategories = [...new Set(mergedCharacters.map(c => c.category).filter(c => c))];
+            
+            // 2.2 순서대로 정렬
+            const sortedCategories = allCategories.sort((a, b) => {
+                const orderA = categoryOrders[a] !== undefined ? categoryOrders[a] : 999;
+                const orderB = categoryOrders[b] !== undefined ? categoryOrders[b] : 999;
+                return orderA - orderB;
+            });
+            
+            console.log('[syncHomepageImages] 정렬된 카테고리:', sortedCategories);
+            
+            const html = sortedCategories.map(cat => {
                 const catChars = mergedCharacters.filter(c => c.category === cat);
                 if (catChars.length === 0) return '';
+                
+                // 2.3 카테고리 내 캐릭터도 순서대로 정렬
+                const charOrders = characterOrders[cat] || {};
+                const sortedChars = catChars.sort((a, b) => {
+                    const orderA = charOrders[a.id] !== undefined ? charOrders[a.id] : 999;
+                    const orderB = charOrders[b.id] !== undefined ? charOrders[b.id] : 999;
+                    return orderA - orderB;
+                });
                 
                 return `
                     <div class="category-section" style="margin-top:2.5rem;">
                         <h3 class="category-title" style="font-size:1.1rem; border-bottom:1px solid #ddd; padding-bottom:0.3rem; margin-bottom:1rem; font-weight:800;">${cat}</h3>
                         <div class="char-grid-portal">
-                            ${catChars.map(c => `
+                            ${sortedChars.map(c => `
                                 <a href="detail.html#${c.id}" class="char-card-mini">
                                     <img src="${c.image || 'https://via.placeholder.com/150'}" alt="${c.name || c.id}">
                                     <span>${c.name || c.id}</span>
