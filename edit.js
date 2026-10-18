@@ -379,7 +379,16 @@ function initToolbar() {
                 case 'link':      replacement = `[${sel || '링크이름'}](주소)`; break;
                 case 'ilink':     replacement = `[[${sel || '문서제목'}/${sel || '표시이름'}]]`; break;
                 case 'image':     replacement = `![${sel || '설명'}](이미지주소)`; break;
-                case 'list':      replacement = `\n* ${sel || '항목'}`; break;
+                case 'list':      
+                    if (sel) {
+                        // 선택된 텍스트가 있으면 각 줄마다 * 추가
+                        const lines = sel.split('\n');
+                        replacement = '\n' + lines.map(line => `* ${line}`).join('\n') + '\n';
+                    } else {
+                        // 선택된 텍스트가 없으면 기본 리스트 항목 추가
+                        replacement = `\n* 항목 1\n* 항목 2\n* 항목 3\n`;
+                    }
+                    break;
                 case 'hr':        replacement = `\n---\n`; break;
                 case 'quote':     replacement = `\n> ${sel || '인용할 내용'}\n`; break;
                 case 'center':    replacement = `\n[center]\n${sel || '가운데 정렬 내용'}\n[/center]\n`; break;
