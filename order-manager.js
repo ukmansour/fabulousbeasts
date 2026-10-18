@@ -173,39 +173,56 @@ function renderCharacterList(category) {
 
 function setupDragAndDrop(listId) {
     const list = document.getElementById(listId);
+    if (!list) return;
+    
     const items = list.querySelectorAll('.draggable-item');
     
     items.forEach(item => {
         item.addEventListener('dragstart', (e) => {
             item.classList.add('dragging');
             e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/html', item.innerHTML);
         });
         
         item.addEventListener('dragend', () => {
             item.classList.remove('dragging');
-            items.forEach(i => i.classList.remove('drag-over'));
+            const allItems = list.querySelectorAll('.draggable-item');
+            allItems.forEach(i => i.classList.remove('drag-over'));
+            updateOrderNumbers(listId);
         });
+    });
+    
+    // 리스트 전체에 dragover 이벤트 바인딩
+    list.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const dragging = list.querySelector('.dragging');
+        if (!dragging) return;
         
-        item.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            const dragging = list.querySelector('.dragging');
-            const siblings = [...list.querySelectorAll('.draggable-item:not(.dragging)')];
-            
-            const nextSibling = siblings.find(sibling => {
-                const box = sibling.getBoundingClientRect();
-                return e.clientY < box.top + box.height / 2;
-            });
-            
-            if (nextSibling) {
-                list.insertBefore(dragging, nextSibling);
-            } else {
-                list.appendChild(dragging);
-            }
-        });
+        const afterElement = getDragAfterElement(list, e.clientY);
+        if (afterElement == null) {
+            list.appendChild(dragging);
+        } else {
+            list.insertBefore(dragging, afterElement);
+        }
     });
     
     // 순서 번호 업데이트
     updateOrderNumbers(listId);
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.draggable-item:not(.dragging)')];
+    
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
 function updateOrderNumbers(listId) {
