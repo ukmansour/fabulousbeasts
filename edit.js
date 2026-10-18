@@ -462,6 +462,7 @@ async function loadInitialData() {
                     nation: dbData.nation || baseData.nation,
                     alias: dbData.alias || baseData.alias,
                     birthday: dbData.birthday || baseData.birthday,
+                    infobox_color: dbData.infobox_color || baseData.infobox_color,
                     image: dbData.image || baseData.image,
                     gallery: dbData.gallery ? (typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery) : (baseData.gallery || []),
                     customInfo: dbData.custom_info ? (typeof dbData.custom_info === 'string' ? JSON.parse(dbData.custom_info) : dbData.custom_info) : []
