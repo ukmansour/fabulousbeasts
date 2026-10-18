@@ -253,6 +253,13 @@ export async function onRequest(context) {
             const data = await request.json();
             const { title, oldTitle, name, content, author, category, species, nation, alias, birthday, infobox_color, image, gallery, custom_info } = data;
 
+            // [추가] infobox_color 컬럼이 없으면 추가
+            try {
+                await env.DB.prepare(`ALTER TABLE wiki_pages ADD COLUMN infobox_color TEXT`).run();
+            } catch (e) {
+                // 이미 존재하면 무시
+            }
+
             // [추가] 제목(ID) 변경 로직: oldTitle이 있고 title과 다를 경우 D1의 PK를 업데이트합니다.
             if (oldTitle && oldTitle !== title) {
                 // 1. 새로운 제목이 이미 존재하는지 확인 (덮어쓰기 방지)
