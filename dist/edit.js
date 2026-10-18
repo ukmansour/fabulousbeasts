@@ -100,7 +100,7 @@ function checkPermission() {
         if (headerEl) headerEl.style.display = 'none';
 
         const errorCode = currentUser ? '403' : '401';
-        const errorMsg = currentUser ? '🔒 관리자 권한이 필요합니다' : '🔒 로그인이 필요합니다';
+        const errorMsg = currentUser ? '관리자 권한이 필요합니다' : '로그인이 필요합니다';
         const subMsg = currentUser ? '이 문서를 편집할 수 있는 권한이 없습니다.' : '편집을 진행하시려면 로그인이 필요합니다.';
         const actionBtn = currentUser ? 
             `<a href="detail.html#${charId}" style="padding:10px 25px; background:#f0f0f0; color:#333; border-radius:5px; text-decoration:none; font-weight:bold; display:inline-block;">상세 페이지로 돌아가기</a>` :
@@ -164,9 +164,9 @@ function previewRender(details) {
         if (/^\[\/spoiler\]$/i.test(line.trim())) { closeAll(); html += '</div></details>'; continue; }
         if (/^\[center\]$/i.test(line.trim())) { closeAll(); html += '<div style="text-align:center">'; continue; }
         if (/^\[\/center\]$/i.test(line.trim())) { closeAll(); html += '</div>'; continue; }
-        if (/^\[note\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-note">📌 <div>'; continue; }
+        if (/^\[note\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-note"><div>'; continue; }
         if (/^\[\/note\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
-        if (/^\[warn\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-warn">⚠️ <div>'; continue; }
+        if (/^\[warn\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-warn"><div>'; continue; }
         if (/^\[\/warn\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
         if (line.trim() === '') { closeAll(); continue; }
         if (line.startsWith('## ')) { closeAll(); html += `<h2>${applyInline(line.slice(3))}</h2>`; continue; }
@@ -379,7 +379,16 @@ function initToolbar() {
                 case 'link':      replacement = `[${sel || '링크이름'}](주소)`; break;
                 case 'ilink':     replacement = `[[${sel || '문서제목'}/${sel || '표시이름'}]]`; break;
                 case 'image':     replacement = `![${sel || '설명'}](이미지주소)`; break;
-                case 'list':      replacement = `\n* ${sel || '항목'}`; break;
+                case 'list':      
+                    if (sel) {
+                        // 선택된 텍스트가 있으면 각 줄마다 * 추가
+                        const lines = sel.split('\n');
+                        replacement = '\n' + lines.map(line => `* ${line}`).join('\n') + '\n';
+                    } else {
+                        // 선택된 텍스트가 없으면 기본 리스트 항목 추가
+                        replacement = `\n* 항목 1\n* 항목 2\n* 항목 3\n`;
+                    }
+                    break;
                 case 'hr':        replacement = `\n---\n`; break;
                 case 'quote':     replacement = `\n> ${sel || '인용할 내용'}\n`; break;
                 case 'center':    replacement = `\n[center]\n${sel || '가운데 정렬 내용'}\n[/center]\n`; break;
@@ -387,7 +396,34 @@ function initToolbar() {
                 case 'note':      replacement = `\n[note]\n${sel || '메모 내용'}\n[/note]\n`; break;
                 case 'warn':      replacement = `\n[warn]\n${sel || '경고 내용'}\n[/warn]\n`; break;
                 case 'table':
-                    replacement = `\n|항목1|항목2|항목3|\n|---|---|---|\n|내용1|내용2|내용3|\n`;
+                    if (sel) {
+                        // 선택된 텍스트가 있으면 각 줄을 행으로 만들고, 탭이나 쉼표로 열 구분
+                        const lines = sel.split('\n').filter(line => line.trim());
+                        if (lines.length > 0) {
+                            // 첫 번째 줄을 헤더로 사용
+                            const firstLine = lines[0].split(/[\t,|]/).map(cell => cell.trim());
+                            const colCount = firstLine.length;
+                            
+                            // 헤더 행
+                            let table = '\n|' + firstLine.join('|') + '|\n';
+                            // 구분선
+                            table += '|' + Array(colCount).fill('---').join('|') + '|\n';
+                            // 데이터 행들
+                            for (let i = 1; i < lines.length; i++) {
+                                const cells = lines[i].split(/[\t,|]/).map(cell => cell.trim());
+                                // 부족한 열은 빈 칸으로 채우기
+                                while (cells.length < colCount) cells.push('');
+                                table += '|' + cells.slice(0, colCount).join('|') + '|\n';
+                            }
+                            replacement = table;
+                        } else {
+                            // 빈 선택이면 기본 표
+                            replacement = `\n|제목1|제목2|제목3|\n|---|---|---|\n|내용1|내용2|내용3|\n`;
+                        }
+                    } else {
+                        // 선택 없으면 기본 2x3 표
+                        replacement = `\n|제목1|제목2|제목3|\n|---|---|---|\n|내용1|내용2|내용3|\n|내용4|내용5|내용6|\n`;
+                    }
                     break;
             }
             if (!replacement) return;
@@ -463,6 +499,8 @@ function fillForm(data) {
     const nationInput = document.getElementById('info-nation');
     const aliasInput = document.getElementById('info-alias');
     const birthdayInput = document.getElementById('info-birthday');
+    const colorInput = document.getElementById('info-color');
+    const colorTextInput = document.getElementById('info-color-text');
     const urlInput = document.getElementById('image-url');
 
     if (speciesInput) speciesInput.value = data.species || '';
@@ -470,6 +508,11 @@ function fillForm(data) {
     if (aliasInput) aliasInput.value = data.alias || '';
     if (birthdayInput) birthdayInput.value = data.birthday || '';
     if (urlInput) urlInput.value = data.image || '';
+    
+    // 인포박스 색상 로드
+    const infoboxColor = data.infoboxColor || data.infobox_color || '#FFFFFF';
+    if (colorInput) colorInput.value = infoboxColor;
+    if (colorTextInput) colorTextInput.value = infoboxColor;
 
     if (data.image && previewImg) {
         previewImg.src = data.image;
@@ -687,6 +730,7 @@ if (form) {
             nation: document.getElementById('info-nation').value,
             alias: document.getElementById('info-alias').value,
             birthday: document.getElementById('info-birthday').value,
+            infobox_color: document.getElementById('info-color-text').value || '#FFFFFF',
             image: document.getElementById('image-url').value,
             gallery: currentGallery,
             author: currentUser.displayName || '익명',
@@ -710,6 +754,88 @@ if (form) {
             alert("저장 실패: " + err.message);
             checkPermission();
             saveBtn.textContent = '저장하기';
+        }
+    };
+}
+
+// 본문 이미지/동영상 업로드 기능
+const contentImageBtn = document.getElementById('content-image-btn');
+const contentVideoBtn = document.getElementById('content-video-btn');
+const contentImageInput = document.getElementById('content-image-input');
+const contentVideoInput = document.getElementById('content-video-input');
+const contentUploadStatus = document.getElementById('content-upload-status');
+
+if (contentImageBtn && contentImageInput) {
+    contentImageBtn.onclick = () => contentImageInput.click();
+    contentImageInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (userRole !== 'admin') { alert("이미지를 업로드할 권한이 없습니다."); return; }
+        if (file.size > MAX_SIZE_MB * 1024 * 1024) { alert(`파일 용량이 너무 큽니다. ${MAX_SIZE_MB}MB 이하만 가능합니다.`); return; }
+
+        try {
+            contentUploadStatus.textContent = '이미지 업로드 중...';
+            contentUploadStatus.style.color = '#666';
+            saveBtn.disabled = true;
+
+            const compressed = await compressImage(file);
+            const url = await uploadToR2(compressed, `characters/${charId}/content`);
+
+            // 커서 위치에 이미지 마크다운 삽입
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+            const imageMarkdown = `![이미지](${url})`;
+            editor.value = text.substring(0, start) + imageMarkdown + text.substring(end);
+            editor.focus();
+            const newPos = start + imageMarkdown.length;
+            editor.setSelectionRange(newPos, newPos);
+
+            contentUploadStatus.textContent = '이미지가 본문에 삽입되었습니다!';
+            contentUploadStatus.style.color = 'green';
+            setTimeout(() => { contentUploadStatus.textContent = ''; }, 3000);
+            saveBtn.disabled = false;
+        } catch (err) {
+            contentUploadStatus.textContent = '업로드 실패: ' + err.message;
+            contentUploadStatus.style.color = 'red';
+            saveBtn.disabled = false;
+        }
+    };
+}
+
+if (contentVideoBtn && contentVideoInput) {
+    contentVideoBtn.onclick = () => contentVideoInput.click();
+    contentVideoInput.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (userRole !== 'admin') { alert("동영상을 업로드할 권한이 없습니다."); return; }
+        if (file.size > 100 * 1024 * 1024) { alert("동영상 파일은 100MB 이하만 가능합니다."); return; }
+
+        try {
+            contentUploadStatus.textContent = '동영상 업로드 중... (시간이 걸릴 수 있습니다)';
+            contentUploadStatus.style.color = '#666';
+            saveBtn.disabled = true;
+
+            const url = await uploadToR2(file, `characters/${charId}/content`);
+
+            // 커서 위치에 동영상 HTML 삽입
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+            const videoHtml = `\n<video controls style="max-width:100%; border-radius:8px; display:block; margin:20px auto;">\n  <source src="${url}" type="${file.type}">\n  브라우저가 동영상을 지원하지 않습니다.\n</video>\n`;
+            editor.value = text.substring(0, start) + videoHtml + text.substring(end);
+            editor.focus();
+            const newPos = start + videoHtml.length;
+            editor.setSelectionRange(newPos, newPos);
+
+            contentUploadStatus.textContent = '동영상이 본문에 삽입되었습니다!';
+            contentUploadStatus.style.color = 'green';
+            setTimeout(() => { contentUploadStatus.textContent = ''; }, 3000);
+            saveBtn.disabled = false;
+        } catch (err) {
+            contentUploadStatus.textContent = '업로드 실패: ' + err.message;
+            contentUploadStatus.style.color = 'red';
+            saveBtn.disabled = false;
         }
     };
 }

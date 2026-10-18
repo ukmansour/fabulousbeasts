@@ -89,7 +89,7 @@ if (editBtn) {
             alert("편집을 위해 로그인이 필요합니다."); 
             location.href = 'auth.html'; 
         } else if (!isUserAdmin) { 
-            alert("🔒 관리자 권한이 필요합니다."); 
+            alert("관리자 권한이 필요합니다."); 
         } else { 
             location.href = `edit.html#${charId}`; 
         }
@@ -278,13 +278,17 @@ function renderInfobox(data) {
         </div>
     ` : '';
 
+    const infoboxColor = data.infoboxColor || data.infobox_color || '#FFFFFF'; // 기본값은 흰색
+    // 흰색 배경일 경우 텍스트를 검은색으로, 그 외에는 흰색으로
+    const textColor = (infoboxColor.toLowerCase() === '#ffffff' || infoboxColor.toLowerCase() === '#fff' || infoboxColor.toLowerCase() === 'white') ? '#333' : 'white';
+    
     infoboxArea.innerHTML = `
-        <div class="infobox" style="position:relative; z-index:10;">
-            <div style="background:var(--primary-color); color:white; padding:8px; text-align:center; font-weight:800; font-size:1rem;">${data.name || charId}</div>
-            <div style="padding:10px; text-align:center; border-bottom:1px solid #eee;" onclick="window.showLarge('${data.image}')">
+        <div class="infobox" style="position:relative; z-index:10; background:${infoboxColor}; border:1px solid #ddd; border-radius:8px; overflow:hidden;">
+            <div style="padding:8px; text-align:center; font-weight:800; font-size:1rem; color:${textColor}; border-bottom:2px solid rgba(0,0,0,0.1);">${data.name || charId}</div>
+            <div style="padding:10px; text-align:center; border-bottom:1px solid rgba(0,0,0,0.1); background:white;" onclick="window.showLarge('${data.image}')">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" style="max-width:100%; cursor:zoom-in;">
             </div>
-            <div style="padding:10px;">
+            <div style="padding:10px; background:white;">
                 <table style="width:100%; font-size:13px; border-collapse:collapse;">
                     ${data.alias ? `<tr><th style="background:#f4f4f4; width:35%; padding:5px; border:1px solid #eee; text-align:left;">별명</th><td style="padding:5px; border:1px solid #eee;">${data.alias}</td></tr>` : ''}
                     ${data.species ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">종족</th><td style="padding:5px; border:1px solid #eee;">${data.species}</td></tr>` : ''}
@@ -345,14 +349,21 @@ function renderContent(details) {
     const closeAll = () => { closeP(); closeUl(); closeTbl(); closeBq(); };
 
     for (const line of lines) {
+        // HTML 태그 (video, img 등) 직접 삽입 허용
+        if (line.trim().startsWith('<video') || line.trim().startsWith('<source') || line.trim().startsWith('</video>')) {
+            closeAll();
+            html += line + '\n';
+            continue;
+        }
+
         // 블록 태그 처리
         if (/^\[spoiler\]$/i.test(line.trim())) { closeAll(); html += '<details class="wiki-spoiler"><summary>스포일러 (클릭하여 펼치기)</summary><div class="spoiler-content">'; continue; }
         if (/^\[\/spoiler\]$/i.test(line.trim())) { closeAll(); html += '</div></details>'; continue; }
         if (/^\[center\]$/i.test(line.trim())) { closeAll(); html += '<div style="text-align:center">'; continue; }
         if (/^\[\/center\]$/i.test(line.trim())) { closeAll(); html += '</div>'; continue; }
-        if (/^\[note\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-note">📌 <div>'; continue; }
+        if (/^\[note\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-note"><div>'; continue; }
         if (/^\[\/note\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
-        if (/^\[warn\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-warn">⚠️ <div>'; continue; }
+        if (/^\[warn\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-warn"><div>'; continue; }
         if (/^\[\/warn\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
 
         // 빈 줄 → 단락 종료
@@ -380,12 +391,20 @@ function renderContent(details) {
             if (cells.every(c => /^[-:]+$/.test(c.trim()))) continue; // 구분 행 무시
             if (!inTable) {
                 html += '<table class="wiki-table"><thead><tr>';
-                cells.forEach(c => { html += `<th>${applyInline(c.trim())}</th>`; });
+                cells.forEach(c => { 
+                    const cellContent = parseCellWithBg(c.trim());
+                    // 헤더는 기본 스타일 유지, 색상 지정 시에만 적용
+                    html += `<th${cellContent.style || ''}>${applyInline(cellContent.text)}</th>`; 
+                });
                 html += '</tr></thead><tbody>';
                 inTable = true;
             } else {
                 html += '<tr>';
-                cells.forEach(c => { html += `<td>${applyInline(c.trim())}</td>`; });
+                cells.forEach(c => { 
+                    const cellContent = parseCellWithBg(c.trim());
+                    // 데이터 셀은 색상 미지정 시 흰색 배경
+                    html += `<td${cellContent.style || ' style="background-color:white"'}>${applyInline(cellContent.text)}</td>`; 
+                });
                 html += '</tr>';
             }
             continue;
@@ -432,6 +451,22 @@ function generateTOC() {
             tocList.appendChild(li);
         });
     }
+}
+
+// 표 셀 배경색 파싱 함수
+function parseCellWithBg(cell) {
+    // {bg:#색상} 또는 {bg:색상이름} 형식 지원
+    // 정규식을 더 관대하게 만들어서 공백도 허용
+    const bgMatch = cell.match(/\{\s*bg\s*:\s*(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|[a-z]+)\s*\}/i);
+    if (bgMatch) {
+        const color = bgMatch[1];
+        const text = cell.replace(bgMatch[0], '').trim();
+        return {
+            text: text,
+            style: ` style="background-color:${color}"`
+        };
+    }
+    return { text: cell, style: '' };
 }
 
 window.showLarge = (url) => {

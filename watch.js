@@ -38,9 +38,9 @@ onAuthStateChanged(auth, async (user) => {
                 userRole = userData.role || 'member';
                 console.log('애니보기 userRole:', userRole, 'uid:', user.uid);
                 if (userRole === 'banned') {
-                    alert("⚠️ 귀하의 계정은 차단되었습니다.");
+                    alert("귀하의 계정은 차단되었습니다.");
                     document.body.innerHTML = `<div style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; background:#f8f9fa;">
-                        <h1 style="color:#dc2626;">🚫 접근 차단됨</h1>
+                        <h1 style="color:#dc2626;">접근 차단됨</h1>
                         <button onclick="auth.signOut().then(() => location.reload())" style="margin-top:2rem; padding:0.8rem 2rem; background:#4b5563; color:white; border:none; border-radius:4px; cursor:pointer;">로그아웃</button>
                     </div>`;
                     return;

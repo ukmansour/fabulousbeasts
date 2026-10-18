@@ -107,7 +107,7 @@
                             <span class="toolbar-sep"></span>
                             <!-- 색상 -->
                             <div class="color-picker-wrap">
-                                <button type="button" class="toolbar-btn" id="color-btn">🎨색상</button>
+                                <button type="button" class="toolbar-btn" id="color-btn">색상</button>
                                 <div class="color-palette" id="color-palette">
                                     <div class="color-swatch" data-color="#e03131" style="background:#e03131" title="빨강"></div>
                                     <div class="color-swatch" data-color="#f08c00" style="background:#f08c00" title="주황"></div>
@@ -138,8 +138,8 @@
                             <span class="toolbar-sep"></span>
                             <!-- 특수 블록 -->
                             <button type="button" class="toolbar-btn" data-type="spoiler">접기</button>
-                            <button type="button" class="toolbar-btn" data-type="note" style="color:#b7950b;">📌메모</button>
-                            <button type="button" class="toolbar-btn" data-type="warn" style="color:#c0392b;">⚠경고</button>
+                            <button type="button" class="toolbar-btn" data-type="note" style="color:#b7950b;">메모</button>
+                            <button type="button" class="toolbar-btn" data-type="warn" style="color:#c0392b;">경고</button>
                             <span class="toolbar-sep"></span>
                             <!-- 미리보기 -->
                             <button type="button" id="history-btn" class="toolbar-btn" style="background:#868e96; color:white; margin-left:10px;">히스토리</button>
@@ -149,10 +149,24 @@
                             <div id="autocomplete-list" class="autocomplete-list"></div>
                         </div>
                         <textarea id="edit-content" class="field-textarea" placeholder="이곳에 내용을 입력하세요. 위 문법 버튼을 사용해 꾸밀 수 있습니다."></textarea>
+                        
+                        <!-- 본문 이미지/동영상 업로드 -->
+                        <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <strong style="font-size: 0.9rem;">본문에 파일 삽입</strong>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" id="content-image-btn" class="toolbar-btn" style="flex: 1; padding: 0.5rem;">이미지 업로드</button>
+                                <button type="button" id="content-video-btn" class="toolbar-btn" style="flex: 1; padding: 0.5rem;">동영상 업로드</button>
+                            </div>
+                            <input type="file" id="content-image-input" accept="image/*" style="display: none;">
+                            <input type="file" id="content-video-input" accept="video/*" style="display: none;">
+                            <div id="content-upload-status" style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;"></div>
+                        </div>
                     </div>
 
                     <div class="guide-box">
-                        <h4>💡 작성 가이드</h4>
+                        <h4>작성 가이드</h4>
                         <ul>
                             <li><span class="syntax">## 제목</span> / <span class="syntax">### 소제목</span></li>
                             <li><span class="syntax">**굵게**</span> / <span class="syntax">*기울임*</span> / <span class="syntax">__밑줄__</span> / <span class="syntax">~~취소선~~</span></li>
@@ -161,6 +175,7 @@
                             <li><span class="syntax">> 텍스트</span> : 인용구</li>
                             <li><span class="syntax">* 항목</span> : 리스트 / <span class="syntax">---</span> : 구분선</li>
                             <li><span class="syntax">|이름|나이|</span> 형식으로 표 작성 (두 번째 줄: |---|---|)</li>
+                            <li><span class="syntax">{bg:#색상}텍스트</span> : 표 셀 배경색 (예: {bg:#ffcccc}빨강)</li>
                             <li><span class="syntax">[spoiler] 내용 [/spoiler]</span> : 접기/펼치기</li>
                             <li><span class="syntax">[center] 내용 [/center]</span> : 가운데 정렬</li>
                             <li><span class="syntax">[note] 내용 [/note]</span> / <span class="syntax">[warn] 내용 [/warn]</span></li>
@@ -217,6 +232,15 @@
                         <label class="field-label">생일</label>
                         <input type="text" id="info-birthday" class="field-input" placeholder="예: 06-05 또는 6월 5일 (자동 계산용)">
                     </div>
+                    <div class="field-group" style="margin-bottom: 0.8rem;">
+                        <label class="field-label">인포박스 색상</label>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <input type="color" id="info-color" class="field-input" value="#2196F3" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
+                            <input type="text" id="info-color-text" class="field-input" value="#2196F3" placeholder="#2196F3" style="flex: 1;">
+                            <button type="button" onclick="document.getElementById('info-color').value='#2196F3'; document.getElementById('info-color-text').value='#2196F3';" style="padding: 0.4rem 0.8rem; background: #868e96; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">초기화</button>
+                        </div>
+                        <small style="color: #666; font-size: 0.8rem; margin-top: 0.3rem; display: block;">인포박스 상단 헤더의 배경색을 설정합니다</small>
+                    </div>
 
                     <div class="section-title" style="margin-top: 1.5rem; display: flex; justify-content: space-between;">
                         <span>커스텀 정보</span>
@@ -259,6 +283,29 @@
         </div>
     </div>
 
+    <script>
+    // 색상 피커와 텍스트 입력 필드 동기화
+    document.addEventListener('DOMContentLoaded', () => {
+        const colorPicker = document.getElementById('info-color');
+        const colorText = document.getElementById('info-color-text');
+        
+        if (colorPicker && colorText) {
+            // 색상 피커 변경 시 텍스트 필드 업데이트
+            colorPicker.addEventListener('input', (e) => {
+                colorText.value = e.target.value.toUpperCase();
+            });
+            
+            // 텍스트 필드 변경 시 색상 피커 업데이트
+            colorText.addEventListener('input', (e) => {
+                const value = e.target.value;
+                // 유효한 HEX 색상 코드인지 확인
+                if (/^#[0-9A-Fa-f]{6}$/.test(value) || /^#[0-9A-Fa-f]{3}$/.test(value)) {
+                    colorPicker.value = value;
+                }
+            });
+        }
+    });
+    </script>
     <script type="module" src="edit.js"></script>
 </body>
 </html>

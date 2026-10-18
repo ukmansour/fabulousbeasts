@@ -89,7 +89,7 @@ if (editBtn) {
             alert("편집을 위해 로그인이 필요합니다."); 
             location.href = 'auth.html'; 
         } else if (!isUserAdmin) { 
-            alert("🔒 관리자 권한이 필요합니다."); 
+            alert("관리자 권한이 필요합니다."); 
         } else { 
             location.href = `edit.html#${charId}`; 
         }
@@ -361,9 +361,9 @@ function renderContent(details) {
         if (/^\[\/spoiler\]$/i.test(line.trim())) { closeAll(); html += '</div></details>'; continue; }
         if (/^\[center\]$/i.test(line.trim())) { closeAll(); html += '<div style="text-align:center">'; continue; }
         if (/^\[\/center\]$/i.test(line.trim())) { closeAll(); html += '</div>'; continue; }
-        if (/^\[note\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-note">📌 <div>'; continue; }
+        if (/^\[note\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-note"><div>'; continue; }
         if (/^\[\/note\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
-        if (/^\[warn\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-warn">⚠️ <div>'; continue; }
+        if (/^\[warn\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-warn"><div>'; continue; }
         if (/^\[\/warn\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
 
         // 빈 줄 → 단락 종료

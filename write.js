@@ -27,7 +27,7 @@ onAuthStateChanged(auth, async (user) => {
                     if (snap.exists()) {
                         const data = snap.data();
                         if (data.isBanned) {
-                            alert('⚠️ 차단된 계정입니다.');
+                            alert('차단된 계정입니다.');
                             signOut(auth);
                             window.location.href = 'community.html';
                             return;

@@ -100,7 +100,7 @@ function checkPermission() {
         if (headerEl) headerEl.style.display = 'none';
 
         const errorCode = currentUser ? '403' : '401';
-        const errorMsg = currentUser ? '🔒 관리자 권한이 필요합니다' : '🔒 로그인이 필요합니다';
+        const errorMsg = currentUser ? '관리자 권한이 필요합니다' : '로그인이 필요합니다';
         const subMsg = currentUser ? '이 문서를 편집할 수 있는 권한이 없습니다.' : '편집을 진행하시려면 로그인이 필요합니다.';
         const actionBtn = currentUser ? 
             `<a href="detail.html#${charId}" style="padding:10px 25px; background:#f0f0f0; color:#333; border-radius:5px; text-decoration:none; font-weight:bold; display:inline-block;">상세 페이지로 돌아가기</a>` :
@@ -164,9 +164,9 @@ function previewRender(details) {
         if (/^\[\/spoiler\]$/i.test(line.trim())) { closeAll(); html += '</div></details>'; continue; }
         if (/^\[center\]$/i.test(line.trim())) { closeAll(); html += '<div style="text-align:center">'; continue; }
         if (/^\[\/center\]$/i.test(line.trim())) { closeAll(); html += '</div>'; continue; }
-        if (/^\[note\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-note">📌 <div>'; continue; }
+        if (/^\[note\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-note"><div>'; continue; }
         if (/^\[\/note\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
-        if (/^\[warn\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-warn">⚠️ <div>'; continue; }
+        if (/^\[warn\]$/i.test(line.trim())) { closeAll(); html += '<div class="wiki-callout wiki-callout-warn"><div>'; continue; }
         if (/^\[\/warn\]$/i.test(line.trim())) { closeAll(); html += '</div></div>'; continue; }
         if (line.trim() === '') { closeAll(); continue; }
         if (line.startsWith('## ')) { closeAll(); html += `<h2>${applyInline(line.slice(3))}</h2>`; continue; }
@@ -791,12 +791,12 @@ if (contentImageBtn && contentImageInput) {
             const newPos = start + imageMarkdown.length;
             editor.setSelectionRange(newPos, newPos);
 
-            contentUploadStatus.textContent = '✅ 이미지가 본문에 삽입되었습니다!';
+            contentUploadStatus.textContent = '이미지가 본문에 삽입되었습니다!';
             contentUploadStatus.style.color = 'green';
             setTimeout(() => { contentUploadStatus.textContent = ''; }, 3000);
             saveBtn.disabled = false;
         } catch (err) {
-            contentUploadStatus.textContent = '❌ 업로드 실패: ' + err.message;
+            contentUploadStatus.textContent = '업로드 실패: ' + err.message;
             contentUploadStatus.style.color = 'red';
             saveBtn.disabled = false;
         }
@@ -828,12 +828,12 @@ if (contentVideoBtn && contentVideoInput) {
             const newPos = start + videoHtml.length;
             editor.setSelectionRange(newPos, newPos);
 
-            contentUploadStatus.textContent = '✅ 동영상이 본문에 삽입되었습니다!';
+            contentUploadStatus.textContent = '동영상이 본문에 삽입되었습니다!';
             contentUploadStatus.style.color = 'green';
             setTimeout(() => { contentUploadStatus.textContent = ''; }, 3000);
             saveBtn.disabled = false;
         } catch (err) {
-            contentUploadStatus.textContent = '❌ 업로드 실패: ' + err.message;
+            contentUploadStatus.textContent = '업로드 실패: ' + err.message;
             contentUploadStatus.style.color = 'red';
             saveBtn.disabled = false;
         }
