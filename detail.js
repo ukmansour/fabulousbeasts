@@ -284,16 +284,17 @@ function renderInfobox(data) {
     const textColor = (infoboxColor.toLowerCase() === '#ffffff' || infoboxColor.toLowerCase() === '#fff' || infoboxColor.toLowerCase() === 'white') ? '#333' : 'white';
     
     infoboxArea.innerHTML = `
-        <div class="infobox" style="position:relative; z-index:10; background:${infoboxColor} !important; border:1px solid #ddd; border-radius:8px; overflow:hidden;">
-            <div style="padding:8px; text-align:center; font-weight:800; font-size:1rem; color:${textColor}; border-bottom:2px solid rgba(0,0,0,0.1);">${data.name || charId}</div>
-            <div style="padding:10px; text-align:center; border-bottom:1px solid rgba(0,0,0,0.1); background:white;" onclick="window.showLarge('${data.image}')">
-                <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" style="max-width:100%; cursor:zoom-in;">
-            </div>
-            <div style="padding:10px; background:white;">
-                <table style="width:100%; font-size:13px; border-collapse:collapse;">
-                    ${data.alias ? `<tr><th style="background:#f4f4f4; width:35%; padding:5px; border:1px solid #eee; text-align:left;">별명</th><td style="padding:5px; border:1px solid #eee;">${data.alias}</td></tr>` : ''}
-                    ${data.species ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">종족</th><td style="padding:5px; border:1px solid #eee;">${data.species}</td></tr>` : ''}
-                    ${data.nation ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">국적</th><td style="padding:5px; border:1px solid #eee;">${data.nation}</td></tr>` : ''}
+        <div class="infobox" style="position:relative; z-index:10; background:${infoboxColor} !important; border:2px solid ${infoboxColor}; border-radius:8px; overflow:hidden; padding:8px;">
+            <div style="background:white; border-radius:4px; overflow:hidden;">
+                <div style="padding:8px; text-align:center; font-weight:800; font-size:1rem; background:${infoboxColor}; color:${textColor};">${data.name || charId}</div>
+                <div style="padding:10px; text-align:center; border-bottom:1px solid rgba(0,0,0,0.1); background:white;" onclick="window.showLarge('${data.image}')">
+                    <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" style="max-width:100%; cursor:zoom-in;">
+                </div>
+                <div style="padding:10px; background:white;">
+                    <table style="width:100%; font-size:13px; border-collapse:collapse;">
+                        ${data.alias ? `<tr><th style="background:#f4f4f4; width:35%; padding:5px; border:1px solid #eee; text-align:left;">별명</th><td style="padding:5px; border:1px solid #eee;">${data.alias}</td></tr>` : ''}
+                        ${data.species ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">종족</th><td style="padding:5px; border:1px solid #eee;">${data.species}</td></tr>` : ''}
+                        ${data.nation ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">국적</th><td style="padding:5px; border:1px solid #eee;">${data.nation}</td></tr>` : ''}
                     ${(() => {
                         if (!data.birthday) return '';
                         const parsed = parseBirthday(data.birthday);
@@ -313,6 +314,7 @@ function renderInfobox(data) {
                     ${data.customInfo && Array.isArray(data.customInfo) ? data.customInfo.map(field => `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">${field.key.replace(/</g, '&lt;')}</th><td style="padding:5px; border:1px solid #eee;">${applyInline(field.value)}</td></tr>`).join('') : ''}
                 </table>
                 ${galleryHTML}
+            </div>
             </div>
         </div>
     `;
