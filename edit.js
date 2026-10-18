@@ -510,7 +510,7 @@ function fillForm(data) {
     if (urlInput) urlInput.value = data.image || '';
     
     // 인포박스 색상 로드
-    const infoboxColor = data.infoboxColor || data.infobox_color || '#2196F3';
+    const infoboxColor = data.infoboxColor || data.infobox_color || '#FFFFFF';
     if (colorInput) colorInput.value = infoboxColor;
     if (colorTextInput) colorTextInput.value = infoboxColor;
 
@@ -730,7 +730,7 @@ if (form) {
             nation: document.getElementById('info-nation').value,
             alias: document.getElementById('info-alias').value,
             birthday: document.getElementById('info-birthday').value,
-            infobox_color: document.getElementById('info-color-text').value || '#2196F3',
+            infobox_color: document.getElementById('info-color-text').value || '#FFFFFF',
             image: document.getElementById('image-url').value,
             gallery: currentGallery,
             author: currentUser.displayName || '익명',
