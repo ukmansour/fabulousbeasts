@@ -380,12 +380,18 @@ function renderContent(details) {
             if (cells.every(c => /^[-:]+$/.test(c.trim()))) continue; // 구분 행 무시
             if (!inTable) {
                 html += '<table class="wiki-table"><thead><tr>';
-                cells.forEach(c => { html += `<th>${applyInline(c.trim())}</th>`; });
+                cells.forEach(c => { 
+                    const cellContent = parseCellWithBg(c.trim());
+                    html += `<th${cellContent.style}>${applyInline(cellContent.text)}</th>`; 
+                });
                 html += '</tr></thead><tbody>';
                 inTable = true;
             } else {
                 html += '<tr>';
-                cells.forEach(c => { html += `<td>${applyInline(c.trim())}</td>`; });
+                cells.forEach(c => { 
+                    const cellContent = parseCellWithBg(c.trim());
+                    html += `<td${cellContent.style}>${applyInline(cellContent.text)}</td>`; 
+                });
                 html += '</tr>';
             }
             continue;
@@ -432,6 +438,21 @@ function generateTOC() {
             tocList.appendChild(li);
         });
     }
+}
+
+// 표 셀 배경색 파싱 함수
+function parseCellWithBg(cell) {
+    // {bg:#색상} 또는 {bg:색상이름} 형식 지원
+    const bgMatch = cell.match(/\{bg:(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|[a-z]+)\}/i);
+    if (bgMatch) {
+        const color = bgMatch[1];
+        const text = cell.replace(bgMatch[0], '').trim();
+        return {
+            text: text,
+            style: ` style="background-color:${color}"`
+        };
+    }
+    return { text: cell, style: '' };
 }
 
 window.showLarge = (url) => {
