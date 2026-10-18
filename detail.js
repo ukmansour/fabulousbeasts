@@ -284,7 +284,7 @@ function renderInfobox(data) {
     const textColor = (infoboxColor.toLowerCase() === '#ffffff' || infoboxColor.toLowerCase() === '#fff' || infoboxColor.toLowerCase() === 'white') ? '#333' : 'white';
     
     infoboxArea.innerHTML = `
-        <div class="infobox" style="position:relative; z-index:10; background:${infoboxColor}; border:1px solid #ddd; border-radius:8px; overflow:hidden;">
+        <div class="infobox" style="position:relative; z-index:10; background:${infoboxColor} !important; border:1px solid #ddd; border-radius:8px; overflow:hidden;">
             <div style="padding:8px; text-align:center; font-weight:800; font-size:1rem; color:${textColor}; border-bottom:2px solid rgba(0,0,0,0.1);">${data.name || charId}</div>
             <div style="padding:10px; text-align:center; border-bottom:1px solid rgba(0,0,0,0.1); background:white;" onclick="window.showLarge('${data.image}')">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" style="max-width:100%; cursor:zoom-in;">
