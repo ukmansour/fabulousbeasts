@@ -462,6 +462,7 @@ async function loadInitialData() {
                     nation: dbData.nation || baseData.nation,
                     alias: dbData.alias || baseData.alias,
                     birthday: dbData.birthday || baseData.birthday,
+                    infobox_color: dbData.infobox_color || baseData.infobox_color,
                     image: dbData.image || baseData.image,
                     gallery: dbData.gallery ? (typeof dbData.gallery === 'string' ? JSON.parse(dbData.gallery) : dbData.gallery) : (baseData.gallery || []),
                     customInfo: dbData.custom_info ? (typeof dbData.custom_info === 'string' ? JSON.parse(dbData.custom_info) : dbData.custom_info) : []
@@ -511,6 +512,7 @@ function fillForm(data) {
     
     // 인포박스 색상 로드
     const infoboxColor = data.infoboxColor || data.infobox_color || '#FFFFFF';
+    console.log('로드된 인포박스 색상:', infoboxColor, 'from data:', data);
     if (colorInput) colorInput.value = infoboxColor;
     if (colorTextInput) colorTextInput.value = infoboxColor;
 
@@ -736,6 +738,10 @@ if (form) {
             author: currentUser.displayName || '익명',
             custom_info: customFields
         };
+        
+        console.log('저장할 데이터:', updatedData);
+        console.log('인포박스 색상:', updatedData.infobox_color);
+        
         try {
             const response = await fetch('/api/wiki', {
                 method: 'POST',
