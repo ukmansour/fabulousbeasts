@@ -251,7 +251,7 @@ export async function onRequest(context) {
     if (request.method === "POST" && apiPath === "/wiki") {
         try {
             const data = await request.json();
-            const { title, oldTitle, name, content, author, category, species, nation, alias, birthday, image, gallery, custom_info } = data;
+            const { title, oldTitle, name, content, author, category, species, nation, alias, birthday, infobox_color, image, gallery, custom_info } = data;
 
             // [추가] 제목(ID) 변경 로직: oldTitle이 있고 title과 다를 경우 D1의 PK를 업데이트합니다.
             if (oldTitle && oldTitle !== title) {
@@ -273,8 +273,8 @@ export async function onRequest(context) {
             }
 
             await env.DB.prepare(`
-                INSERT INTO wiki_pages (title, name, content, author, category, species, nation, alias, birthday, image, gallery, custom_info, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                INSERT INTO wiki_pages (title, name, content, author, category, species, nation, alias, birthday, infobox_color, image, gallery, custom_info, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
                 ON CONFLICT(title) DO UPDATE SET
                   name = excluded.name,
                   content = excluded.content,
@@ -284,13 +284,14 @@ export async function onRequest(context) {
                   nation = excluded.nation,
                   alias = excluded.alias,
                   birthday = excluded.birthday,
+                  infobox_color = excluded.infobox_color,
                   image = excluded.image,
                   gallery = excluded.gallery,
                   custom_info = excluded.custom_info,
                   updated_at = CURRENT_TIMESTAMP
             `).bind(
                 title, name || "", content, author || "Anonymous", category || "기타",
-                species || "", nation || "", alias || "", birthday || "", image || "",
+                species || "", nation || "", alias || "", birthday || "", infobox_color || "#2196F3", image || "",
                 gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]",
                 custom_info ? (typeof custom_info === 'string' ? custom_info : JSON.stringify(custom_info)) : "[]"
             ).run();

@@ -499,6 +499,8 @@ function fillForm(data) {
     const nationInput = document.getElementById('info-nation');
     const aliasInput = document.getElementById('info-alias');
     const birthdayInput = document.getElementById('info-birthday');
+    const colorInput = document.getElementById('info-color');
+    const colorTextInput = document.getElementById('info-color-text');
     const urlInput = document.getElementById('image-url');
 
     if (speciesInput) speciesInput.value = data.species || '';
@@ -506,6 +508,11 @@ function fillForm(data) {
     if (aliasInput) aliasInput.value = data.alias || '';
     if (birthdayInput) birthdayInput.value = data.birthday || '';
     if (urlInput) urlInput.value = data.image || '';
+    
+    // 인포박스 색상 로드
+    const infoboxColor = data.infoboxColor || data.infobox_color || '#2196F3';
+    if (colorInput) colorInput.value = infoboxColor;
+    if (colorTextInput) colorTextInput.value = infoboxColor;
 
     if (data.image && previewImg) {
         previewImg.src = data.image;
@@ -723,6 +730,7 @@ if (form) {
             nation: document.getElementById('info-nation').value,
             alias: document.getElementById('info-alias').value,
             birthday: document.getElementById('info-birthday').value,
+            infobox_color: document.getElementById('info-color-text').value || '#2196F3',
             image: document.getElementById('image-url').value,
             gallery: currentGallery,
             author: currentUser.displayName || '익명',
