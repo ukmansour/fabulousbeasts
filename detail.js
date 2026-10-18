@@ -279,6 +279,7 @@ function renderInfobox(data) {
     ` : '';
 
     const infoboxColor = data.infoboxColor || data.infobox_color || '#FFFFFF'; // 기본값은 흰색
+    console.log('Detail 페이지 인포박스 색상:', infoboxColor, 'from data:', data);
     // 흰색 배경일 경우 텍스트를 검은색으로, 그 외에는 흰색으로
     const textColor = (infoboxColor.toLowerCase() === '#ffffff' || infoboxColor.toLowerCase() === '#fff' || infoboxColor.toLowerCase() === 'white') ? '#333' : 'white';
     
