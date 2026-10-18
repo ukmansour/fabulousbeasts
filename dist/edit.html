@@ -212,9 +212,11 @@
                     </div>
                     <div class="field-group" style="margin-bottom: 0.8rem;">
                         <label class="field-label">카테고리</label>
-                        <select id="edit-category" class="field-input" style="background-color: white;">
-                            <!-- JS: CATEGORIES inject here -->
-                        </select>
+                        <input type="text" id="edit-category" class="field-input" placeholder="카테고리 입력 (예: 주요 캐릭터)" list="category-suggestions">
+                        <datalist id="category-suggestions">
+                            <!-- 기존 카테고리 목록이 자동 완성으로 표시됩니다 -->
+                        </datalist>
+                        <small style="color: #666; font-size: 0.8rem; margin-top: 0.3rem; display: block;">기존 카테고리를 선택하거나 새로 입력하세요</small>
                     </div>
                     <div class="field-group" style="margin-bottom: 0.8rem;">
                         <label class="field-label">종족</label>

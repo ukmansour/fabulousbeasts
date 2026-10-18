@@ -1054,3 +1054,90 @@ export async function onRequest(context) {
 
     return new Response(JSON.stringify({ error: "Not Found: " + path }), { status: 404, headers: corsHeaders });
 }
+
+
+    // === 순서 관리 API ===
+    // GET: 순서 정보 조회
+    if (request.method === "GET" && apiPath === "/order") {
+        try {
+            // 테이블 생성
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS display_orders (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                )
+            `).run();
+            
+            // 카테고리 순서 조회
+            const categoryResult = await env.DB.prepare("SELECT value FROM display_orders WHERE key = 'category_orders'").first();
+            const categoryOrders = categoryResult ? JSON.parse(categoryResult.value) : {};
+            
+            // 캐릭터 순서 조회
+            const characterResult = await env.DB.prepare("SELECT value FROM display_orders WHERE key = 'character_orders'").first();
+            const characterOrders = characterResult ? JSON.parse(characterResult.value) : {};
+            
+            return new Response(JSON.stringify({
+                categoryOrders,
+                characterOrders
+            }), { headers: corsHeaders });
+        } catch (err) {
+            console.error('순서 정보 로드 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+    
+    // POST: 순서 정보 저장
+    if (request.method === "POST" && apiPath === "/order") {
+        try {
+            const { type, category, orders, secret } = await request.json();
+            
+            // 보안 확인
+            if (secret !== "9889") {
+                return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+            }
+            
+            // 테이블 생성
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS display_orders (
+                    key TEXT PRIMARY KEY,
+                    value TEXT NOT NULL
+                )
+            `).run();
+            
+            if (type === 'category') {
+                // 카테고리 순서 저장
+                await env.DB.prepare(`
+                    INSERT INTO display_orders (key, value)
+                    VALUES ('category_orders', ?)
+                    ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                `).bind(JSON.stringify(orders)).run();
+                
+                console.log('[순서 저장] 카테고리 순서 업데이트:', orders);
+            } else if (type === 'character') {
+                // 기존 캐릭터 순서 로드
+                const result = await env.DB.prepare("SELECT value FROM display_orders WHERE key = 'character_orders'").first();
+                const allOrders = result ? JSON.parse(result.value) : {};
+                
+                // 해당 카테고리의 순서 업데이트
+                allOrders[category] = orders;
+                
+                // 저장
+                await env.DB.prepare(`
+                    INSERT INTO display_orders (key, value)
+                    VALUES ('character_orders', ?)
+                    ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                `).bind(JSON.stringify(allOrders)).run();
+                
+                console.log(`[순서 저장] "${category}" 캐릭터 순서 업데이트:`, orders);
+            }
+            
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            console.error('순서 저장 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // 404: Not Found
+    return new Response(JSON.stringify({ error: "Not Found" }), { status: 404, headers: corsHeaders });
+}

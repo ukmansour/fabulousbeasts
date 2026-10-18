@@ -76,9 +76,21 @@ onAuthStateChanged(auth, async (user) => {
     checkPermission();
 });
 
-function initCategorySelect() {
-    if (!categorySelect) return;
-    categorySelect.innerHTML = CATEGORIES.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+async function initCategorySelect() {
+    const categoryInput = document.getElementById('edit-category');
+    const datalist = document.getElementById('category-suggestions');
+    if (!categoryInput || !datalist) return;
+    
+    try {
+        // API에서 모든 문서의 카테고리를 가져와서 중복 제거
+        const response = await fetch('/api/images');
+        const documents = await response.json();
+        const categories = [...new Set(documents.map(doc => doc.category).filter(c => c))];
+        
+        datalist.innerHTML = categories.map(cat => `<option value="${cat}">`).join('');
+    } catch (e) {
+        console.error('카테고리 목록 로드 실패:', e);
+    }
 }
 
 function checkPermission() {

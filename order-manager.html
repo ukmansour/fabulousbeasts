@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>카테고리 & 순서 관리 - 유수언</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .manager-container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
+        .manager-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        
+        .panel { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 1.5rem; }
+        .panel-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem; color: var(--primary-color); }
+        
+        .category-list, .character-list { list-style: none; padding: 0; margin: 0; }
+        .draggable-item {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            cursor: move;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+        }
+        .draggable-item:hover { background: #e9ecef; border-color: var(--primary-color); }
+        .draggable-item.dragging { opacity: 0.5; }
+        .draggable-item.drag-over { border-color: var(--primary-color); background: #e7f5ff; }
+        
+        .drag-handle { cursor: grab; font-size: 1.2rem; color: #868e96; margin-right: 0.5rem; }
+        .drag-handle:active { cursor: grabbing; }
+        
+        .item-info { flex: 1; display: flex; align-items: center; gap: 0.5rem; }
+        .item-order { 
+            background: var(--primary-color); 
+            color: white; 
+            padding: 0.2rem 0.5rem; 
+            border-radius: 4px; 
+            font-size: 0.85rem;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
+        }
+        .item-name { font-weight: 700; }
+        .item-count { font-size: 0.85rem; color: #868e96; }
+        
+        .save-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 6px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 1rem;
+            width: 100%;
+        }
+        .save-btn:hover { opacity: 0.9; }
+        
+        .status-message {
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            display: none;
+        }
+        .status-message.success { background: #d3f9d8; color: #2b8a3e; display: block; }
+        .status-message.error { background: #ffe3e3; color: #c92a2a; display: block; }
+        
+        @media (max-width: 950px) {
+            .manager-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
+                <span>유수언</span>
+            </a>
+            <nav class="top-nav">
+                <a href="index.html" class="nav-link">홈</a>
+                <a href="admin.html" class="nav-link">관리자</a>
+                <span id="user-info"></span>
+            </nav>
+        </div>
+    </header>
+
+    <div class="manager-container">
+        <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 2rem;">카테고리 & 순서 관리</h1>
+        
+        <div class="manager-grid">
+            <!-- 카테고리 순서 -->
+            <div class="panel">
+                <div class="panel-title">카테고리 순서</div>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">드래그하여 홈페이지에 표시될 카테고리 순서를 변경하세요</p>
+                <ul class="category-list" id="category-list">
+                    <li style="text-align: center; color: #868e96; padding: 2rem;">불러오는 중...</li>
+                </ul>
+                <button class="save-btn" id="save-category-order">카테고리 순서 저장</button>
+                <div class="status-message" id="category-status"></div>
+            </div>
+            
+            <!-- 캐릭터 순서 -->
+            <div class="panel">
+                <div class="panel-title">캐릭터 순서</div>
+                <p style="color: #666; font-size: 0.9rem; margin-bottom: 1rem;">
+                    카테고리를 선택하세요: 
+                    <select id="category-selector" style="padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; margin-left: 0.5rem;">
+                        <option value="">선택...</option>
+                    </select>
+                </p>
+                <ul class="character-list" id="character-list">
+                    <li style="text-align: center; color: #868e96; padding: 2rem;">카테고리를 선택하세요</li>
+                </ul>
+                <button class="save-btn" id="save-character-order" style="display: none;">캐릭터 순서 저장</button>
+                <div class="status-message" id="character-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="order-manager.js"></script>
+</body>
+</html>
