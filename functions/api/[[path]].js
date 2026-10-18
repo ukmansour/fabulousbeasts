@@ -1052,10 +1052,6 @@ export async function onRequest(context) {
         }
     }
 
-    return new Response(JSON.stringify({ error: "Not Found: " + path }), { status: 404, headers: corsHeaders });
-}
-
-
     // === 순서 관리 API ===
     // GET: 순서 정보 조회
     if (request.method === "GET" && apiPath === "/order") {
