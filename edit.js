@@ -453,6 +453,7 @@ async function loadInitialData() {
             if (contentType && contentType.includes("application/json")) {
                 const dbData = await response.json();
                 console.log("D1 data received for edit:", dbData);
+                console.log("infobox_color from DB:", dbData.infobox_color);
                 const data = { 
                     ...baseData, 
                     name: dbData.name || baseData.name,
