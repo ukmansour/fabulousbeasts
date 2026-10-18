@@ -278,11 +278,11 @@ function renderInfobox(data) {
         </div>
     ` : '';
 
-    const infoboxColor = data.infoboxColor || data.infobox_color || '#FFFFFF'; // 기본값은 흰색
+    const infoboxColor = data.infoboxColor || data.infobox_color || '#2196F3'; // 기본값은 파란색
     
     infoboxArea.innerHTML = `
         <div class="infobox" style="position:relative; z-index:10;">
-            <div style="background:${infoboxColor}; color:${infoboxColor === '#FFFFFF' || infoboxColor === '#ffffff' || infoboxColor === 'white' ? '#333' : 'white'}; padding:8px; text-align:center; font-weight:800; font-size:1rem;">${data.name || charId}</div>
+            <div style="background:${infoboxColor}; color:white; padding:8px; text-align:center; font-weight:800; font-size:1rem;">${data.name || charId}</div>
             <div style="padding:10px; text-align:center; border-bottom:1px solid #eee;" onclick="window.showLarge('${data.image}')">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" style="max-width:100%; cursor:zoom-in;">
             </div>
@@ -384,7 +384,8 @@ function renderContent(details) {
                 html += '<table class="wiki-table"><thead><tr>';
                 cells.forEach(c => { 
                     const cellContent = parseCellWithBg(c.trim());
-                    html += `<th${cellContent.style}>${applyInline(cellContent.text)}</th>`; 
+                    // 헤더는 기본 스타일 유지, 색상 지정 시에만 적용
+                    html += `<th${cellContent.style || ''}>${applyInline(cellContent.text)}</th>`; 
                 });
                 html += '</tr></thead><tbody>';
                 inTable = true;
@@ -392,7 +393,8 @@ function renderContent(details) {
                 html += '<tr>';
                 cells.forEach(c => { 
                     const cellContent = parseCellWithBg(c.trim());
-                    html += `<td${cellContent.style}>${applyInline(cellContent.text)}</td>`; 
+                    // 데이터 셀은 색상 미지정 시 흰색 배경
+                    html += `<td${cellContent.style || ' style="background-color:white"'}>${applyInline(cellContent.text)}</td>`; 
                 });
                 html += '</tr>';
             }
