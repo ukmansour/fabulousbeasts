@@ -26,6 +26,8 @@ window.addEventListener('adminTabSwitch', (e) => {
         renderWikiAdminPage();
     } else if (tabId === 'settings') {
         renderSettingsAdminPage();
+    } else if (tabId === 'order') {
+        renderOrderAdminPage();
     } else {
         renderAdminPage();
     }
@@ -445,3 +447,332 @@ async function renderSettingsAdminPage() {
 }
 
 initAdminToolbars();
+
+// [추가] 순서 관리 탭 렌더링
+let allDocuments = [];
+let categoryOrders = {};
+let characterOrders = {};
+
+async function renderOrderAdminPage() {
+    const orderArea = document.getElementById('order-admin-content');
+    if (!orderArea) return;
+
+    orderArea.innerHTML = '<div style="text-align:center; padding:2rem;">데이터를 불러오는 중...</div>';
+
+    try {
+        // 모든 문서 로드
+        const response = await fetch('/api/images');
+        allDocuments = await response.json();
+        
+        // 순서 정보 로드
+        const orderResponse = await fetch('/api/order');
+        if (orderResponse.ok) {
+            const orderData = await orderResponse.json();
+            categoryOrders = orderData.categoryOrders || {};
+            characterOrders = orderData.characterOrders || {};
+        }
+
+        orderArea.innerHTML = `
+            <div style="max-width:1200px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:2rem;">
+                <!-- 카테고리 순서 -->
+                <div style="background:white; border:1px solid #ccc; padding:1.5rem;">
+                    <h3 style="font-weight:900; margin-bottom:0.5rem; font-size:1.1rem;">카테고리 순서</h3>
+                    <p style="color:#666; font-size:0.85rem; margin-bottom:1.5rem;">드래그하여 홈페이지에 표시될 카테고리 순서를 변경하세요</p>
+                    <ul id="admin-category-list" style="list-style:none; padding:0; margin:0 0 1.5rem 0; min-height:300px;">
+                    </ul>
+                    <button id="save-category-order" style="width:100%; padding:0.8rem; background:#333; color:white; border:none; font-weight:900; cursor:pointer;">카테고리 순서 저장</button>
+                    <div id="category-status" style="margin-top:1rem; padding:0.8rem; border-radius:4px; display:none;"></div>
+                </div>
+                
+                <!-- 캐릭터 순서 -->
+                <div style="background:white; border:1px solid #ccc; padding:1.5rem;">
+                    <h3 style="font-weight:900; margin-bottom:0.5rem; font-size:1.1rem;">캐릭터 순서</h3>
+                    <p style="color:#666; font-size:0.85rem; margin-bottom:1rem;">
+                        카테고리 선택: 
+                        <select id="admin-category-selector" style="padding:0.4rem; border:1px solid #ccc; margin-left:0.5rem;">
+                            <option value="">선택...</option>
+                        </select>
+                    </p>
+                    <ul id="admin-character-list" style="list-style:none; padding:0; margin:0 0 1.5rem 0; min-height:300px;">
+                        <li style="text-align:center; color:#868e96; padding:2rem;">카테고리를 선택하세요</li>
+                    </ul>
+                    <button id="save-character-order" style="width:100%; padding:0.8rem; background:#333; color:white; border:none; font-weight:900; cursor:pointer; display:none;">캐릭터 순서 저장</button>
+                    <div id="character-status" style="margin-top:1rem; padding:0.8rem; border-radius:4px; display:none;"></div>
+                </div>
+            </div>
+            
+            <style>
+                .admin-draggable-item {
+                    background:#f8f9fa;
+                    border:2px solid #dee2e6;
+                    border-radius:4px;
+                    padding:0.8rem;
+                    margin-bottom:0.5rem;
+                    cursor:move;
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    transition:0.2s;
+                }
+                .admin-draggable-item:hover { background:#e9ecef; border-color:#adb5bd; }
+                .admin-drag-handle { cursor:grab; font-size:1.2rem; color:#868e96; margin-right:0.5rem; }
+                .admin-drag-handle:active { cursor:grabbing; }
+                .admin-item-order { 
+                    background:#333; 
+                    color:white; 
+                    padding:0.2rem 0.5rem; 
+                    border-radius:3px; 
+                    font-size:0.8rem;
+                    font-weight:bold;
+                    min-width:25px;
+                    text-align:center;
+                }
+            </style>
+        `;
+
+        renderAdminCategoryList();
+        setupAdminCategorySelector();
+
+        // 저장 버튼 이벤트
+        document.getElementById('save-category-order').onclick = saveCategoryOrder;
+        document.getElementById('save-character-order').onclick = saveCharacterOrder;
+
+    } catch (e) {
+        orderArea.innerHTML = `<div style="text-align:center; padding:2rem; color:red;">오류: ${e.message}</div>`;
+    }
+}
+
+function renderAdminCategoryList() {
+    const categoryList = document.getElementById('admin-category-list');
+    if (!categoryList) return;
+
+    const categories = [...new Set(allDocuments.map(doc => doc.category).filter(c => c))];
+    const sortedCategories = categories.sort((a, b) => {
+        const orderA = categoryOrders[a] !== undefined ? categoryOrders[a] : 999;
+        const orderB = categoryOrders[b] !== undefined ? categoryOrders[b] : 999;
+        return orderA - orderB;
+    });
+
+    categoryList.innerHTML = sortedCategories.map((category, index) => {
+        const count = allDocuments.filter(doc => doc.category === category).length;
+        return `
+            <li class="admin-draggable-item" data-category="${category}" draggable="true">
+                <div style="display:flex; align-items:center; gap:0.5rem; flex:1;">
+                    <span class="admin-drag-handle">☰</span>
+                    <span class="admin-item-order">${index + 1}</span>
+                    <span style="font-weight:700;">${category}</span>
+                    <span style="font-size:0.85rem; color:#868e96;">(${count}개)</span>
+                </div>
+            </li>
+        `;
+    }).join('');
+
+    setupAdminDragAndDrop('admin-category-list');
+}
+
+function setupAdminCategorySelector() {
+    const selector = document.getElementById('admin-category-selector');
+    if (!selector) return;
+
+    const categories = [...new Set(allDocuments.map(doc => doc.category).filter(c => c))];
+    const sortedCategories = categories.sort((a, b) => {
+        const orderA = categoryOrders[a] !== undefined ? categoryOrders[a] : 999;
+        const orderB = categoryOrders[b] !== undefined ? categoryOrders[b] : 999;
+        return orderA - orderB;
+    });
+
+    selector.innerHTML = '<option value="">선택...</option>' + 
+        sortedCategories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+
+    selector.onchange = (e) => {
+        if (e.target.value) {
+            renderAdminCharacterList(e.target.value);
+        } else {
+            document.getElementById('admin-character-list').innerHTML = '<li style="text-align:center; color:#868e96; padding:2rem;">카테고리를 선택하세요</li>';
+            document.getElementById('save-character-order').style.display = 'none';
+        }
+    };
+}
+
+function renderAdminCharacterList(category) {
+    const characterList = document.getElementById('admin-character-list');
+    const saveBtn = document.getElementById('save-character-order');
+    if (!characterList) return;
+
+    const characters = allDocuments.filter(doc => doc.category === category);
+    
+    if (characters.length === 0) {
+        characterList.innerHTML = '<li style="text-align:center; color:#868e96; padding:2rem;">이 카테고리에 캐릭터가 없습니다</li>';
+        saveBtn.style.display = 'none';
+        return;
+    }
+
+    const orders = characterOrders[category] || {};
+    const sortedCharacters = characters.sort((a, b) => {
+        const orderA = orders[a.title] !== undefined ? orders[a.title] : 999;
+        const orderB = orders[b.title] !== undefined ? orders[b.title] : 999;
+        return orderA - orderB;
+    });
+
+    characterList.innerHTML = sortedCharacters.map((char, index) => `
+        <li class="admin-draggable-item" data-title="${char.title}" data-category="${category}" draggable="true">
+            <div style="display:flex; align-items:center; gap:0.5rem; flex:1;">
+                <span class="admin-drag-handle">☰</span>
+                <span class="admin-item-order">${index + 1}</span>
+                <span style="font-weight:700;">${char.name || char.title}</span>
+            </div>
+        </li>
+    `).join('');
+
+    saveBtn.style.display = 'block';
+    setupAdminDragAndDrop('admin-character-list');
+}
+
+function setupAdminDragAndDrop(listId) {
+    const list = document.getElementById(listId);
+    if (!list) return;
+
+    let draggedElement = null;
+    const items = list.querySelectorAll('.admin-draggable-item');
+
+    items.forEach(item => {
+        item.ondragstart = function(e) {
+            draggedElement = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        };
+
+        item.ondragend = function() {
+            this.style.opacity = '1';
+            updateAdminOrderNumbers(listId);
+        };
+
+        item.ondragover = function(e) {
+            e.preventDefault();
+            return false;
+        };
+
+        item.ondrop = function(e) {
+            e.stopPropagation();
+            
+            if (draggedElement !== this) {
+                const allItems = Array.from(list.querySelectorAll('.admin-draggable-item'));
+                const draggedIndex = allItems.indexOf(draggedElement);
+                const targetIndex = allItems.indexOf(this);
+
+                if (draggedIndex < targetIndex) {
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedElement, this);
+                }
+            }
+            return false;
+        };
+    });
+
+    updateAdminOrderNumbers(listId);
+}
+
+function updateAdminOrderNumbers(listId) {
+    const items = document.querySelectorAll(`#${listId} .admin-draggable-item`);
+    items.forEach((item, index) => {
+        const orderSpan = item.querySelector('.admin-item-order');
+        if (orderSpan) orderSpan.textContent = index + 1;
+    });
+}
+
+async function saveCategoryOrder() {
+    const items = document.querySelectorAll('#admin-category-list .admin-draggable-item');
+    const newOrders = {};
+
+    items.forEach((item, index) => {
+        const category = item.dataset.category;
+        newOrders[category] = index;
+    });
+
+    const secret = prompt("보안 코드를 입력하세요:");
+    if (secret !== "9889") {
+        alert("보안 코드가 틀렸습니다.");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'category',
+                orders: newOrders,
+                secret: secret
+            })
+        });
+
+        if (response.ok) {
+            categoryOrders = newOrders;
+            showAdminStatus('category-status', '카테고리 순서가 저장되었습니다!', 'success');
+            setupAdminCategorySelector();
+        } else {
+            throw new Error('저장 실패');
+        }
+    } catch (e) {
+        showAdminStatus('category-status', '저장에 실패했습니다: ' + e.message, 'error');
+    }
+}
+
+async function saveCharacterOrder() {
+    const categorySelector = document.getElementById('admin-category-selector');
+    const category = categorySelector.value;
+
+    if (!category) return;
+
+    const items = document.querySelectorAll('#admin-character-list .admin-draggable-item');
+    const newOrders = {};
+
+    items.forEach((item, index) => {
+        const title = item.dataset.title;
+        newOrders[title] = index;
+    });
+
+    const secret = prompt("보안 코드를 입력하세요:");
+    if (secret !== "9889") {
+        alert("보안 코드가 틀렸습니다.");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'character',
+                category: category,
+                orders: newOrders,
+                secret: secret
+            })
+        });
+
+        if (response.ok) {
+            if (!characterOrders[category]) characterOrders[category] = {};
+            characterOrders[category] = newOrders;
+            showAdminStatus('character-status', `"${category}" 카테고리의 캐릭터 순서가 저장되었습니다!`, 'success');
+        } else {
+            throw new Error('저장 실패');
+        }
+    } catch (e) {
+        showAdminStatus('character-status', '저장에 실패했습니다: ' + e.message, 'error');
+    }
+}
+
+function showAdminStatus(elementId, message, type) {
+    const statusEl = document.getElementById(elementId);
+    if (!statusEl) return;
+    
+    statusEl.textContent = message;
+    statusEl.style.display = 'block';
+    statusEl.style.background = type === 'success' ? '#d3f9d8' : '#ffe3e3';
+    statusEl.style.color = type === 'success' ? '#2b8a3e' : '#c92a2a';
+
+    setTimeout(() => {
+        statusEl.style.display = 'none';
+    }, 3000);
+}
