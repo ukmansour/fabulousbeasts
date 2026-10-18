@@ -445,7 +445,8 @@ function generateTOC() {
 // 표 셀 배경색 파싱 함수
 function parseCellWithBg(cell) {
     // {bg:#색상} 또는 {bg:색상이름} 형식 지원
-    const bgMatch = cell.match(/\{bg:(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|[a-z]+)\}/i);
+    // 정규식을 더 관대하게 만들어서 공백도 허용
+    const bgMatch = cell.match(/\{\s*bg\s*:\s*(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|[a-z]+)\s*\}/i);
     if (bgMatch) {
         const color = bgMatch[1];
         const text = cell.replace(bgMatch[0], '').trim();
