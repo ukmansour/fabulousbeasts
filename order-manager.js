@@ -173,56 +173,83 @@ function renderCharacterList(category) {
 
 function setupDragAndDrop(listId) {
     const list = document.getElementById(listId);
-    if (!list) return;
+    if (!list) {
+        console.error('List not found:', listId);
+        return;
+    }
     
+    let draggedElement = null;
+    
+    // 기존 이벤트 리스너 제거를 위해 새로 렌더링
     const items = list.querySelectorAll('.draggable-item');
     
     items.forEach(item => {
-        item.addEventListener('dragstart', (e) => {
-            item.classList.add('dragging');
+        // Dragstart
+        item.ondragstart = function(e) {
+            draggedElement = this;
+            this.style.opacity = '0.5';
             e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', item.innerHTML);
-        });
+            e.dataTransfer.setData('text/html', this.innerHTML);
+        };
         
-        item.addEventListener('dragend', () => {
-            item.classList.remove('dragging');
-            const allItems = list.querySelectorAll('.draggable-item');
-            allItems.forEach(i => i.classList.remove('drag-over'));
+        // Dragend
+        item.ondragend = function(e) {
+            this.style.opacity = '1';
+            
+            // 모든 아이템에서 over 클래스 제거
+            items.forEach(function (item) {
+                item.classList.remove('drag-over');
+            });
+            
+            // 순서 번호 업데이트
             updateOrderNumbers(listId);
-        });
-    });
-    
-    // 리스트 전체에 dragover 이벤트 바인딩
-    list.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const dragging = list.querySelector('.dragging');
-        if (!dragging) return;
+        };
         
-        const afterElement = getDragAfterElement(list, e.clientY);
-        if (afterElement == null) {
-            list.appendChild(dragging);
-        } else {
-            list.insertBefore(dragging, afterElement);
-        }
+        // Dragover
+        item.ondragover = function(e) {
+            if (e.preventDefault) {
+                e.preventDefault();
+            }
+            
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        };
+        
+        // Dragenter
+        item.ondragenter = function(e) {
+            this.classList.add('drag-over');
+        };
+        
+        // Dragleave
+        item.ondragleave = function(e) {
+            this.classList.remove('drag-over');
+        };
+        
+        // Drop
+        item.ondrop = function(e) {
+            if (e.stopPropagation) {
+                e.stopPropagation();
+            }
+            
+            if (draggedElement !== this) {
+                // 드래그한 요소를 드롭 위치로 이동
+                const allItems = Array.from(list.querySelectorAll('.draggable-item'));
+                const draggedIndex = allItems.indexOf(draggedElement);
+                const targetIndex = allItems.indexOf(this);
+                
+                if (draggedIndex < targetIndex) {
+                    this.parentNode.insertBefore(draggedElement, this.nextSibling);
+                } else {
+                    this.parentNode.insertBefore(draggedElement, this);
+                }
+            }
+            
+            return false;
+        };
     });
     
-    // 순서 번호 업데이트
+    // 초기 순서 번호 설정
     updateOrderNumbers(listId);
-}
-
-function getDragAfterElement(container, y) {
-    const draggableElements = [...container.querySelectorAll('.draggable-item:not(.dragging)')];
-    
-    return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        
-        if (offset < 0 && offset > closest.offset) {
-            return { offset: offset, element: child };
-        } else {
-            return closest;
-        }
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
 
 function updateOrderNumbers(listId) {
