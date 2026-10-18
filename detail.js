@@ -278,15 +278,17 @@ function renderInfobox(data) {
         </div>
     ` : '';
 
-    const infoboxColor = data.infoboxColor || data.infobox_color || '#2196F3'; // 기본값은 파란색
+    const infoboxColor = data.infoboxColor || data.infobox_color || '#FFFFFF'; // 기본값은 흰색
+    // 흰색 배경일 경우 텍스트를 검은색으로, 그 외에는 흰색으로
+    const textColor = (infoboxColor.toLowerCase() === '#ffffff' || infoboxColor.toLowerCase() === '#fff' || infoboxColor.toLowerCase() === 'white') ? '#333' : 'white';
     
     infoboxArea.innerHTML = `
-        <div class="infobox" style="position:relative; z-index:10;">
-            <div style="background:${infoboxColor}; color:white; padding:8px; text-align:center; font-weight:800; font-size:1rem;">${data.name || charId}</div>
-            <div style="padding:10px; text-align:center; border-bottom:1px solid #eee;" onclick="window.showLarge('${data.image}')">
+        <div class="infobox" style="position:relative; z-index:10; background:${infoboxColor}; border:1px solid #ddd; border-radius:8px; overflow:hidden;">
+            <div style="padding:8px; text-align:center; font-weight:800; font-size:1rem; color:${textColor}; border-bottom:2px solid rgba(0,0,0,0.1);">${data.name || charId}</div>
+            <div style="padding:10px; text-align:center; border-bottom:1px solid rgba(0,0,0,0.1); background:white;" onclick="window.showLarge('${data.image}')">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" style="max-width:100%; cursor:zoom-in;">
             </div>
-            <div style="padding:10px;">
+            <div style="padding:10px; background:white;">
                 <table style="width:100%; font-size:13px; border-collapse:collapse;">
                     ${data.alias ? `<tr><th style="background:#f4f4f4; width:35%; padding:5px; border:1px solid #eee; text-align:left;">별명</th><td style="padding:5px; border:1px solid #eee;">${data.alias}</td></tr>` : ''}
                     ${data.species ? `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">종족</th><td style="padding:5px; border:1px solid #eee;">${data.species}</td></tr>` : ''}
