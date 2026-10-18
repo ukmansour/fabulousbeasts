@@ -149,6 +149,20 @@
                             <div id="autocomplete-list" class="autocomplete-list"></div>
                         </div>
                         <textarea id="edit-content" class="field-textarea" placeholder="이곳에 내용을 입력하세요. 위 문법 버튼을 사용해 꾸밀 수 있습니다."></textarea>
+                        
+                        <!-- 본문 이미지/동영상 업로드 -->
+                        <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <strong style="font-size: 0.9rem;">📎 본문에 파일 삽입</strong>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" id="content-image-btn" class="toolbar-btn" style="flex: 1; padding: 0.5rem;">🖼️ 이미지 업로드</button>
+                                <button type="button" id="content-video-btn" class="toolbar-btn" style="flex: 1; padding: 0.5rem;">🎥 동영상 업로드</button>
+                            </div>
+                            <input type="file" id="content-image-input" accept="image/*" style="display: none;">
+                            <input type="file" id="content-video-input" accept="video/*" style="display: none;">
+                            <div id="content-upload-status" style="margin-top: 0.5rem; font-size: 0.85rem; color: #666;"></div>
+                        </div>
                     </div>
 
                     <div class="guide-box">
@@ -221,11 +235,11 @@
                     <div class="field-group" style="margin-bottom: 0.8rem;">
                         <label class="field-label">인포박스 색상</label>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="color" id="info-color" class="field-input" value="#FFFFFF" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
-                            <input type="text" id="info-color-text" class="field-input" value="#FFFFFF" placeholder="#FFFFFF" style="flex: 1;">
-                            <button type="button" onclick="document.getElementById('info-color').value='#FFFFFF'; document.getElementById('info-color-text').value='#FFFFFF';" style="padding: 0.4rem 0.8rem; background: #868e96; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">초기화</button>
+                            <input type="color" id="info-color" class="field-input" value="#2196F3" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
+                            <input type="text" id="info-color-text" class="field-input" value="#2196F3" placeholder="#2196F3" style="flex: 1;">
+                            <button type="button" onclick="document.getElementById('info-color').value='#2196F3'; document.getElementById('info-color-text').value='#2196F3';" style="padding: 0.4rem 0.8rem; background: #868e96; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">초기화</button>
                         </div>
-                        <small style="color: #666; font-size: 0.8rem; margin-top: 0.3rem; display: block;">인포박스 상단 헤더의 배경색을 설정합니다 (흰색일 경우 텍스트는 검은색)</small>
+                        <small style="color: #666; font-size: 0.8rem; margin-top: 0.3rem; display: block;">인포박스 상단 헤더의 배경색을 설정합니다</small>
                     </div>
 
                     <div class="section-title" style="margin-top: 1.5rem; display: flex; justify-content: space-between;">

@@ -347,6 +347,13 @@ function renderContent(details) {
     const closeAll = () => { closeP(); closeUl(); closeTbl(); closeBq(); };
 
     for (const line of lines) {
+        // HTML 태그 (video, img 등) 직접 삽입 허용
+        if (line.trim().startsWith('<video') || line.trim().startsWith('<source') || line.trim().startsWith('</video>')) {
+            closeAll();
+            html += line + '\n';
+            continue;
+        }
+
         // 블록 태그 처리
         if (/^\[spoiler\]$/i.test(line.trim())) { closeAll(); html += '<details class="wiki-spoiler"><summary>스포일러 (클릭하여 펼치기)</summary><div class="spoiler-content">'; continue; }
         if (/^\[\/spoiler\]$/i.test(line.trim())) { closeAll(); html += '</div></details>'; continue; }
