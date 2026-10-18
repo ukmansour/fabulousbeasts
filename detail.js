@@ -278,11 +278,11 @@ function renderInfobox(data) {
         </div>
     ` : '';
 
-    const infoboxColor = data.infoboxColor || data.infobox_color || '#2196F3'; // 기본값은 파란색
+    const infoboxColor = data.infoboxColor || data.infobox_color || '#FFFFFF'; // 기본값은 흰색
     
     infoboxArea.innerHTML = `
         <div class="infobox" style="position:relative; z-index:10;">
-            <div style="background:${infoboxColor}; color:white; padding:8px; text-align:center; font-weight:800; font-size:1rem;">${data.name || charId}</div>
+            <div style="background:${infoboxColor}; color:${infoboxColor === '#FFFFFF' || infoboxColor === '#ffffff' || infoboxColor === 'white' ? '#333' : 'white'}; padding:8px; text-align:center; font-weight:800; font-size:1rem;">${data.name || charId}</div>
             <div style="padding:10px; text-align:center; border-bottom:1px solid #eee;" onclick="window.showLarge('${data.image}')">
                 <img src="${data.image || 'https://via.placeholder.com/300x400?text=No+Image'}" style="max-width:100%; cursor:zoom-in;">
             </div>

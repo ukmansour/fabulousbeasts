@@ -298,7 +298,7 @@ export async function onRequest(context) {
                   updated_at = CURRENT_TIMESTAMP
             `).bind(
                 title, name || "", content, author || "Anonymous", category || "기타",
-                species || "", nation || "", alias || "", birthday || "", infobox_color || "#2196F3", image || "",
+                species || "", nation || "", alias || "", birthday || "", infobox_color || "#FFFFFF", image || "",
                 gallery ? (typeof gallery === 'string' ? gallery : JSON.stringify(gallery)) : "[]",
                 custom_info ? (typeof custom_info === 'string' ? custom_info : JSON.stringify(custom_info)) : "[]"
             ).run();
