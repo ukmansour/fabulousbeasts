@@ -396,7 +396,34 @@ function initToolbar() {
                 case 'note':      replacement = `\n[note]\n${sel || '메모 내용'}\n[/note]\n`; break;
                 case 'warn':      replacement = `\n[warn]\n${sel || '경고 내용'}\n[/warn]\n`; break;
                 case 'table':
-                    replacement = `\n|항목1|항목2|항목3|\n|---|---|---|\n|내용1|내용2|내용3|\n`;
+                    if (sel) {
+                        // 선택된 텍스트가 있으면 각 줄을 행으로 만들고, 탭이나 쉼표로 열 구분
+                        const lines = sel.split('\n').filter(line => line.trim());
+                        if (lines.length > 0) {
+                            // 첫 번째 줄을 헤더로 사용
+                            const firstLine = lines[0].split(/[\t,|]/).map(cell => cell.trim());
+                            const colCount = firstLine.length;
+                            
+                            // 헤더 행
+                            let table = '\n|' + firstLine.join('|') + '|\n';
+                            // 구분선
+                            table += '|' + Array(colCount).fill('---').join('|') + '|\n';
+                            // 데이터 행들
+                            for (let i = 1; i < lines.length; i++) {
+                                const cells = lines[i].split(/[\t,|]/).map(cell => cell.trim());
+                                // 부족한 열은 빈 칸으로 채우기
+                                while (cells.length < colCount) cells.push('');
+                                table += '|' + cells.slice(0, colCount).join('|') + '|\n';
+                            }
+                            replacement = table;
+                        } else {
+                            // 빈 선택이면 기본 표
+                            replacement = `\n|제목1|제목2|제목3|\n|---|---|---|\n|내용1|내용2|내용3|\n`;
+                        }
+                    } else {
+                        // 선택 없으면 기본 2x3 표
+                        replacement = `\n|제목1|제목2|제목3|\n|---|---|---|\n|내용1|내용2|내용3|\n|내용4|내용5|내용6|\n`;
+                    }
                     break;
             }
             if (!replacement) return;
