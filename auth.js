@@ -65,12 +65,15 @@ let isProcessingAuth = false;
 
 authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log('[AUTH] 로그인/가입 시작');
     isProcessingAuth = true;
     
     const nickname = nicknameInput.value.trim();
     const email = emailInput.value.trim();
     const password = passwordInput.value;
     const passwordConfirm = passwordConfirmInput.value;
+    
+    console.log('[AUTH] 입력값:', { nickname, email: email ? '입력됨' : '없음', isLogin });
     
     errorMessage.style.display = 'none';
     submitBtn.disabled = true;
@@ -80,19 +83,24 @@ authForm.addEventListener('submit', async (e) => {
         if (isLogin) {
             // [로그인 로직]
             const loginEmail = nickname.includes('@') ? nickname : nickname + INTERNAL_DOMAIN;
+            console.log('[AUTH] 로그인 시도:', loginEmail);
             await signInWithEmailAndPassword(auth, loginEmail, password);
+            console.log('[AUTH] 로그인 성공');
             window.location.href = 'index.html';
         } else {
             // [회원가입 로직]
+            console.log('[AUTH] 회원가입 시작');
             if (password !== passwordConfirm) throw new Error("비밀번호 확인이 일치하지 않습니다.");
             if (password.length < 6) throw new Error("비밀번호는 6자리 이상이어야 합니다.");
             
             // 1. 닉네임 중복 체크
+            console.log('[AUTH] 닉네임 중복 체크');
             const taken = await isNicknameTaken(nickname);
             if (taken) throw new Error("이미 존재하는 닉네임입니다. 다른 이름을 사용해 주세요.");
 
             // 2. 계정 생성 (Authentication)
             const signupEmail = email || (nickname + INTERNAL_DOMAIN);
+            console.log('[AUTH] Firebase 계정 생성:', signupEmail);
             const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, password);
             const user = userCredential.user;
             console.log("1단계: 계정 생성 성공", user.uid);
@@ -144,7 +152,7 @@ authForm.addEventListener('submit', async (e) => {
             window.location.href = 'index.html';
         }
     } catch (error) {
-        console.error(error);
+        console.error('[AUTH] 오류:', error);
         errorMessage.textContent = error.message;
         errorMessage.style.display = 'block';
         isProcessingAuth = false; // 에러 시 플래그 초기화

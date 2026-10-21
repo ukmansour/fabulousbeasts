@@ -15,6 +15,22 @@
             box-shadow: var(--shadow-md);
             text-align: center;
         }
+        
+        @media (max-width: 768px) {
+            .auth-container {
+                margin: 40px auto;
+                padding: 1.5rem;
+                border-radius: 16px;
+                max-width: 90%;
+            }
+            .auth-form input {
+                font-size: 16px; /* iOS에서 자동 줌 방지 */
+            }
+            .auth-btn {
+                font-size: 1rem;
+                padding: 0.9rem;
+            }
+        }
         .auth-tabs {
             display: flex;
             margin-bottom: 2rem;
