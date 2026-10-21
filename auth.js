@@ -28,11 +28,27 @@ const loginTab = document.getElementById('login-tab');
 const signupTab = document.getElementById('signup-tab');
 const errorMessage = document.getElementById('error-message');
 
+console.log('[AUTH INIT] 요소 확인:', {
+    authForm: !!authForm,
+    nicknameInput: !!nicknameInput,
+    emailInput: !!emailInput,
+    passwordInput: !!passwordInput,
+    submitBtn: !!submitBtn,
+    loginTab: !!loginTab,
+    signupTab: !!signupTab
+});
+
+if (!authForm || !submitBtn) {
+    console.error('[AUTH INIT] 필수 요소를 찾을 수 없습니다!');
+    alert('페이지 로딩 오류가 발생했습니다. 새로고침 해주세요.');
+}
+
 let isLogin = true;
 const INTERNAL_DOMAIN = "@youshouyan.wiki"; // 이 사이트만의 전용 도메인
 
 // 탭 전환 로직
 loginTab.addEventListener('click', () => {
+    console.log('[AUTH] 로그인 탭 클릭');
     isLogin = true;
     loginTab.classList.add('active');
     signupTab.classList.remove('active');
@@ -44,6 +60,7 @@ loginTab.addEventListener('click', () => {
 });
 
 signupTab.addEventListener('click', () => {
+    console.log('[AUTH] 회원가입 탭 클릭');
     isLogin = false;
     signupTab.classList.add('active');
     loginTab.classList.remove('active');
@@ -63,8 +80,11 @@ async function isNicknameTaken(nickname) {
 
 let isProcessingAuth = false;
 
+console.log('[AUTH] 폼 이벤트 리스너 등록 시작');
+
 authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log('[AUTH] 폼 제출 이벤트 발생!');
     console.log('[AUTH] 로그인/가입 시작');
     isProcessingAuth = true;
     
@@ -165,6 +185,15 @@ authForm.addEventListener('submit', async (e) => {
 onAuthStateChanged(auth, (user) => {
     // 가입/로그인 버튼을 눌러서 처리 중일 때는 여기서 강제 이동하지 않음!
     if (user && !isProcessingAuth && !window.location.hash.includes('logout')) {
+        console.log('[AUTH] 이미 로그인됨, 홈으로 이동');
         window.location.href = 'index.html';
     }
 });
+
+// 모바일에서 폼 제출이 안 되는 경우를 대비한 버튼 직접 클릭 핸들러
+submitBtn.addEventListener('click', (e) => {
+    console.log('[AUTH] 버튼 직접 클릭됨');
+    // 폼의 submit 이벤트가 자동으로 발생하므로 여기서는 로그만 남김
+});
+
+console.log('[AUTH] auth.js 로딩 완료');
