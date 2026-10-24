@@ -329,7 +329,7 @@ function applyInline(text) {
         .replace(/~~(.*?)~~/g, '<s>$1</s>')
         .replace(/(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
         .replace(/\[color=(.*?)\](.*?)\[\/color\]/g, '<span style="color:$1">$2</span>')
-        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:500px; border-radius:8px; display:block; margin:20px auto;">')
+        .replace(/!\[(.*?)\]\((.*?)\)/g, '<img src="$2" alt="$1" style="max-width:250px; border-radius:8px; display:block; margin:20px auto;">')
         .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>')
         .replace(/\[\[([^\]]+)\]\]/g, (match, p1) => {
             const parts = p1.split('/');
