@@ -49,7 +49,9 @@ async function loadNotifications() {
             return;
         }
         
-        const notifications = await response.json();
+        const data = await response.json();
+        // API가 배열이 아닌 경우(에러 객체) 처리
+        const notifications = Array.isArray(data) ? data : [];
         renderNotifications(notifications);
         updateUnreadCount(notifications);
     } catch (error) {
@@ -73,11 +75,11 @@ function renderNotifications(notifications) {
         const timeAgo = getTimeAgo(notif.created_at);
         const unreadClass = notif.is_read ? '' : 'unread';
         const unreadDot = notif.is_read ? '' : '<span class="notification-dot"></span>';
-        // API의 필드명: content (18번 API), message (이전 방식) 둘 다 지원
         const text = notif.content || notif.message || '';
+        const link = notif.link || '';
         
         return `
-            <div class="notification-item ${unreadClass}" onclick="handleNotificationClick(${notif.id}, '${notif.link || ''}')">
+            <div class="notification-item ${unreadClass}" onclick="handleNotificationClick(${notif.id}, '${link}')">
                 <div class="notification-content">
                     <div class="notification-text">${escapeHtml(text)}</div>
                     <div class="notification-time">${timeAgo}</div>
@@ -114,12 +116,11 @@ window.toggleNotificationDropdown = function() {
     if (!isVisible) loadNotifications();
 };
 
-// 알림 클릭 처리
+// 알림 클릭 처리 - 읽음 처리 후 링크 이동
 window.handleNotificationClick = async function(notificationId, link) {
     if (!currentUser) return;
     
     try {
-        // 읽음 처리 (19번 API: { id, uid })
         await fetch('/api/notifications/read', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -139,7 +140,6 @@ window.markAllAsRead = async function() {
     if (!currentUser) return;
     
     try {
-        // 20번 API: { uid }
         await fetch('/api/notifications/read-all', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -149,62 +149,6 @@ window.markAllAsRead = async function() {
         await loadNotifications();
     } catch (error) {
         console.error('모두 읽음 처리 오류:', error);
-    }
-};
-
-// 관리자 문의 모달 열기
-window.openContactModal = function() {
-    const modal = document.getElementById('contact-modal');
-    if (modal) modal.style.display = 'flex';
-    
-    const dropdown = document.getElementById('notification-dropdown');
-    if (dropdown) dropdown.style.display = 'none';
-};
-
-// 관리자 문의 모달 닫기
-window.closeContactModal = function() {
-    const modal = document.getElementById('contact-modal');
-    if (modal) modal.style.display = 'none';
-    
-    const textarea = document.getElementById('contact-message');
-    if (textarea) textarea.value = '';
-};
-
-// 관리자 문의 제출 (22번 API: { uid, author, message })
-window.submitContact = async function() {
-    if (!currentUser) {
-        alert('로그인이 필요합니다.');
-        return;
-    }
-    
-    const textarea = document.getElementById('contact-message');
-    const message = textarea.value.trim();
-    
-    if (!message) {
-        alert('메시지를 입력해주세요.');
-        return;
-    }
-    
-    try {
-        const nickname = currentUser.displayName || currentUser.email?.split('@')[0] || '익명';
-        
-        const response = await fetch('/api/contact', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                uid: currentUser.uid,
-                author: nickname,
-                message
-            })
-        });
-        
-        if (!response.ok) throw new Error('문의 전송 실패');
-        
-        alert('관리자에게 메시지가 전송되었습니다.');
-        closeContactModal();
-    } catch (error) {
-        console.error('문의 전송 오류:', error);
-        alert('문의 전송 중 오류가 발생했습니다.');
     }
 };
 
@@ -239,12 +183,6 @@ document.addEventListener('click', (e) => {
     if (notificationBell && dropdown && !notificationBell.contains(e.target)) {
         dropdown.style.display = 'none';
     }
-});
-
-// 모달 외부 클릭 시 닫기
-document.addEventListener('click', (e) => {
-    const modal = document.getElementById('contact-modal');
-    if (modal && e.target === modal) closeContactModal();
 });
 
 console.log('알림 시스템 초기화 완료');

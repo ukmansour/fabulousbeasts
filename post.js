@@ -429,7 +429,7 @@ window.submitComment = async function() {
 
         if (res.ok) {
             input.value = '';
-            replyToCommentId = null; // 답글 상태 초기화
+            replyToCommentId = null;
             const cancelBtn = document.getElementById('cancel-reply-btn');
             if (cancelBtn) cancelBtn.remove();
             input.placeholder = '따뜻한 댓글을 남겨보세요...';

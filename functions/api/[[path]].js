@@ -865,28 +865,37 @@ export async function onRequest(context) {
 
             await env.DB.prepare("INSERT INTO community_comments (post_id, uid, author, content, parent_id) VALUES (?, ?, ?, ?, ?)").bind(post_id, uid, author, content, parent_id || null).run();
             
-            // 대댓글인 경우 원댓글 작성자에게 알림 생성
+            // 게시글 작성자에게 알림 전송 (자기 댓글 제외)
+            try {
+                const post = await env.DB.prepare("SELECT uid, title FROM community_posts WHERE id = ?").bind(post_id).first();
+                if (post && post.uid !== uid) {
+                    const shortTitle = post.title.length > 20 ? post.title.substring(0, 20) + '...' : post.title;
+                    await env.DB.prepare(`
+                        INSERT INTO notifications (recipient_uid, sender_uid, sender_name, type, content, link)
+                        VALUES (?, ?, ?, 'comment', ?, ?)
+                    `).bind(
+                        post.uid,
+                        uid,
+                        author,
+                        `${author}님이 "${shortTitle}" 글에 댓글을 남겼습니다`,
+                        `/post.html?id=${post_id}`
+                    ).run();
+                }
+            } catch (e) {
+                console.error('게시글 작성자 알림 실패:', e);
+            }
+            
+            // 답글인 경우 원댓글 작성자에게 알림 (자기 답글, 게시글 작성자 중복 제외)
             if (parent_id) {
                 try {
                     const parentComment = await env.DB.prepare("SELECT uid, author FROM community_comments WHERE id = ?").bind(parent_id).first();
-                    if (parentComment && parentComment.uid !== uid) { // 자기 자신에게는 알림 안 보냄
-                        await env.DB.prepare(`
-                            CREATE TABLE IF NOT EXISTS notifications (
-                                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                recipient_uid TEXT NOT NULL,
-                                sender_uid TEXT NOT NULL,
-                                sender_name TEXT NOT NULL,
-                                type TEXT NOT NULL,
-                                content TEXT NOT NULL,
-                                link TEXT,
-                                is_read INTEGER DEFAULT 0,
-                                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                            )
-                        `).run();
-                        
-                        // 게시글 제목 가져오기
-                        const post = await env.DB.prepare("SELECT title FROM community_posts WHERE id = ?").bind(post_id).first();
-                        const postTitle = post ? post.title : '게시글';
+                    const post = await env.DB.prepare("SELECT uid FROM community_posts WHERE id = ?").bind(post_id).first();
+                    const postAuthorUid = post?.uid;
+                    
+                    // 원댓글 작성자가 나 자신이 아니고, 게시글 작성자와 다른 경우에만 알림
+                    if (parentComment && parentComment.uid !== uid && parentComment.uid !== postAuthorUid) {
+                        const postInfo = await env.DB.prepare("SELECT title FROM community_posts WHERE id = ?").bind(post_id).first();
+                        const shortTitle = postInfo?.title ? (postInfo.title.length > 20 ? postInfo.title.substring(0, 20) + '...' : postInfo.title) : '게시글';
                         
                         await env.DB.prepare(`
                             INSERT INTO notifications (recipient_uid, sender_uid, sender_name, type, content, link)
@@ -895,13 +904,12 @@ export async function onRequest(context) {
                             parentComment.uid,
                             uid,
                             author,
-                            `${author}님이 "${postTitle}" 댓글에 답글을 남겼습니다`,
+                            `${author}님이 "${shortTitle}" 댓글에 답글을 남겼습니다`,
                             `/post.html?id=${post_id}`
                         ).run();
                     }
                 } catch (e) {
-                    console.error('알림 생성 실패:', e);
-                    // 알림 생성 실패해도 댓글은 등록됨
+                    console.error('답글 알림 실패:', e);
                 }
             }
             
