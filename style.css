@@ -701,6 +701,38 @@ body {
     color: #c92a2a !important;
 }
 
+/* 답글 버튼 */
+.reply-comment-btn {
+    background: none;
+    border: none;
+    color: #868e96;
+    font-size: 0.78rem;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+}
+.reply-comment-btn:hover {
+    background: #f1f3f5;
+    color: var(--primary-color, #3b5bdb);
+}
+
+/* 답글 취소 버튼 */
+.btn-cancel-reply {
+    background: none;
+    border: 1px solid #ced4da;
+    color: #868e96;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+.btn-cancel-reply:hover {
+    background: #f1f3f5;
+    color: #495057;
+}
+
 /* Animations */
 @keyframes bounce {
     from { transform: translateY(0); }
