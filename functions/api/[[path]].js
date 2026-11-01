@@ -1242,15 +1242,35 @@ export async function onRequest(context) {
     // GET: 모든 게시글 조회
     if (request.method === "GET" && apiPath === "/community/posts") {
         try {
+            // D1에서 게시글 조회 (LEFT JOIN으로 users 테이블에서 avatar 가져오기)
             const { results } = await env.DB.prepare(`
-                SELECT * FROM community_posts 
-                ORDER BY created_at DESC
+                SELECT 
+                    p.id, p.uid, p.author, p.title, p.content, p.image, 
+                    p.created_at, p.updated_at, p.videos,
+                    u.avatar
+                FROM community_posts p
+                LEFT JOIN users u ON p.uid = u.uid
+                ORDER BY p.created_at DESC
             `).all();
 
-            return new Response(JSON.stringify(results), { headers: corsHeaders });
+            console.log(`[커뮤니티] ${results.length}개 게시글 조회됨`);
+            
+            // 각 게시글의 댓글 수 추가
+            const postsWithComments = await Promise.all(results.map(async (post) => {
+                const commentCount = await env.DB.prepare(
+                    'SELECT COUNT(*) as count FROM community_comments WHERE post_id = ?'
+                ).bind(post.id).first();
+                
+                return {
+                    ...post,
+                    comment_count: commentCount?.count || 0
+                };
+            }));
+
+            return new Response(JSON.stringify(postsWithComments), { headers: corsHeaders });
         } catch (err) {
             console.error('게시글 조회 오류:', err);
-            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+            return new Response(JSON.stringify({ error: err.message, stack: err.stack }), { status: 500, headers: corsHeaders });
         }
     }
 
