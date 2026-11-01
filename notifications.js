@@ -58,7 +58,10 @@ async function loadNotifications() {
         });
         
         if (!response.ok) {
-            throw new Error('알림 로드 실패');
+            console.log('[알림] API 응답 실패, 빈 배열 사용');
+            renderNotifications([]);
+            updateUnreadCount([]);
+            return;
         }
         
         const notifications = await response.json();
@@ -66,6 +69,9 @@ async function loadNotifications() {
         updateUnreadCount(notifications);
     } catch (error) {
         console.error('알림 로드 오류:', error);
+        // 에러 발생 시에도 빈 배열로 렌더링
+        renderNotifications([]);
+        updateUnreadCount([]);
     }
 }
 

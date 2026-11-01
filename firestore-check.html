@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Firestore 데이터 확인</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>Firestore 커뮤니티 데이터 확인</h1>
+    <button onclick="checkFirestoreData()">Firestore 데이터 확인</button>
+    <button onclick="migrateToD1()">D1로 마이그레이션</button>
+    <pre id="output" style="background: #f5f5f5; padding: 1rem; margin-top: 1rem;"></pre>
+
+    <script type="module">
+        import { db } from './firebase-config.js';
+        import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        window.checkFirestoreData = async function() {
+            const output = document.getElementById('output');
+            output.textContent = 'Firestore 데이터 확인 중...';
+
+            try {
+                const snapshot = await getDocs(collection(db, 'community_posts'));
+                
+                if (snapshot.empty) {
+                    output.textContent = 'Firestore에 community_posts 컬렉션이 비어있습니다.';
+                    return;
+                }
+
+                const posts = [];
+                snapshot.forEach(doc => {
+                    posts.push({ id: doc.id, ...doc.data() });
+                });
+
+                output.textContent = `Firestore에서 ${posts.length}개의 게시글을 찾았습니다:\n\n` + 
+                    JSON.stringify(posts.slice(0, 3), null, 2);
+                
+                console.log('모든 게시글:', posts);
+            } catch (error) {
+                output.textContent = `오류: ${error.message}`;
+                console.error(error);
+            }
+        };
+
+        window.migrateToD1 = async function() {
+            const output = document.getElementById('output');
+            output.textContent = 'Firestore → D1 마이그레이션 시작...';
+
+            try {
+                const snapshot = await getDocs(collection(db, 'community_posts'));
+                
+                if (snapshot.empty) {
+                    output.textContent = 'Firestore에 데이터가 없습니다.';
+                    return;
+                }
+
+                const posts = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    posts.push({
+                        uid: data.uid || 'unknown',
+                        author: data.author || '익명',
+                        title: data.title || '제목 없음',
+                        content: data.content || '',
+                        image: data.image || null,
+                        created_at: data.created_at || new Date().toISOString()
+                    });
+                });
+
+                output.textContent = `${posts.length}개의 게시글을 D1로 전송 중...\n\n`;
+
+                // D1 API로 각 게시글 전송
+                let success = 0;
+                let failed = 0;
+
+                for (const post of posts) {
+                    try {
+                        const res = await fetch('/api/community/posts', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(post)
+                        });
+
+                        if (res.ok) {
+                            success++;
+                        } else {
+                            failed++;
+                            console.error('실패:', post.title, await res.text());
+                        }
+                    } catch (err) {
+                        failed++;
+                        console.error('오류:', err);
+                    }
+                }
+
+                output.textContent += `\n완료!\n성공: ${success}개\n실패: ${failed}개`;
+            } catch (error) {
+                output.textContent = `오류: ${error.message}`;
+                console.error(error);
+            }
+        };
+    </script>
+</body>
+</html>

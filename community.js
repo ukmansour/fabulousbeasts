@@ -215,6 +215,12 @@ async function loadPosts() {
         const loadTime = Math.round(performance.now() - startTime);
         console.log(`[SUCCESS] 커뮤니티 게시글 로드 완료: ${allPosts.length}개, ${loadTime}ms`);
         
+        // 첫 번째 게시글의 필드 확인
+        if (allPosts.length > 0) {
+            console.log('[DEBUG] 첫 번째 게시글:', allPosts[0]);
+            console.log('[DEBUG] content 필드:', allPosts[0].content);
+        }
+        
         applyFilterAndRender();
     } catch (e) {
         console.error('❌ 게시글 로드 실패:', e);
