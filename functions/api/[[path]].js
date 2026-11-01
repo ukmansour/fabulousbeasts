@@ -1138,15 +1138,13 @@ export async function onRequest(context) {
     // GET: 사용자 알림 목록 조회
     if (request.method === "GET" && apiPath === "/notifications") {
         try {
-            // 사용자 인증 확인 (Authorization 헤더에서 uid 추출)
-            const authHeader = request.headers.get('Authorization');
-            if (!authHeader) {
-                return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+            // 사용자 인증 확인
+            const uid = request.headers.get('X-User-UID');
+            
+            if (!uid) {
+                console.log('[알림] UID 없음 - 빈 배열 반환');
+                return new Response(JSON.stringify([]), { headers: corsHeaders });
             }
-
-            // 간단한 토큰 파싱 (실제로는 Firebase Admin SDK로 검증해야 함)
-            // 여기서는 uid를 직접 전달받는 방식으로 구현
-            const uid = request.headers.get('X-User-UID') || authHeader.replace('Bearer ', '');
 
             // 알림 테이블 생성
             await env.DB.prepare(`
@@ -1170,7 +1168,8 @@ export async function onRequest(context) {
                 LIMIT 50
             `).bind(uid).all();
 
-            return new Response(JSON.stringify(results), { headers: corsHeaders });
+            console.log(`[알림] ${uid} - ${results.length}개 알림 조회됨`);
+            return new Response(JSON.stringify(results || []), { headers: corsHeaders });
         } catch (err) {
             console.error('알림 조회 오류:', err);
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
@@ -1198,8 +1197,11 @@ export async function onRequest(context) {
     // POST: 모든 알림 읽음 처리
     if (request.method === "POST" && apiPath === "/notifications/read-all") {
         try {
-            const authHeader = request.headers.get('Authorization');
-            const uid = request.headers.get('X-User-UID') || authHeader.replace('Bearer ', '');
+            const uid = request.headers.get('X-User-UID');
+            
+            if (!uid) {
+                return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+            }
 
             await env.DB.prepare(`
                 UPDATE notifications 
@@ -1218,8 +1220,11 @@ export async function onRequest(context) {
     if (request.method === "POST" && apiPath === "/contact") {
         try {
             const { message, recipient_uid } = await request.json();
-            const authHeader = request.headers.get('Authorization');
-            const senderUid = request.headers.get('X-User-UID') || authHeader.replace('Bearer ', '');
+            const senderUid = request.headers.get('X-User-UID');
+            
+            if (!senderUid) {
+                return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+            }
 
             // 발신자 정보 조회
             const senderInfo = await env.DB.prepare("SELECT name, nickname FROM users WHERE uid = ?").bind(senderUid).first();

@@ -135,6 +135,7 @@ function renderPost() {
     let imageUrls = [];
     
     console.log('현재 게시글 데이터:', currentPost);
+    console.log('content 필드:', currentPost.content);
     console.log('images 필드:', currentPost.images);
     console.log('image 필드:', currentPost.image);
     
