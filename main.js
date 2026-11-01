@@ -521,7 +521,7 @@ async function loadCommunityPosts() {
     if (!listEl) return;
 
     // 로딩 표시
-    listEl.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #888;">⏳ 게시글을 불러오는 중...</div>`;
+    listEl.innerHTML = `<div style="padding: 1.5rem; text-align: center; color: #888;">게시글을 불러오는 중...</div>`;
 
     try {
         const startTime = performance.now();

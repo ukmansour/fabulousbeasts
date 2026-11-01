@@ -202,7 +202,7 @@ async function loadPosts() {
     // 로딩 인디케이터 표시
     if (wrap) wrap.innerHTML = `
         <div class="post-empty">
-            <div class="empty-icon">⏳</div>
+            <div class="empty-icon"></div>
             <div>게시글을 불러오는 중...</div>
         </div>`;
     
