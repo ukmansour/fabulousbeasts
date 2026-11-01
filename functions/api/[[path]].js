@@ -1247,13 +1247,25 @@ export async function onRequest(context) {
     // GET: 모든 게시글 조회
     if (request.method === "GET" && apiPath === "/community/posts") {
         try {
-            // 먼저 모든 게시글 조회
+            // 먼저 테이블 구조 확인
+            const { results: tableInfo } = await env.DB.prepare(`
+                PRAGMA table_info(community_posts)
+            `).all();
+            
+            console.log('[커뮤니티] community_posts 테이블 구조:', tableInfo);
+
+            // 모든 게시글 조회
             const { results: posts } = await env.DB.prepare(`
                 SELECT * FROM community_posts 
                 ORDER BY created_at DESC
             `).all();
 
             console.log(`[커뮤니티] ${posts.length}개 게시글 조회됨`);
+            
+            if (posts.length > 0) {
+                console.log('[커뮤니티] 첫 번째 게시글 필드:', Object.keys(posts[0]));
+                console.log('[커뮤니티] 첫 번째 게시글 데이터:', posts[0]);
+            }
             
             // 각 게시글에 대해 users 테이블에서 avatar 조회 및 댓글 수 추가
             const postsWithExtras = await Promise.all(posts.map(async (post) => {
@@ -1282,7 +1294,7 @@ export async function onRequest(context) {
                 };
             }));
 
-            console.log(`[커뮤니티] 첫 번째 게시글:`, postsWithExtras[0]);
+            console.log(`[커뮤니티] 응답 전송 - 첫 번째 게시글:`, postsWithExtras[0]);
             return new Response(JSON.stringify(postsWithExtras), { headers: corsHeaders });
         } catch (err) {
             console.error('게시글 조회 오류:', err);
