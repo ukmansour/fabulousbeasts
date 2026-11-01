@@ -1134,6 +1134,110 @@ export async function onRequest(context) {
         }
     }
 
+    // === 알림 시스템 API ===
+    // GET: 사용자 알림 목록 조회
+    if (request.method === "GET" && apiPath === "/notifications") {
+        try {
+            // 사용자 인증 확인 (Authorization 헤더에서 uid 추출)
+            const authHeader = request.headers.get('Authorization');
+            if (!authHeader) {
+                return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+            }
+
+            // 간단한 토큰 파싱 (실제로는 Firebase Admin SDK로 검증해야 함)
+            // 여기서는 uid를 직접 전달받는 방식으로 구현
+            const uid = request.headers.get('X-User-UID') || authHeader.replace('Bearer ', '');
+
+            // 알림 테이블 생성
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    recipient_uid TEXT NOT NULL,
+                    sender_uid TEXT,
+                    sender_name TEXT,
+                    message TEXT NOT NULL,
+                    link TEXT,
+                    is_read INTEGER DEFAULT 0,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+
+            // 사용자의 알림 조회 (최근 50개)
+            const { results } = await env.DB.prepare(`
+                SELECT * FROM notifications 
+                WHERE recipient_uid = ? 
+                ORDER BY created_at DESC 
+                LIMIT 50
+            `).bind(uid).all();
+
+            return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            console.error('알림 조회 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // POST: 알림 읽음 처리
+    if (request.method === "POST" && apiPath === "/notifications/read") {
+        try {
+            const { notification_id } = await request.json();
+
+            await env.DB.prepare(`
+                UPDATE notifications 
+                SET is_read = 1 
+                WHERE id = ?
+            `).bind(notification_id).run();
+
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            console.error('알림 읽음 처리 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // POST: 모든 알림 읽음 처리
+    if (request.method === "POST" && apiPath === "/notifications/read-all") {
+        try {
+            const authHeader = request.headers.get('Authorization');
+            const uid = request.headers.get('X-User-UID') || authHeader.replace('Bearer ', '');
+
+            await env.DB.prepare(`
+                UPDATE notifications 
+                SET is_read = 1 
+                WHERE recipient_uid = ?
+            `).bind(uid).run();
+
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            console.error('모든 알림 읽음 처리 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // POST: 관리자에게 문의 전송
+    if (request.method === "POST" && apiPath === "/contact") {
+        try {
+            const { message, recipient_uid } = await request.json();
+            const authHeader = request.headers.get('Authorization');
+            const senderUid = request.headers.get('X-User-UID') || authHeader.replace('Bearer ', '');
+
+            // 발신자 정보 조회
+            const senderInfo = await env.DB.prepare("SELECT name, nickname FROM users WHERE uid = ?").bind(senderUid).first();
+            const senderName = senderInfo?.nickname || senderInfo?.name || '익명';
+
+            // 알림 생성
+            await env.DB.prepare(`
+                INSERT INTO notifications (recipient_uid, sender_uid, sender_name, message, link)
+                VALUES (?, ?, ?, ?, '/community.html')
+            `).bind(recipient_uid, senderUid, senderName, `${senderName}님이 문의를 남겼습니다: ${message.substring(0, 50)}...`).run();
+
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            console.error('문의 전송 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
     // 404: Not Found
     return new Response(JSON.stringify({ error: "Not Found" }), { status: 404, headers: corsHeaders });
 }

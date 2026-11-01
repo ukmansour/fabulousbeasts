@@ -51,10 +51,9 @@ async function loadNotifications() {
     if (!currentUser) return;
     
     try {
-        const token = await currentUser.getIdToken();
         const response = await fetch('/api/notifications', {
             headers: {
-                'Authorization': `Bearer ${token}`
+                'X-User-UID': currentUser.uid
             }
         });
         
@@ -130,13 +129,11 @@ window.handleNotificationClick = async function(notificationId, link) {
     if (!currentUser) return;
     
     try {
-        const token = await currentUser.getIdToken();
-        
         // 알림을 읽음으로 표시
         await fetch('/api/notifications/read', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'X-User-UID': currentUser.uid,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ notification_id: notificationId })
@@ -159,12 +156,10 @@ window.markAllAsRead = async function() {
     if (!currentUser) return;
     
     try {
-        const token = await currentUser.getIdToken();
-        
         await fetch('/api/notifications/read-all', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`
+                'X-User-UID': currentUser.uid
             }
         });
         
@@ -220,27 +215,18 @@ window.submitContact = async function() {
     }
     
     try {
-        const token = await currentUser.getIdToken();
-        
-        // hodu 사용자의 UID를 가져오기 위해 먼저 사용자 정보 조회
-        const usersResponse = await fetch('/api/users');
-        const users = await usersResponse.json();
-        const hoduUser = users.find(u => u.nickname === 'hodu');
-        
-        if (!hoduUser) {
-            alert('관리자(hodu) 계정을 찾을 수 없습니다.');
-            return;
-        }
+        // hodu의 고정 UID (관리자 계정)
+        const hoduUid = 'HODU_UID_PLACEHOLDER'; // 실제 hodu의 UID로 교체 필요
         
         const response = await fetch('/api/contact', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'X-User-UID': currentUser.uid,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({ 
                 message,
-                recipient_uid: hoduUser.uid  // hodu의 UID 전달
+                recipient_uid: hoduUid
             })
         });
         
