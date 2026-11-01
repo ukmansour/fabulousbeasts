@@ -1238,6 +1238,118 @@ export async function onRequest(context) {
         }
     }
 
+    // === 커뮤니티 API ===
+    // GET: 모든 게시글 조회
+    if (request.method === "GET" && apiPath === "/community/posts") {
+        try {
+            const { results } = await env.DB.prepare(`
+                SELECT * FROM community_posts 
+                ORDER BY created_at DESC
+            `).all();
+
+            return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            console.error('게시글 조회 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // POST: 게시글 작성
+    if (request.method === "POST" && apiPath === "/community/posts") {
+        try {
+            const { uid, author, title, content, image } = await request.json();
+
+            const result = await env.DB.prepare(`
+                INSERT INTO community_posts (uid, author, title, content, image)
+                VALUES (?, ?, ?, ?, ?)
+            `).bind(uid, author, title, content, image || null).run();
+
+            return new Response(JSON.stringify({ success: true, id: result.meta.last_row_id }), { headers: corsHeaders });
+        } catch (err) {
+            console.error('게시글 작성 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // POST: 게시글 삭제
+    if (request.method === "POST" && apiPath === "/community/posts/delete") {
+        try {
+            const { id, uid, isAdmin } = await request.json();
+
+            // 권한 확인
+            if (!isAdmin) {
+                const post = await env.DB.prepare("SELECT uid FROM community_posts WHERE id = ?").bind(id).first();
+                if (!post || post.uid !== uid) {
+                    return new Response(JSON.stringify({ error: "권한이 없습니다" }), { status: 403, headers: corsHeaders });
+                }
+            }
+
+            await env.DB.prepare("DELETE FROM community_posts WHERE id = ?").bind(id).run();
+
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            console.error('게시글 삭제 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // GET: 댓글 조회
+    if (request.method === "GET" && apiPath === "/community/comments") {
+        try {
+            const postId = url.searchParams.get('post_id');
+            
+            const { results } = await env.DB.prepare(`
+                SELECT * FROM community_comments 
+                WHERE post_id = ? 
+                ORDER BY created_at ASC
+            `).bind(postId).all();
+
+            return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            console.error('댓글 조회 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // POST: 댓글 작성
+    if (request.method === "POST" && apiPath === "/community/comments") {
+        try {
+            const { post_id, uid, author, content } = await request.json();
+
+            const result = await env.DB.prepare(`
+                INSERT INTO community_comments (post_id, uid, author, content)
+                VALUES (?, ?, ?, ?)
+            `).bind(post_id, uid, author, content).run();
+
+            return new Response(JSON.stringify({ success: true, id: result.meta.last_row_id }), { headers: corsHeaders });
+        } catch (err) {
+            console.error('댓글 작성 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // POST: 댓글 삭제
+    if (request.method === "POST" && apiPath === "/community/comments/delete") {
+        try {
+            const { id, uid, isAdmin } = await request.json();
+
+            // 권한 확인
+            if (!isAdmin) {
+                const comment = await env.DB.prepare("SELECT uid FROM community_comments WHERE id = ?").bind(id).first();
+                if (!comment || comment.uid !== uid) {
+                    return new Response(JSON.stringify({ error: "권한이 없습니다" }), { status: 403, headers: corsHeaders });
+                }
+            }
+
+            await env.DB.prepare("DELETE FROM community_comments WHERE id = ?").bind(id).run();
+
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            console.error('댓글 삭제 오류:', err);
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
     // 404: Not Found
     return new Response(JSON.stringify({ error: "Not Found" }), { status: 404, headers: corsHeaders });
 }
