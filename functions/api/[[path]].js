@@ -1250,27 +1250,36 @@ export async function onRequest(context) {
             // 디버깅 모드 확인
             const debug = url.searchParams.get('debug') === 'true';
             
-            // 테이블 구조 확인
-            const { results: tableInfo } = await env.DB.prepare(`
-                PRAGMA table_info(community_posts)
-            `).all();
+            if (debug) {
+                // 테이블 구조 확인
+                const { results: tableInfo } = await env.DB.prepare(`
+                    PRAGMA table_info(community_posts)
+                `).all();
 
-            // 모든 게시글 조회
-            const { results: posts } = await env.DB.prepare(`
-                SELECT * FROM community_posts 
-                ORDER BY created_at DESC
-            `).all();
-            
-            // 디버깅 모드일 때 테이블 구조 정보 포함
-            if (debug && posts.length > 0) {
+                // 게시글 1개만 조회
+                const { results: posts } = await env.DB.prepare(`
+                    SELECT * FROM community_posts 
+                    ORDER BY created_at DESC 
+                    LIMIT 1
+                `).all();
+                
                 return new Response(JSON.stringify({
                     debug: true,
-                    table_columns: tableInfo.map(col => col.name),
-                    post_keys: Object.keys(posts[0]),
-                    first_post: posts[0],
+                    table_columns: tableInfo.map(col => ({name: col.name, type: col.type})),
+                    post_keys: posts[0] ? Object.keys(posts[0]) : [],
+                    first_post: posts[0] || null,
                     total_posts: posts.length
                 }, null, 2), { headers: corsHeaders });
             }
+
+            // 모든 게시글 조회 - 명시적으로 필드 나열
+            const { results: posts } = await env.DB.prepare(`
+                SELECT 
+                    id, uid, author, title, content, 
+                    image, images, videos, created_at
+                FROM community_posts 
+                ORDER BY created_at DESC
+            `).all();
             
             // 각 게시글에 대해 users 테이블에서 avatar 조회 및 댓글 수 추가
             const postsWithExtras = await Promise.all(posts.map(async (post) => {
@@ -1293,9 +1302,17 @@ export async function onRequest(context) {
                 }
                 
                 return {
-                    ...post,
-                    avatar,
-                    comment_count
+                    id: post.id,
+                    uid: post.uid,
+                    author: post.author,
+                    title: post.title,
+                    content: post.content,
+                    image: post.image,
+                    images: post.images,
+                    videos: post.videos,
+                    created_at: post.created_at,
+                    avatar: avatar,
+                    comment_count: comment_count
                 };
             }));
 
