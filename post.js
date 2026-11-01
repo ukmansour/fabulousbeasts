@@ -87,7 +87,7 @@ async function loadPost() {
     
     try {
         // 게시글 불러오기
-        const res = await fetch('/api/community/posts/v2'); // 캐시 우회용 v2
+        const res = await fetch('/api/community/posts');
         if (!res.ok) throw new Error('fetch failed');
         const posts = await res.json();
         

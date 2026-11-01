@@ -10,33 +10,23 @@ onAuthStateChanged(auth, (user) => {
     currentUser = user;
     
     if (user) {
-        // 로그인된 경우 알림 벨 표시
         const notificationBell = document.getElementById('notification-bell');
-        if (notificationBell) {
-            notificationBell.style.display = 'block';
-        }
+        if (notificationBell) notificationBell.style.display = 'block';
         
-        // 알림 로드 및 주기적 업데이트 시작
         loadNotifications();
         startNotificationPolling();
     } else {
-        // 로그아웃된 경우 알림 벨 숨김
         const notificationBell = document.getElementById('notification-bell');
-        if (notificationBell) {
-            notificationBell.style.display = 'none';
-        }
+        if (notificationBell) notificationBell.style.display = 'none';
         
-        // 주기적 업데이트 중지
         stopNotificationPolling();
     }
 });
 
-// 알림 주기적으로 확인 (30초마다)
+// 알림 주기적 확인 (30초)
 function startNotificationPolling() {
     if (notificationInterval) return;
-    notificationInterval = setInterval(() => {
-        loadNotifications();
-    }, 30000); // 30초
+    notificationInterval = setInterval(loadNotifications, 30000);
 }
 
 function stopNotificationPolling() {
@@ -51,14 +41,9 @@ async function loadNotifications() {
     if (!currentUser) return;
     
     try {
-        const response = await fetch('/api/notifications', {
-            headers: {
-                'X-User-UID': currentUser.uid
-            }
-        });
+        const response = await fetch(`/api/notifications?uid=${currentUser.uid}`);
         
         if (!response.ok) {
-            console.log('[알림] API 응답 실패, 빈 배열 사용');
             renderNotifications([]);
             updateUnreadCount([]);
             return;
@@ -69,7 +54,6 @@ async function loadNotifications() {
         updateUnreadCount(notifications);
     } catch (error) {
         console.error('알림 로드 오류:', error);
-        // 에러 발생 시에도 빈 배열로 렌더링
         renderNotifications([]);
         updateUnreadCount([]);
     }
@@ -80,7 +64,7 @@ function renderNotifications(notifications) {
     const notificationList = document.getElementById('notification-list');
     if (!notificationList) return;
     
-    if (notifications.length === 0) {
+    if (!notifications.length) {
         notificationList.innerHTML = '<div style="padding: 2rem; text-align: center; color: #999;">알림이 없습니다</div>';
         return;
     }
@@ -89,11 +73,13 @@ function renderNotifications(notifications) {
         const timeAgo = getTimeAgo(notif.created_at);
         const unreadClass = notif.is_read ? '' : 'unread';
         const unreadDot = notif.is_read ? '' : '<span class="notification-dot"></span>';
+        // API의 필드명: content (18번 API), message (이전 방식) 둘 다 지원
+        const text = notif.content || notif.message || '';
         
         return `
-            <div class="notification-item ${unreadClass}" onclick="handleNotificationClick(${notif.id}, '${notif.link}')">
+            <div class="notification-item ${unreadClass}" onclick="handleNotificationClick(${notif.id}, '${notif.link || ''}')">
                 <div class="notification-content">
-                    <div class="notification-text">${escapeHtml(notif.message)}</div>
+                    <div class="notification-text">${escapeHtml(text)}</div>
                     <div class="notification-time">${timeAgo}</div>
                 </div>
                 ${unreadDot}
@@ -125,9 +111,7 @@ window.toggleNotificationDropdown = function() {
     const isVisible = dropdown.style.display === 'block';
     dropdown.style.display = isVisible ? 'none' : 'block';
     
-    if (!isVisible) {
-        loadNotifications(); // 드롭다운 열 때 새로고침
-    }
+    if (!isVisible) loadNotifications();
 };
 
 // 알림 클릭 처리
@@ -135,23 +119,16 @@ window.handleNotificationClick = async function(notificationId, link) {
     if (!currentUser) return;
     
     try {
-        // 알림을 읽음으로 표시
+        // 읽음 처리 (19번 API: { id, uid })
         await fetch('/api/notifications/read', {
             method: 'POST',
-            headers: {
-                'X-User-UID': currentUser.uid,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ notification_id: notificationId })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: notificationId, uid: currentUser.uid })
         });
         
-        // 알림 목록 새로고침
         await loadNotifications();
         
-        // 링크로 이동
-        if (link) {
-            window.location.href = link;
-        }
+        if (link) window.location.href = link;
     } catch (error) {
         console.error('알림 읽음 처리 오류:', error);
     }
@@ -162,50 +139,38 @@ window.markAllAsRead = async function() {
     if (!currentUser) return;
     
     try {
+        // 20번 API: { uid }
         await fetch('/api/notifications/read-all', {
             method: 'POST',
-            headers: {
-                'X-User-UID': currentUser.uid
-            }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ uid: currentUser.uid })
         });
         
-        // 알림 목록 새로고침
         await loadNotifications();
     } catch (error) {
         console.error('모두 읽음 처리 오류:', error);
-        alert('알림 처리 중 오류가 발생했습니다.');
     }
 };
 
 // 관리자 문의 모달 열기
 window.openContactModal = function() {
     const modal = document.getElementById('contact-modal');
-    if (modal) {
-        modal.style.display = 'flex';
-    }
+    if (modal) modal.style.display = 'flex';
     
-    // 알림 드롭다운 닫기
     const dropdown = document.getElementById('notification-dropdown');
-    if (dropdown) {
-        dropdown.style.display = 'none';
-    }
+    if (dropdown) dropdown.style.display = 'none';
 };
 
 // 관리자 문의 모달 닫기
 window.closeContactModal = function() {
     const modal = document.getElementById('contact-modal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    if (modal) modal.style.display = 'none';
     
-    // 입력 필드 초기화
     const textarea = document.getElementById('contact-message');
-    if (textarea) {
-        textarea.value = '';
-    }
+    if (textarea) textarea.value = '';
 };
 
-// 관리자 문의 제출
+// 관리자 문의 제출 (22번 API: { uid, author, message })
 window.submitContact = async function() {
     if (!currentUser) {
         alert('로그인이 필요합니다.');
@@ -221,26 +186,21 @@ window.submitContact = async function() {
     }
     
     try {
-        // hodu의 고정 UID (관리자 계정)
-        const hoduUid = 'HODU_UID_PLACEHOLDER'; // 실제 hodu의 UID로 교체 필요
+        const nickname = currentUser.displayName || currentUser.email?.split('@')[0] || '익명';
         
         const response = await fetch('/api/contact', {
             method: 'POST',
-            headers: {
-                'X-User-UID': currentUser.uid,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 
-                message,
-                recipient_uid: hoduUid
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                uid: currentUser.uid,
+                author: nickname,
+                message
             })
         });
         
-        if (!response.ok) {
-            throw new Error('문의 전송 실패');
-        }
+        if (!response.ok) throw new Error('문의 전송 실패');
         
-        alert('hodu 님에게 메시지가 전송되었습니다.');
+        alert('관리자에게 메시지가 전송되었습니다.');
         closeContactModal();
     } catch (error) {
         console.error('문의 전송 오류:', error);
@@ -267,21 +227,15 @@ function getTimeAgo(timestamp) {
 
 // HTML 이스케이프
 function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-    };
-    return text.replace(/[&<>"']/g, m => map[m]);
+    if (!text) return '';
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
 // 외부 클릭 시 드롭다운 닫기
 document.addEventListener('click', (e) => {
     const notificationBell = document.getElementById('notification-bell');
     const dropdown = document.getElementById('notification-dropdown');
-    
     if (notificationBell && dropdown && !notificationBell.contains(e.target)) {
         dropdown.style.display = 'none';
     }
@@ -290,9 +244,7 @@ document.addEventListener('click', (e) => {
 // 모달 외부 클릭 시 닫기
 document.addEventListener('click', (e) => {
     const modal = document.getElementById('contact-modal');
-    if (modal && e.target === modal) {
-        closeContactModal();
-    }
+    if (modal && e.target === modal) closeContactModal();
 });
 
 console.log('알림 시스템 초기화 완료');
