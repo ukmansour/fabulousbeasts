@@ -135,7 +135,9 @@ function renderPost() {
     let imageUrls = [];
     
     console.log('현재 게시글 데이터:', currentPost);
-    console.log('content 필드:', currentPost.content);
+    console.log('content 필드 타입:', typeof currentPost.content);
+    console.log('content 필드 값:', currentPost.content);
+    console.log('content 필드 길이:', currentPost.content ? currentPost.content.length : 0);
     console.log('images 필드:', currentPost.images);
     console.log('image 필드:', currentPost.image);
     
@@ -207,7 +209,7 @@ function renderPost() {
         bodyHTML += '</div>';
     }
     
-    bodyHTML += `<div style="white-space: pre-wrap; word-wrap: break-word;">${currentPost.content ? escHtml(currentPost.content).replace(/\n/g, '<br>') : '(내용 없음)'}</div>`;
+    bodyHTML += `<div style="white-space: pre-wrap; word-wrap: break-word;">${escHtml(currentPost.content || '').replace(/\n/g, '<br>') || '(내용이 비어있습니다)'}</div>`;
     
     // 작성자 아바타 표시
     let authorAvatarHTML;
