@@ -206,7 +206,7 @@ function renderPost() {
         bodyHTML += '</div>';
     }
     
-    bodyHTML += `<div style="white-space: pre-wrap; word-wrap: break-word;">${escHtml(currentPost.content).replace(/\n/g, '<br>')}</div>`;
+    bodyHTML += `<div style="white-space: pre-wrap; word-wrap: break-word;">${currentPost.content ? escHtml(currentPost.content).replace(/\n/g, '<br>') : '(내용 없음)'}</div>`;
     
     // 작성자 아바타 표시
     let authorAvatarHTML;
@@ -517,6 +517,7 @@ function stripCategoryTag(title) {
 }
 
 function escHtml(str) {
+    if (!str) return '';
     return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
