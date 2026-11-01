@@ -1247,32 +1247,43 @@ export async function onRequest(context) {
     // GET: 모든 게시글 조회
     if (request.method === "GET" && apiPath === "/community/posts") {
         try {
-            // D1에서 게시글 조회 (LEFT JOIN으로 users 테이블에서 avatar 가져오기)
-            const { results } = await env.DB.prepare(`
-                SELECT 
-                    p.id, p.uid, p.author, p.title, p.content, p.image, 
-                    p.created_at, p.updated_at, p.videos,
-                    u.avatar
-                FROM community_posts p
-                LEFT JOIN users u ON p.uid = u.uid
-                ORDER BY p.created_at DESC
+            // 먼저 모든 게시글 조회
+            const { results: posts } = await env.DB.prepare(`
+                SELECT * FROM community_posts 
+                ORDER BY created_at DESC
             `).all();
 
-            console.log(`[커뮤니티] ${results.length}개 게시글 조회됨`);
+            console.log(`[커뮤니티] ${posts.length}개 게시글 조회됨`);
             
-            // 각 게시글의 댓글 수 추가
-            const postsWithComments = await Promise.all(results.map(async (post) => {
-                const commentCount = await env.DB.prepare(
-                    'SELECT COUNT(*) as count FROM community_comments WHERE post_id = ?'
-                ).bind(post.id).first();
+            // 각 게시글에 대해 users 테이블에서 avatar 조회 및 댓글 수 추가
+            const postsWithExtras = await Promise.all(posts.map(async (post) => {
+                // avatar 조회
+                let avatar = null;
+                try {
+                    const userInfo = await env.DB.prepare('SELECT avatar FROM users WHERE uid = ?').bind(post.uid).first();
+                    avatar = userInfo?.avatar || null;
+                } catch (e) {
+                    console.error('avatar 조회 오류:', e);
+                }
+                
+                // 댓글 수 조회
+                let comment_count = 0;
+                try {
+                    const commentCount = await env.DB.prepare('SELECT COUNT(*) as count FROM community_comments WHERE post_id = ?').bind(post.id).first();
+                    comment_count = commentCount?.count || 0;
+                } catch (e) {
+                    console.error('댓글 수 조회 오류:', e);
+                }
                 
                 return {
                     ...post,
-                    comment_count: commentCount?.count || 0
+                    avatar,
+                    comment_count
                 };
             }));
 
-            return new Response(JSON.stringify(postsWithComments), { headers: corsHeaders });
+            console.log(`[커뮤니티] 첫 번째 게시글:`, postsWithExtras[0]);
+            return new Response(JSON.stringify(postsWithExtras), { headers: corsHeaders });
         } catch (err) {
             console.error('게시글 조회 오류:', err);
             return new Response(JSON.stringify({ error: err.message, stack: err.stack }), { status: 500, headers: corsHeaders });
