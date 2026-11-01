@@ -1243,9 +1243,9 @@ export async function onRequest(context) {
         }
     }
 
-    // === 커뮤니티 API ===
+    // === 커뮤니티 API V2 (캐시 우회) ===
     // GET: 모든 게시글 조회
-    if (request.method === "GET" && apiPath === "/community/posts") {
+    if (request.method === "GET" && (apiPath === "/community/posts" || apiPath === "/community/posts/v2")) {
         try {
             // 디버깅 모드 확인
             const debug = url.searchParams.get('debug') === 'true';

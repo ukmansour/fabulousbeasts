@@ -208,7 +208,7 @@ async function loadPosts() {
     
     try {
         const startTime = performance.now();
-        const res = await fetch('/api/community/posts');
+        const res = await fetch('/api/community/posts/v2'); // 캐시 우회용 v2
         if (!res.ok) throw new Error('fetch failed');
         allPosts = await res.json();
         
