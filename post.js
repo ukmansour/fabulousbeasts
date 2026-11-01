@@ -207,7 +207,7 @@ function renderPost() {
         bodyHTML += '</div>';
     }
     
-    bodyHTML += `<div>${escHtml(currentPost.content)}</div>`;
+    bodyHTML += `<div style="white-space: pre-wrap; word-wrap: break-word;">${escHtml(currentPost.content).replace(/\n/g, '<br>')}</div>`;
     
     // 작성자 아바타 표시
     let authorAvatarHTML;
