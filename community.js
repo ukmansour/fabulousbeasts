@@ -213,13 +213,7 @@ async function loadPosts() {
         allPosts = await res.json();
         
         const loadTime = Math.round(performance.now() - startTime);
-        console.log(`[SUCCESS] 커뮤니티 게시글 로드 완료: ${allPosts.length}개, ${loadTime}ms`);
-        
-        // 첫 번째 게시글의 필드 확인
-        if (allPosts.length > 0) {
-            console.log('[DEBUG] 첫 번째 게시글:', allPosts[0]);
-            console.log('[DEBUG] content 필드:', allPosts[0].content);
-        }
+        console.log(`[커뮤니티] ${allPosts.length}개 로드 완료 (${loadTime}ms)`);
         
         applyFilterAndRender();
     } catch (e) {

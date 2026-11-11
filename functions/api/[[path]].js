@@ -613,82 +613,7 @@ export async function onRequest(context) {
     // 12. GET: 커뮤니티 게시글 목록 조회
     if (request.method === "GET" && apiPath === "/community/posts") {
         try {
-            console.log('[API] Loading community posts...');
-            
-            // users 테이블 생성 및 avatar 컬럼 확인
-            await env.DB.prepare(`
-                CREATE TABLE IF NOT EXISTS users (
-                    uid TEXT PRIMARY KEY,
-                    role TEXT DEFAULT 'member',
-                    name TEXT,
-                    nickname TEXT,
-                    email TEXT,
-                    is_banned INTEGER DEFAULT 0,
-                    avatar TEXT,
-                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            `).run();
-            
-            // avatar 컬럼 추가 (없는 경우에만)
-            try {
-                await env.DB.prepare(`ALTER TABLE users ADD COLUMN avatar TEXT`).run();
-            } catch (e) {
-                // 이미 존재하면 무시
-            }
-            
-            // 기존 테이블 생성
-            await env.DB.prepare(`
-                CREATE TABLE IF NOT EXISTS community_posts (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    uid TEXT NOT NULL,
-                    author TEXT NOT NULL,
-                    title TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    image TEXT,
-                    images TEXT,
-                    videos TEXT,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            `).run();
-            
-            console.log('[API] Tables created');
-            
-            // images와 videos 컬럼 추가 (없는 경우에만)
-            try {
-                await env.DB.prepare(`ALTER TABLE community_posts ADD COLUMN images TEXT`).run();
-            } catch (e) {
-                // 이미 존재하면 무시
-            }
-            try {
-                await env.DB.prepare(`ALTER TABLE community_posts ADD COLUMN videos TEXT`).run();
-            } catch (e) {
-                // 이미 존재하면 무시
-            }
-            
-            await env.DB.prepare(`
-                CREATE TABLE IF NOT EXISTS community_comments (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    post_id INTEGER NOT NULL,
-                    uid TEXT NOT NULL,
-                    author TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            `).run();
-            
-            // 성능 향상을 위한 인덱스 생성
-            try {
-                await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_community_posts_created ON community_posts(created_at DESC)`).run();
-                await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_community_comments_post ON community_comments(post_id)`).run();
-                await env.DB.prepare(`CREATE INDEX IF NOT EXISTS idx_users_uid ON users(uid)`).run();
-                console.log('[API] Indexes created/verified');
-            } catch (e) {
-                console.warn('[API] Index creation warning:', e.message);
-            }
-
-            console.log('[API] Fetching posts...');
-            
-            // 게시글과 댓글 수를 한 번에 조회
+            // 게시글과 댓글 수, avatar를 한 번에 조회
             const { results: posts } = await env.DB.prepare(`
                 SELECT 
                     p.id, 
@@ -709,8 +634,6 @@ export async function onRequest(context) {
                 ORDER BY p.created_at DESC
                 LIMIT 100
             `).all();
-            
-            console.log(`[API] Found ${posts.length} posts`);
             
             return new Response(JSON.stringify(posts), { headers: corsHeaders });
         } catch (err) {
@@ -793,26 +716,6 @@ export async function onRequest(context) {
         const postId = url.searchParams.get("post_id");
         if (!postId) return new Response(JSON.stringify({ error: "Missing post_id parameter" }), { status: 400, headers: corsHeaders });
         try {
-            await env.DB.prepare(`
-                CREATE TABLE IF NOT EXISTS community_comments (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    post_id INTEGER NOT NULL,
-                    uid TEXT NOT NULL,
-                    author TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    parent_id INTEGER,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            `).run();
-            
-            // parent_id 컬럼 추가 (없는 경우에만)
-            try {
-                await env.DB.prepare(`ALTER TABLE community_comments ADD COLUMN parent_id INTEGER`).run();
-            } catch (e) {
-                // 이미 존재하면 무시
-            }
-
-            // 댓글과 사용자 아바타를 JOIN하여 조회
             const { results } = await env.DB.prepare(`
                 SELECT 
                     c.id, 
@@ -838,25 +741,6 @@ export async function onRequest(context) {
     // 16. POST: 특정 게시글 댓글 작성
     if (request.method === "POST" && apiPath === "/community/comments") {
         try {
-            await env.DB.prepare(`
-                CREATE TABLE IF NOT EXISTS community_comments (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    post_id INTEGER NOT NULL,
-                    uid TEXT NOT NULL,
-                    author TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    parent_id INTEGER,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            `).run();
-            
-            // parent_id 컬럼 추가 (없는 경우에만)
-            try {
-                await env.DB.prepare(`ALTER TABLE community_comments ADD COLUMN parent_id INTEGER`).run();
-            } catch (e) {
-                // 이미 존재하면 무시
-            }
-
             const data = await request.json();
             const { post_id, uid, author, content, parent_id } = data;
             if (!post_id || !uid || !author || !content) {
@@ -888,14 +772,10 @@ export async function onRequest(context) {
             // 답글인 경우 원댓글 작성자에게 알림 (자기 답글, 게시글 작성자 중복 제외)
             if (parent_id) {
                 try {
-                    const parentComment = await env.DB.prepare("SELECT uid, author FROM community_comments WHERE id = ?").bind(parent_id).first();
-                    const post = await env.DB.prepare("SELECT uid FROM community_posts WHERE id = ?").bind(post_id).first();
-                    const postAuthorUid = post?.uid;
+                    const parentComment = await env.DB.prepare("SELECT uid FROM community_comments WHERE id = ?").bind(parent_id).first();
                     
-                    // 원댓글 작성자가 나 자신이 아니고, 게시글 작성자와 다른 경우에만 알림
-                    if (parentComment && parentComment.uid !== uid && parentComment.uid !== postAuthorUid) {
-                        const postInfo = await env.DB.prepare("SELECT title FROM community_posts WHERE id = ?").bind(post_id).first();
-                        const shortTitle = postInfo?.title ? (postInfo.title.length > 20 ? postInfo.title.substring(0, 20) + '...' : postInfo.title) : '게시글';
+                    if (parentComment && parentComment.uid !== uid && parentComment.uid !== post?.uid) {
+                        const shortTitle = post?.title ? (post.title.length > 20 ? post.title.substring(0, 20) + '...' : post.title) : '게시글';
                         
                         await env.DB.prepare(`
                             INSERT INTO notifications (recipient_uid, sender_uid, sender_name, type, content, link)
@@ -950,22 +830,6 @@ export async function onRequest(context) {
         if (!uid) return new Response(JSON.stringify({ error: "Missing uid parameter" }), { status: 400, headers: corsHeaders });
         
         try {
-            // 알림 테이블 생성
-            await env.DB.prepare(`
-                CREATE TABLE IF NOT EXISTS notifications (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    recipient_uid TEXT NOT NULL,
-                    sender_uid TEXT NOT NULL,
-                    sender_name TEXT NOT NULL,
-                    type TEXT NOT NULL,
-                    content TEXT NOT NULL,
-                    link TEXT,
-                    is_read INTEGER DEFAULT 0,
-                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                )
-            `).run();
-            
-            // 최근 30일 이내 알림만 조회
             const { results } = await env.DB.prepare(`
                 SELECT * FROM notifications 
                 WHERE recipient_uid = ? 
