@@ -347,18 +347,28 @@ export async function onRequest(context) {
             
             // 보안 코드(9889)가 있는 경우에만 권한(role), 차단 여부, 아바타를 수정할 수 있습니다.
             if (secret === "9889") {
-                await env.DB.prepare(`
-                    INSERT INTO users (uid, role, name, nickname, email, is_banned, avatar, updated_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                    ON CONFLICT(uid) DO UPDATE SET 
-                        role = excluded.role, 
-                        name = excluded.name,
-                        nickname = excluded.nickname, 
-                        email = excluded.email, 
-                        is_banned = excluded.is_banned,
-                        avatar = excluded.avatar,
-                        updated_at = CURRENT_TIMESTAMP
-                `).bind(uid, role || "member", name || nickname || "", nickname || "", email || "", isBanned ? 1 : 0, avatar || null).run();
+                // role, is_banned, avatar만 업데이트 - name/nickname/email은 건드리지 않음
+                // avatar가 명시적으로 전달된 경우에만 업데이트
+                if (avatar !== undefined && avatar !== null) {
+                    await env.DB.prepare(`
+                        INSERT INTO users (uid, role, name, nickname, email, is_banned, avatar, updated_at)
+                        VALUES (?, ?, '', '', '', ?, ?, CURRENT_TIMESTAMP)
+                        ON CONFLICT(uid) DO UPDATE SET 
+                            role = excluded.role,
+                            is_banned = excluded.is_banned,
+                            avatar = excluded.avatar,
+                            updated_at = CURRENT_TIMESTAMP
+                    `).bind(uid, role || "member", isBanned ? 1 : 0, avatar).run();
+                } else {
+                    await env.DB.prepare(`
+                        INSERT INTO users (uid, role, name, nickname, email, is_banned, updated_at)
+                        VALUES (?, ?, '', '', '', ?, CURRENT_TIMESTAMP)
+                        ON CONFLICT(uid) DO UPDATE SET 
+                            role = excluded.role,
+                            is_banned = excluded.is_banned,
+                            updated_at = CURRENT_TIMESTAMP
+                    `).bind(uid, role || "member", isBanned ? 1 : 0).run();
+                }
             } else {
                 // 보안 코드가 없는 경우 (단순 가입/동기화), 기존 권한을 유지하며 정보만 업데이트합니다.
                 await env.DB.prepare(`
