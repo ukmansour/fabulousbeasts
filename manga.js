@@ -172,40 +172,26 @@ window.selectChapter = async function (chapterNum) {
     renderPages(pages);
 };
 
-// ===== 페이지 목록 생성 (media.fabulousbeasts.kr 직접 접근) =====
-async function buildPageList(chapterNum, baseUrl) {
-    // 폴더 구조: {시작화4자리}화 ~ {끝화4자리}화/{화번호4자리}화.jpg
-    // 예: 0101화 ~ 0200화/0101화.jpg
+// ===== 페이지 목록 생성 (api/r2 경유로 CORS 처리) =====
+async function buildPageList(chapterNum) {
     const folderStart = Math.floor((chapterNum - 1) / 100) * 100 + 1;
     const folderEnd = folderStart + 99;
     const folderStartPad = String(folderStart).padStart(4, '0');
     const folderEndPad = String(folderEnd).padStart(4, '0');
     const paddedNum = String(chapterNum).padStart(4, '0');
 
-    const folder = `${folderStartPad}%ED%99%94%20~%20${folderEndPad}%ED%99%94`;
-    const filename = `${paddedNum}%ED%99%94`;
-    const base = `https://media.fabulousbeasts.kr/${folder}/${filename}`;
+    // R2 경로: {0101화 ~ 0200화}/{0101화}.jpg
+    const folderName = `${folderStartPad}화 ~ ${folderEndPad}화`;
+    const fileName = `${paddedNum}화`;
 
-    // 단일 파일 시도
-    const singleUrl = `${base}.jpg`;
-    const singleRes = await fetch(singleUrl, { method: 'HEAD' }).catch(() => null);
-    if (singleRes && singleRes.ok) {
-        return [{ page_num: 1, urls: [singleUrl] }];
-    }
+    // /api/r2/ 경로 사용 (CORS 헤더 포함)
+    const encodedFolder = encodeURIComponent(folderName);
+    const encodedFile = encodeURIComponent(fileName);
+    const base = `/api/r2/${encodedFolder}/${encodedFile}`;
 
-    // _a, _b 합본 시도
-    const aUrl = `${base}_a.jpg`;
-    const aRes = await fetch(aUrl, { method: 'HEAD' }).catch(() => null);
-    if (aRes && aRes.ok) {
-        const bUrl = `${base}_b.jpg`;
-        const bRes = await fetch(bUrl, { method: 'HEAD' }).catch(() => null);
-        if (bRes && bRes.ok) {
-            return [{ page_num: 1, urls: [aUrl, bUrl] }];
-        }
-        return [{ page_num: 1, urls: [aUrl] }];
-    }
-
-    return [];
+    return [
+        { page_num: 1, single: `${base}.jpg`, a: `${base}_a.jpg`, b: `${base}_b.jpg` }
+    ];
 }
 
 // ===== 이미지 렌더링 =====
@@ -215,24 +201,28 @@ function renderPages(pages) {
         wrap.innerHTML = `<div style="color:#888;padding:3rem;text-align:center;">아직 업로드된 이미지가 없습니다.</div>`;
         return;
     }
-    // pages는 [{page_num, urls:[...]}] 형태
-    // urls가 2개 이상이면 가로로 나란히 표시 (0000_a, 0000_b 합본)
-    wrap.innerHTML = pages.map((page, i) => {
-        if (page.urls.length === 1) {
-            // 단일 이미지
-            return `<img src="${page.urls[0]}" alt="${currentChapter}화 ${i + 1}페이지" loading="lazy"
-                        style="width:100%;display:block;max-width:800px;margin:0 auto;"
-                        onerror="this.style.display='none'">`;
-        } else {
-            // 합본 이미지 (가로 나란히)
-            const imgs = page.urls.map(url =>
-                `<img src="${url}" alt="${currentChapter}화 ${i + 1}페이지" loading="lazy"
-                      style="width:${100 / page.urls.length}%;display:block;"
-                      onerror="this.style.display='none'">`
-            ).join('');
-            return `<div style="display:flex;max-width:800px;margin:0 auto;">${imgs}</div>`;
-        }
+
+    wrap.innerHTML = pages.map((page) => {
+        // 단일 이미지: 로드 성공 시 그대로, 실패 시 _a를 표시
+        // _a 이미지: 로드 성공 시 _b도 나란히 표시
+        return `
+            <div class="manga-page-row" data-single="${page.single}" data-a="${page.a}" data-b="${page.b}"
+                 style="max-width:800px;margin:0 auto;">
+                <img src="${page.single}"
+                     style="width:100%;display:block;"
+                     crossorigin="anonymous"
+                     onload="this.parentElement.querySelector('.manga-ab-wrap').style.display='none';"
+                     onerror="this.style.display='none'; this.parentElement.querySelector('.manga-ab-wrap').style.display='flex';">
+                <div class="manga-ab-wrap" style="display:none; width:100%;">
+                    <img src="${page.a}" style="flex:1;width:50%;display:block;" crossorigin="anonymous"
+                         onerror="this.style.display='none';">
+                    <img src="${page.b}" style="flex:1;width:50%;display:block;" crossorigin="anonymous"
+                         onerror="this.style.display='none';">
+                </div>
+            </div>
+        `;
     }).join('');
+
     wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
