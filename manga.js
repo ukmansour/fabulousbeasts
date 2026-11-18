@@ -118,8 +118,8 @@ function renderChapterList(groupIndex) {
             <div class="ch-item ${isActive ? 'active' : ''}" onclick="selectChapter(${ch})">
                 <span class="ch-num">${ch}화</span>
                 <span style="flex:1;font-size:0.85rem;color:#333;">제${ch}화</span>
-                <span class="ch-status ${isUploaded ? 'uploaded' : 'empty'}">
-                    ${isUploaded ? '완료' : '미등록'}
+                <span class="ch-status ${isUploaded ? '' : 'empty'}">
+                    ${isUploaded ? '' : '미등록'}
                 </span>
             </div>
         `;
