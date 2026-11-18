@@ -1055,7 +1055,6 @@ export async function onRequest(context) {
             ).all();
             return new Response(JSON.stringify(results.map(r => r.chapter)), { headers: corsHeaders });
         } catch (err) {
-            // 테이블이 없으면 빈 배열
             return new Response(JSON.stringify([]), { headers: corsHeaders });
         }
     }
@@ -1103,6 +1102,93 @@ export async function onRequest(context) {
             await env.DB.batch(pages.map(p => stmt.bind(chapter, p.page, p.url)));
 
             return new Response(JSON.stringify({ success: true, count: pages.length }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // GET /api/manga/comments?chapter=N - 만화 댓글 조회
+    if (request.method === "GET" && apiPath === "/manga/comments") {
+        const chapter = parseInt(url.searchParams.get("chapter"));
+        if (!chapter) return new Response(JSON.stringify({ error: "Missing chapter" }), { status: 400, headers: corsHeaders });
+        try {
+            const { results } = await env.DB.prepare(`
+                SELECT
+                    c.id, c.chapter, c.uid, c.author, c.content, c.parent_id,
+                    strftime('%Y-%m-%dT%H:%M:%SZ', c.created_at) as created_at,
+                    u.avatar
+                FROM manga_comments c
+                LEFT JOIN users u ON c.uid = u.uid
+                WHERE c.chapter = ?
+                ORDER BY COALESCE(c.parent_id, c.id), c.created_at ASC
+            `).bind(chapter).all();
+            return new Response(JSON.stringify(results), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify([]), { headers: corsHeaders });
+        }
+    }
+
+    // POST /api/manga/comments - 만화 댓글 작성
+    if (request.method === "POST" && apiPath === "/manga/comments") {
+        try {
+            const { chapter, uid, author, content, parent_id } = await request.json();
+            if (!chapter || !uid || !author || !content) {
+                return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+            }
+
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS manga_comments (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    chapter INTEGER NOT NULL,
+                    uid TEXT NOT NULL,
+                    author TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    parent_id INTEGER,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `).run();
+
+            await env.DB.prepare(
+                "INSERT INTO manga_comments (chapter, uid, author, content, parent_id) VALUES (?, ?, ?, ?, ?)"
+            ).bind(chapter, uid, author, content, parent_id || null).run();
+
+            // 답글 알림: 원댓글 작성자에게 (본인 제외)
+            if (parent_id) {
+                try {
+                    const parent = await env.DB.prepare("SELECT uid FROM manga_comments WHERE id = ?").bind(parent_id).first();
+                    if (parent && parent.uid !== uid) {
+                        await env.DB.prepare(`
+                            INSERT INTO notifications (recipient_uid, sender_uid, sender_name, type, content, link)
+                            VALUES (?, ?, ?, 'reply', ?, ?)
+                        `).bind(
+                            parent.uid, uid, author,
+                            `${author}님이 만화 ${chapter}화 댓글에 답글을 남겼습니다`,
+                            `/manga.html?chapter=${chapter}`
+                        ).run();
+                    }
+                } catch (e) { /* 알림 실패해도 댓글은 등록 */ }
+            }
+
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
+    // POST /api/manga/comments/delete - 만화 댓글 삭제
+    if (request.method === "POST" && apiPath === "/manga/comments/delete") {
+        try {
+            const { id, uid, role } = await request.json();
+            if (!id || !uid) return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+
+            const comment = await env.DB.prepare("SELECT uid FROM manga_comments WHERE id = ?").bind(id).first();
+            if (!comment) return new Response(JSON.stringify({ error: "Not found" }), { status: 404, headers: corsHeaders });
+            if (comment.uid !== uid && role !== 'admin') {
+                return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 403, headers: corsHeaders });
+            }
+
+            await env.DB.prepare("DELETE FROM manga_comments WHERE id = ?").bind(id).run();
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
         }

@@ -145,47 +145,21 @@
             color: #868e96;
         }
 
-        /* 업로드 패널 */
-        .upload-panel {
+        /* 댓글 영역 */
+        .manga-comments {
             background: white;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1.5rem;
-            margin-top: 1.5rem;
-        }
-        .upload-panel h3 {
-            font-size: 1rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
-            color: #333;
-        }
-        .upload-drop-zone {
-            border: 2px dashed var(--primary-color);
-            border-radius: 6px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: background 0.2s;
-            color: #666;
-            font-size: 0.9rem;
-        }
-        .upload-drop-zone:hover { background: var(--primary-light); }
-        .upload-progress {
             margin-top: 1rem;
-            font-size: 0.85rem;
+        }
+        .manga-comments h3 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 1.2rem;
             color: #333;
-        }
-        .upload-progress-bar {
-            height: 6px;
-            background: #eee;
-            border-radius: 3px;
-            margin-top: 0.5rem;
-            overflow: hidden;
-        }
-        .upload-progress-fill {
-            height: 100%;
-            background: var(--primary-color);
-            transition: width 0.3s;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 0.6rem;
         }
 
         /* 화 정보 */
@@ -271,23 +245,11 @@
                 <p id="manga-chapter-desc"></p>
             </div>
 
-            <!-- 관리자 업로드 패널 -->
-            <div class="upload-panel" id="upload-panel" style="display:none;">
-                <h3 id="upload-panel-title">업로드</h3>
-                <p style="font-size:0.85rem; color:#666; margin-bottom:1rem;">
-                    파일명을 <strong>0001.jpg, 0002.jpg, ...</strong> 형식으로 올려주세요.<br>
-                    여러 파일을 한 번에 선택할 수 있습니다.
-                </p>
-                <div class="upload-drop-zone" id="upload-drop-zone" onclick="document.getElementById('manga-file-input').click()">
-                    클릭하거나 파일을 드래그하여 업로드
-                </div>
-                <input type="file" id="manga-file-input" accept="image/*" multiple style="display:none;">
-                <div class="upload-progress" id="upload-progress" style="display:none;">
-                    <span id="upload-progress-text">준비 중...</span>
-                    <div class="upload-progress-bar">
-                        <div class="upload-progress-fill" id="upload-progress-fill" style="width:0%"></div>
-                    </div>
-                </div>
+            <!-- 댓글 영역 -->
+            <div class="manga-comments" id="manga-comments" style="display:none;">
+                <h3>댓글 <span id="manga-comments-count" style="color:var(--primary-color);">0</span></h3>
+                <div id="manga-comment-form-wrap" style="margin-bottom:1.5rem;"></div>
+                <div id="manga-comments-list" style="display:flex; flex-direction:column; gap:0.8rem;"></div>
             </div>
         </div>
 
