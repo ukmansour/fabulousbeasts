@@ -106,8 +106,11 @@ let unsubscribeUsers = null;
 async function renderAdminPage() {
     if (!contentArea) return;
     
-    // 이전 리스너가 있다면 해제
-    if (unsubscribeUsers) unsubscribeUsers();
+    // 이전 Firestore 리스너가 있다면 해제
+    if (unsubscribeUsers) {
+        unsubscribeUsers();
+        unsubscribeUsers = null;
+    }
 
     contentArea.innerHTML = `
         <div style="display:flex; justify-content:center; padding:2rem;">
@@ -115,14 +118,13 @@ async function renderAdminPage() {
         </div>
     `;
     
-    // [실시간 업데이트] Firestore users 컬렉션을 감시합니다.
-    const q = query(collection(db, "users"), orderBy("updatedAt", "desc"));
-    
-    unsubscribeUsers = onSnapshot(q, (snapshot) => {
-        const users = [];
-        snapshot.forEach(doc => users.push(doc.data()));
+    try {
+        // D1에서 사용자 목록 조회
+        const res = await fetch('/api/users');
+        if (!res.ok) throw new Error('사용자 목록을 불러올 수 없습니다.');
+        const users = await res.json();
 
-        if (users.length === 0) {
+        if (!users || users.length === 0) {
             contentArea.innerHTML = `
                 <div style="text-align:center; padding:3rem; color:#999;">
                     <p style="font-size:0.85rem; margin-bottom:1.5rem;">가입한 회원이 없습니다.</p>
@@ -134,7 +136,7 @@ async function renderAdminPage() {
             <div style="max-width:900px; margin:0 auto; padding:0; background:white; border:1px solid #ccc;">
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; background:#f0f0f0; border-bottom:1px solid #ccc;">
                     <h2 style="font-size:1rem; font-weight:900; color:#111; margin:0;">사용자 관리 (${users.length})</h2>
-                    <span style="font-size:0.7rem; color:#666;">실시간 동기화 중</span>
+                    <button onclick="renderAdminPage()" style="font-size:0.7rem; color:#666; background:none; border:1px solid #ccc; padding:2px 8px; cursor:pointer; border-radius:3px;">새로고침</button>
                 </div>
                 
                 <div style="display:flex; flex-direction:column;">
@@ -149,18 +151,16 @@ async function renderAdminPage() {
                 roleText = '관리자';
                 roleColor = '#d97706';
                 roleBg = '#fffbeb';
-            } else if (u.isBanned === true) {
+            } else if (u.is_banned == 1) {
                 roleText = '차단';
                 roleColor = '#dc2626';
                 roleBg = '#fef2f2';
             }
 
-            // [방어 코드] 이름이 없으면 익명 표시
-            const displayName = u.name || u.nickname || (u.email ? u.email.split('@')[0] : '익명');
+            const displayName = u.nickname || u.name || (u.email ? u.email.split('@')[0] : '익명');
 
             html += `
                 <div style="display:flex; align-items:center; gap:1rem; padding:0.8rem 1rem; ${index !== users.length - 1 ? 'border-bottom:1px solid #ccc;' : ''} transition:background 0.1s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
-                    <!-- 아바타 이미지 -->
                     <div style="width: 48px; height: 48px; border-radius: 50%; overflow: hidden; border: 2px solid #ddd; flex-shrink: 0; background: #f0f0f0; display: flex; align-items: center; justify-content: center; cursor: pointer;" onclick="window.changeUserAvatar('${u.uid}', '${displayName}')">
                         ${u.avatar ? `<img src="${u.avatar}" style="width: 100%; height: 100%; object-fit: cover;">` : `<span style="font-size: 1.5rem; color: #999;">👤</span>`}
                     </div>
@@ -192,10 +192,11 @@ async function renderAdminPage() {
             <p style="text-align:center; font-size:0.7rem; color:#aaa; margin-top:1.5rem;">🔒 관리 권한 변경은 데이터 유실 없이 안전하게 처리됩니다.</p>
         `;
         contentArea.innerHTML = html;
-    }, (error) => {
-        console.error("Firestore listen failed:", error);
-        contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:red;">권한이 없거나 데이터를 불러올 수 없습니다.</div>`;
-    });
+
+    } catch (e) {
+        console.error('사용자 목록 로드 실패:', e);
+        contentArea.innerHTML = `<div style="text-align:center; padding:2rem; color:red;">사용자 목록을 불러올 수 없습니다: ${e.message}</div>`;
+    }
 }
 
 // [추가] Firestore의 유저 데이터를 D1으로 동기화하는 함수
@@ -274,25 +275,16 @@ window.changeUserRole = async (uid, newRole) => {
     if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
 
     try {
-        // [안전한 수정] updateDoc을 사용하여 기존 필드(name, email 등)를 유지하며 특정 필드만 수정합니다.
-        const userRef = doc(db, "users", uid);
-        await updateDoc(userRef, {
-            role: newRole,
-            isBanned: newRole === 'banned',
-            updatedAt: serverTimestamp()
-        });
-
-        // Cloudflare D1 동기화
         const res = await fetch('/api/user/role', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ uid, role: newRole, isBanned: newRole === 'banned', secret: code })
         });
         
-        if (!res.ok) throw new Error('D1 동기화 실패');
+        if (!res.ok) throw new Error('변경 실패');
 
         alert(`${actionText} 완료!`);
-        // onSnapshot이 실시간으로 화면을 갱신하므로 별도의 render 호출 불필요
+        renderAdminPage(); // 목록 새로고침
     } catch (e) {
         alert("오류 발생: " + e.message);
     }
