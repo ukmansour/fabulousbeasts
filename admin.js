@@ -301,9 +301,12 @@ window.changeUserAvatar = async (uid, displayName) => {
         }
         
         try {
-            // 1. 이미지 R2 업로드
+            // 1. 클라이언트에서 아바타 압축 (200px, 품질 0.8)
+            const compressed = await compressImageForAvatar(file, 200);
+
+            // 2. 이미지 R2 업로드
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', compressed);
             formData.append('folder', 'avatars');
             
             const uploadRes = await fetch('/api/upload', {
@@ -318,7 +321,7 @@ window.changeUserAvatar = async (uid, displayName) => {
             
             const { url: avatarUrl } = await uploadRes.json();
             
-            // 2. D1에서 기존 유저 정보 가져오기
+            // 3. D1에서 기존 유저 정보 가져오기
             const userInfoRes = await fetch(`/api/user/${uid}`);
             let role = 'member', name = displayName, email = '';
             if (userInfoRes.ok) {
@@ -328,7 +331,7 @@ window.changeUserAvatar = async (uid, displayName) => {
                 email = userInfo.email || '';
             }
             
-            // 3. D1 업데이트 (avatar 포함)
+            // 4. D1 업데이트 (avatar 포함)
             const res = await fetch('/api/user/role', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -344,7 +347,7 @@ window.changeUserAvatar = async (uid, displayName) => {
             }
             
             alert(`${displayName}의 프로필 사진이 변경되었습니다!`);
-            renderAdminPage(); // 목록 새로고침
+            renderAdminPage();
         } catch (e) {
             console.error(e);
             alert("프로필 사진 변경 실패: " + e.message);
@@ -353,6 +356,33 @@ window.changeUserAvatar = async (uid, displayName) => {
     
     input.click();
 };
+
+// 아바타용 이미지 압축 (정사각형 크롭 없이 단순 리사이즈)
+function compressImageForAvatar(file, maxSize) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+            try {
+                const canvas = document.createElement('canvas');
+                let { width, height } = img;
+                if (width > height) { if (width > maxSize) { height = Math.round(height * maxSize / width); width = maxSize; } }
+                else { if (height > maxSize) { width = Math.round(width * maxSize / height); height = maxSize; } }
+                canvas.width = width;
+                canvas.height = height;
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                    URL.revokeObjectURL(img.src);
+                    resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file);
+                }, 'image/jpeg', 0.8);
+            } catch {
+                URL.revokeObjectURL(img.src);
+                resolve(file);
+            }
+        };
+        img.onerror = () => { URL.revokeObjectURL(img.src); resolve(file); };
+    });
+}
 
 // [추가] 공지/소식 관리 탭 렌더링
 async function renderSettingsAdminPage() {

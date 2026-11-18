@@ -663,19 +663,27 @@ if (galleryInput) {
         if (userRole !== 'admin') { alert("관리자만 사진을 추가할 수 있습니다."); return; }
 
         saveBtn.disabled = true;
-        saveBtn.textContent = '사진 업로드 중...';
+        saveBtn.textContent = `사진 업로드 중... (0/${files.length})`;
 
-        for (const file of files) {
-            try {
-                const compressed = await compressImage(file);
-                const url = await uploadToR2(compressed, `characters/${charId}/gallery`);
-                currentGallery.push(url);
-                renderGalleryPreview();
-            } catch (err) {
-                console.error("Gallery upload error:", err);
-                alert("갤러리 사진 업로드 실패: " + err.message);
-            }
+        try {
+            // 압축 병렬 처리
+            const compressedFiles = await Promise.all(files.map(f => compressImage(f)));
+
+            // 업로드 병렬 처리
+            const urls = await Promise.all(compressedFiles.map((compressed, i) =>
+                uploadToR2(compressed, `characters/${charId}/gallery`).then(url => {
+                    saveBtn.textContent = `사진 업로드 중... (${i + 1}/${files.length})`;
+                    return url;
+                })
+            ));
+
+            currentGallery.push(...urls);
+            renderGalleryPreview();
+        } catch (err) {
+            console.error("Gallery upload error:", err);
+            alert("갤러리 사진 업로드 실패: " + err.message);
         }
+
         saveBtn.disabled = false;
         saveBtn.textContent = '저장하기';
         checkPermission();
@@ -691,16 +699,16 @@ async function compressImage(file) {
                 const canvas = document.createElement('canvas');
                 let width = img.width;
                 let height = img.height;
-                const MAX = 1200;
-                if (width > height) { if (width > MAX) { height *= MAX/width; width = MAX; } }
-                else { if (height > MAX) { width *= MAX/height; height = MAX; } }
+                const MAX = 900; // 1200 → 900px
+                if (width > height) { if (width > MAX) { height = Math.round(height * MAX / width); width = MAX; } }
+                else { if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; } }
                 canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
                 canvas.toBlob((blob) => {
                     URL.revokeObjectURL(img.src);
                     resolve(blob ? new File([blob], file.name, { type: 'image/jpeg' }) : file);
-                }, 'image/jpeg', 0.8);
+                }, 'image/jpeg', 0.75); // 0.8 → 0.75
             } catch (e) {
                 URL.revokeObjectURL(img.src);
                 resolve(file);
