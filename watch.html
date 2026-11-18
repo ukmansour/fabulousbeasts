@@ -43,6 +43,7 @@
             <nav class="top-nav">
                 <a href="index.html#characters" class="nav-link">캐릭터</a>
                 <a href="watch.html" class="nav-link active">애니 보기</a>
+                <a href="manga.html" class="nav-link">만화 보기</a>
                 <a href="community.html" class="nav-link">커뮤니티</a>
                 
                 <span id="user-info" style="display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;white-space:nowrap;"></span>
@@ -91,10 +92,13 @@
                 <!-- JS injects episodes here -->
             </div>
             
-            <!-- 자막 다운로드 버튼 -->
-            <div style="padding: 1rem; text-align: center; border-top: 1px solid #eee;">
-                <a href="subtitles.html" style="display: inline-block; padding: 0.5rem 1rem; background: white; color: #333; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 0.85rem; transition: 0.2s;">
+            <!-- 자막 다운로드 / 만화 보기 버튼 -->
+            <div style="padding: 1rem; text-align: center; border-top: 1px solid #eee; display: flex; flex-direction: column; gap: 0.5rem;">
+                <a href="subtitles.html" style="display: block; padding: 0.5rem 1rem; background: white; color: #333; border: 1px solid #ddd; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 0.85rem; transition: 0.2s;">
                     자막 다운로드
+                </a>
+                <a href="manga.html" style="display: block; padding: 0.5rem 1rem; background: linear-gradient(135deg, #f76707, #fd9644); color: white; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 0.85rem; transition: 0.2s;">
+                    📖 만화 보기
                 </a>
             </div>
         </aside>

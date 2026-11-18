@@ -1045,7 +1045,68 @@ export async function onRequest(context) {
         }
     }
 
-    // === 알림 시스템 API (18~21번과 중복 제거 - 위의 18번 API 사용) ===
+    // === 만화 API ===
+
+    // GET /api/manga/chapters - 업로드된 화 번호 목록
+    if (request.method === "GET" && apiPath === "/manga/chapters") {
+        try {
+            const { results } = await env.DB.prepare(
+                "SELECT DISTINCT chapter FROM manga_pages ORDER BY chapter ASC"
+            ).all();
+            return new Response(JSON.stringify(results.map(r => r.chapter)), { headers: corsHeaders });
+        } catch (err) {
+            // 테이블이 없으면 빈 배열
+            return new Response(JSON.stringify([]), { headers: corsHeaders });
+        }
+    }
+
+    // GET /api/manga/pages?chapter=N - 특정 화의 페이지 URL 목록
+    if (request.method === "GET" && apiPath === "/manga/pages") {
+        const chapter = parseInt(url.searchParams.get("chapter"));
+        if (!chapter) return new Response(JSON.stringify({ error: "Missing chapter" }), { status: 400, headers: corsHeaders });
+        try {
+            const { results } = await env.DB.prepare(
+                "SELECT url FROM manga_pages WHERE chapter = ? ORDER BY page_num ASC"
+            ).bind(chapter).all();
+            if (results.length === 0) {
+                return new Response(JSON.stringify([]), { status: 200, headers: corsHeaders });
+            }
+            return new Response(JSON.stringify(results.map(r => r.url)), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify([]), { headers: corsHeaders });
+        }
+    }
+
+    // POST /api/manga/pages - 특정 화 페이지 URL 저장 (관리자 전용)
+    if (request.method === "POST" && apiPath === "/manga/pages") {
+        try {
+            const { chapter, pages, secret } = await request.json();
+            if (secret !== "9889") return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+            if (!chapter || !pages?.length) return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
+
+            // 테이블 생성 (최초 1회)
+            await env.DB.prepare(`
+                CREATE TABLE IF NOT EXISTS manga_pages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    chapter INTEGER NOT NULL,
+                    page_num INTEGER NOT NULL,
+                    url TEXT NOT NULL,
+                    UNIQUE(chapter, page_num)
+                )
+            `).run();
+
+            // 해당 화 기존 데이터 삭제 후 재삽입 (덮어쓰기)
+            await env.DB.prepare("DELETE FROM manga_pages WHERE chapter = ?").bind(chapter).run();
+
+            // 배치 삽입
+            const stmt = env.DB.prepare("INSERT INTO manga_pages (chapter, page_num, url) VALUES (?, ?, ?)");
+            await env.DB.batch(pages.map(p => stmt.bind(chapter, p.page, p.url)));
+
+            return new Response(JSON.stringify({ success: true, count: pages.length }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
 
     // 404: Not Found
     return new Response(JSON.stringify({ error: "Not Found" }), { status: 404, headers: corsHeaders });

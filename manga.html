@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>만화 보기 - 유수언</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        .manga-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            gap: 2rem;
+            padding: 0 1rem;
+        }
+
+        /* 만화 뷰어 */
+        .manga-viewer-wrap {
+            background: #111;
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .manga-page-img {
+            width: 100%;
+            max-width: 800px;
+            display: block;
+            margin: 0 auto;
+        }
+        .manga-page-img img {
+            width: 100%;
+            display: block;
+        }
+        .manga-nav-bar {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #1a1a1a;
+            position: sticky;
+            top: 46px;
+            z-index: 100;
+        }
+        .manga-nav-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.2rem;
+            border-radius: 4px;
+            font-weight: 800;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+        .manga-nav-btn:hover { background: var(--primary-dark); }
+        .manga-nav-btn:disabled { background: #444; cursor: not-allowed; }
+        .manga-page-indicator {
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 700;
+            min-width: 80px;
+            text-align: center;
+        }
+        .manga-placeholder {
+            color: #666;
+            text-align: center;
+            padding: 4rem 2rem;
+            font-size: 1rem;
+        }
+
+        /* 화 목록 사이드바 */
+        .chapter-list-wrap {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            height: fit-content;
+            position: sticky;
+            top: calc(46px + 1rem);
+        }
+        .ch-header {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            font-weight: 800;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .ch-group-select {
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            border: none;
+            font-size: 0.8rem;
+            background: white;
+            color: #333;
+            font-weight: 700;
+        }
+        .ch-items {
+            max-height: 560px;
+            overflow-y: auto;
+        }
+        .ch-item {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: background 0.15s;
+            font-size: 0.9rem;
+        }
+        .ch-item:hover { background: var(--primary-light); }
+        .ch-item.active {
+            background: var(--primary-light);
+            border-left: 4px solid var(--primary-color);
+            font-weight: 800;
+        }
+        .ch-num {
+            font-weight: 800;
+            color: var(--primary-color);
+            min-width: 36px;
+            font-size: 0.85rem;
+        }
+        .ch-status {
+            margin-left: auto;
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .ch-status.uploaded {
+            background: #d3f9d8;
+            color: #2b8a3e;
+        }
+        .ch-status.empty {
+            background: #f1f3f5;
+            color: #868e96;
+        }
+
+        /* 업로드 패널 */
+        .upload-panel {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .upload-panel h3 {
+            font-size: 1rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: #333;
+        }
+        .upload-drop-zone {
+            border: 2px dashed var(--primary-color);
+            border-radius: 6px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: background 0.2s;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .upload-drop-zone:hover { background: var(--primary-light); }
+        .upload-progress {
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #333;
+        }
+        .upload-progress-bar {
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        .upload-progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s;
+        }
+
+        /* 화 정보 */
+        .manga-info {
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.2rem 1.5rem;
+            margin-top: 1rem;
+        }
+        .manga-info h2 {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 0.3rem;
+        }
+        .manga-info p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 900px) {
+            .manga-container {
+                grid-template-columns: 1fr;
+            }
+            .chapter-list-wrap {
+                position: static;
+                order: -1;
+            }
+            .ch-items { max-height: 300px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <img src="https://static.wikitide.net/youshouyanwiki/thumb/a/a0/YouShouTransparent2.png/450px-YouShouTransparent2.png" alt="Logo">
+                <span>유수언</span>
+            </a>
+            <div class="search-container">
+                <input type="text" class="search-input" id="global-search" placeholder="검색...">
+                <div class="search-results" id="search-results"></div>
+            </div>
+            <nav class="top-nav">
+                <a href="index.html#characters" class="nav-link">캐릭터</a>
+                <a href="watch.html" class="nav-link">애니 보기</a>
+                <a href="manga.html" class="nav-link active">만화 보기</a>
+                <a href="community.html" class="nav-link">커뮤니티</a>
+                <div id="notification-bell" style="display:none; position:relative; cursor:pointer; margin-left:0.3rem;" onclick="toggleNotificationDropdown()">
+                    <span style="color:white; font-size:0.8rem; font-weight:700;">🔔</span>
+                    <span id="notification-badge" style="display:none; position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; border-radius:50%; width:16px; height:16px; font-size:0.6rem; font-weight:800; align-items:center; justify-content:center;">0</span>
+                    <div id="notification-dropdown" style="display:none; position:absolute; right:0; top:calc(100% + 8px); width:300px; background:white; border:1px solid #ddd; border-radius:8px; box-shadow:0 4px 20px rgba(0,0,0,0.15); z-index:9999;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; border-bottom:1px solid #eee;">
+                            <strong style="font-size:0.9rem;">알림</strong>
+                            <button onclick="markAllAsRead(); event.stopPropagation();" style="background:none; border:none; color:var(--primary-color); font-size:0.75rem; cursor:pointer; font-weight:700;">모두 읽음</button>
+                        </div>
+                        <div id="notification-list"><div style="padding:2rem; text-align:center; color:#999; font-size:0.85rem;">알림이 없습니다</div></div>
+                    </div>
+                </div>
+                <span id="user-info" style="display:flex;align-items:center;gap:0.5rem;margin-left:0.5rem;white-space:nowrap;"></span>
+            </nav>
+        </div>
+    </header>
+
+    <div class="manga-container">
+        <!-- 왼쪽: 뷰어 -->
+        <div>
+            <div class="manga-viewer-wrap" id="manga-viewer">
+                <div class="manga-nav-bar" id="manga-nav-bar" style="display:none;">
+                    <button class="manga-nav-btn" id="btn-prev-ch" onclick="changeChapter(-1)">◀ 이전화</button>
+                    <span class="manga-page-indicator" id="page-indicator">-</span>
+                    <button class="manga-nav-btn" id="btn-next-ch" onclick="changeChapter(1)">다음화 ▶</button>
+                </div>
+                <div class="manga-placeholder" id="manga-placeholder">
+                    <div style="font-size:3rem; margin-bottom:1rem;">📖</div>
+                    <p>왼쪽 목록에서 화를 선택하세요</p>
+                </div>
+                <div class="manga-page-img" id="manga-pages" style="display:none;"></div>
+            </div>
+
+            <div class="manga-info" id="manga-info" style="display:none;">
+                <h2 id="manga-chapter-title">-</h2>
+                <p id="manga-chapter-desc"></p>
+            </div>
+
+            <!-- 관리자 업로드 패널 -->
+            <div class="upload-panel" id="upload-panel" style="display:none;">
+                <h3 id="upload-panel-title">업로드</h3>
+                <p style="font-size:0.85rem; color:#666; margin-bottom:1rem;">
+                    파일명을 <strong>0001.jpg, 0002.jpg, ...</strong> 형식으로 올려주세요.<br>
+                    여러 파일을 한 번에 선택할 수 있습니다.
+                </p>
+                <div class="upload-drop-zone" id="upload-drop-zone" onclick="document.getElementById('manga-file-input').click()">
+                    클릭하거나 파일을 드래그하여 업로드
+                </div>
+                <input type="file" id="manga-file-input" accept="image/*" multiple style="display:none;">
+                <div class="upload-progress" id="upload-progress" style="display:none;">
+                    <span id="upload-progress-text">준비 중...</span>
+                    <div class="upload-progress-bar">
+                        <div class="upload-progress-fill" id="upload-progress-fill" style="width:0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽: 화 목록 -->
+        <aside>
+            <div class="chapter-list-wrap">
+                <div class="ch-header">
+                    <span>화 목록</span>
+                    <select class="ch-group-select" id="chapter-group-select" onchange="onGroupChange()">
+                        <!-- JS로 채움 -->
+                    </select>
+                </div>
+                <div class="ch-items" id="chapter-list">
+                    <div style="padding:2rem; text-align:center; color:#999; font-size:0.85rem;">불러오는 중...</div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script type="module" src="manga.js"></script>
+</body>
+</html>
