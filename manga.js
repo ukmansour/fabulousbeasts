@@ -94,9 +94,14 @@ function initGroupSelector() {
 
 // ===== 업로드된 화 목록 조회 =====
 async function loadUploadedChapters() {
-    // media.fabulousbeasts.kr 직접 접근 방식이므로 별도 조회 불필요
-    // 1~1300화 전부 존재한다고 가정, 실제 없는 화는 이미지 로딩 시 onerror로 처리
-    for (let i = 1; i <= TOTAL_CHAPTERS; i++) uploadedChapters.add(i);
+    try {
+        const res = await fetch('/api/manga/chapters');
+        if (!res.ok) return;
+        const data = await res.json();
+        uploadedChapters = new Set(data.map(ch => Number(ch)));
+    } catch (e) {
+        console.error('챕터 목록 로드 실패:', e);
+    }
 }
 
 // ===== 화 목록 렌더링 =====
@@ -113,6 +118,9 @@ function renderChapterList(groupIndex) {
             <div class="ch-item ${isActive ? 'active' : ''}" onclick="selectChapter(${ch})">
                 <span class="ch-num">${ch}화</span>
                 <span style="flex:1;font-size:0.85rem;color:#333;">제${ch}화</span>
+                <span class="ch-status ${isUploaded ? 'uploaded' : 'empty'}">
+                    ${isUploaded ? '완료' : '미등록'}
+                </span>
             </div>
         `;
     }

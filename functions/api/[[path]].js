@@ -1047,13 +1047,27 @@ export async function onRequest(context) {
 
     // === 만화 API ===
 
-    // GET /api/manga/chapters - 업로드된 화 번호 목록
+    // GET /api/manga/chapters - 업로드된 화 번호 목록 (R2 직접 조회)
     if (request.method === "GET" && apiPath === "/manga/chapters") {
         try {
-            const { results } = await env.DB.prepare(
-                "SELECT DISTINCT chapter FROM manga_pages ORDER BY chapter ASC"
-            ).all();
-            return new Response(JSON.stringify(results.map(r => r.chapter)), { headers: corsHeaders });
+            const uploadedSet = new Set();
+            // R2 버킷에서 manga 관련 파일 목록 조회 (폴더별)
+            // 파일명 패턴: {폴더}/{0001화}.jpg 또는 {0001화_a}.jpg
+            let cursor = undefined;
+            do {
+                const listResult = await env.BUCKET.list({ limit: 1000, cursor });
+                for (const obj of listResult.objects) {
+                    // 파일명에서 화 번호 추출: "0101화 ~ 0200화/0101화.jpg" → 101
+                    const filename = obj.key.split('/').pop(); // "0101화.jpg"
+                    const match = filename.match(/^(\d{4})화/);
+                    if (match) {
+                        uploadedSet.add(parseInt(match[1], 10));
+                    }
+                }
+                cursor = listResult.truncated ? listResult.cursor : undefined;
+            } while (cursor);
+
+            return new Response(JSON.stringify([...uploadedSet].sort((a,b) => a-b)), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify([]), { headers: corsHeaders });
         }
