@@ -94,14 +94,9 @@ function initGroupSelector() {
 
 // ===== 업로드된 화 목록 조회 =====
 async function loadUploadedChapters() {
-    try {
-        const res = await fetch('/api/manga/chapters');
-        if (!res.ok) return;
-        const data = await res.json();
-        uploadedChapters = new Set(data.map(ch => Number(ch)));
-    } catch (e) {
-        console.error('챕터 목록 로드 실패:', e);
-    }
+    // media.fabulousbeasts.kr 직접 접근 방식이므로 별도 조회 불필요
+    // 1~1300화 전부 존재한다고 가정, 실제 없는 화는 이미지 로딩 시 onerror로 처리
+    for (let i = 1; i <= TOTAL_CHAPTERS; i++) uploadedChapters.add(i);
 }
 
 // ===== 화 목록 렌더링 =====
@@ -118,9 +113,6 @@ function renderChapterList(groupIndex) {
             <div class="ch-item ${isActive ? 'active' : ''}" onclick="selectChapter(${ch})">
                 <span class="ch-num">${ch}화</span>
                 <span style="flex:1;font-size:0.85rem;color:#333;">제${ch}화</span>
-                <span class="ch-status ${isUploaded ? 'uploaded' : 'empty'}">
-                    ${isUploaded ? '완료' : '미등록'}
-                </span>
             </div>
         `;
     }
@@ -166,17 +158,45 @@ window.selectChapter = async function (chapterNum) {
 
     document.getElementById('manga-pages').innerHTML =
         `<div style="color:#888;padding:3rem;text-align:center;">이미지를 불러오는 중...</div>`;
-    try {
-        const res = await fetch(`/api/manga/pages?chapter=${chapterNum}`);
-        if (!res.ok) throw new Error();
-        const pages = await res.json();
-        chapterPages[chapterNum] = pages;
-        renderPages(pages);
-    } catch (e) {
-        document.getElementById('manga-pages').innerHTML =
-            `<div style="color:#e03131;padding:3rem;text-align:center;">아직 업로드되지 않은 화입니다.</div>`;
-    }
+
+    // media.fabulousbeasts.kr/{화번호4자리}화.jpg 직접 생성
+    const paddedNum = String(chapterNum).padStart(4, '0');
+    const baseUrl = `https://media.fabulousbeasts.kr/${paddedNum}%ED%99%94`;
+    
+    // _a, _b 합본 여부 확인: 단일 → [{page_num:1, urls:[url]}]
+    // 먼저 단일 파일 시도, 없으면 _a/_b 시도
+    const pages = await buildPageList(chapterNum, baseUrl);
+    chapterPages[chapterNum] = pages;
+    renderPages(pages);
 };
+
+// ===== 페이지 목록 생성 (media.fabulousbeasts.kr 직접 접근) =====
+async function buildPageList(chapterNum, baseUrl) {
+    // 단일 파일 존재 여부 확인
+    const singleUrl = `${baseUrl}.jpg`;
+    const singleRes = await fetch(singleUrl, { method: 'HEAD' }).catch(() => null);
+
+    if (singleRes && singleRes.ok) {
+        // 단일 파일만 있는 경우
+        return [{ page_num: 1, urls: [singleUrl] }];
+    }
+
+    // _a, _b 합본 시도
+    const aUrl = `${baseUrl}_a.jpg`;
+    const bUrl = `${baseUrl}_b.jpg`;
+    const aRes = await fetch(aUrl, { method: 'HEAD' }).catch(() => null);
+
+    if (aRes && aRes.ok) {
+        const bRes = await fetch(bUrl, { method: 'HEAD' }).catch(() => null);
+        if (bRes && bRes.ok) {
+            return [{ page_num: 1, urls: [aUrl, bUrl] }];
+        }
+        return [{ page_num: 1, urls: [aUrl] }];
+    }
+
+    // 없는 화
+    return [];
+}
 
 // ===== 이미지 렌더링 =====
 function renderPages(pages) {
