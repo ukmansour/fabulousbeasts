@@ -185,11 +185,24 @@ function renderPages(pages) {
         wrap.innerHTML = `<div style="color:#888;padding:3rem;text-align:center;">아직 업로드된 이미지가 없습니다.</div>`;
         return;
     }
-    wrap.innerHTML = pages.map((url, i) =>
-        `<img src="${url}" alt="${currentChapter}화 ${i + 1}페이지" loading="lazy"
-              style="width:100%;display:block;max-width:800px;margin:0 auto;"
-              onerror="this.style.display='none'">`
-    ).join('');
+    // pages는 [{page_num, urls:[...]}] 형태
+    // urls가 2개 이상이면 가로로 나란히 표시 (0000_a, 0000_b 합본)
+    wrap.innerHTML = pages.map((page, i) => {
+        if (page.urls.length === 1) {
+            // 단일 이미지
+            return `<img src="${page.urls[0]}" alt="${currentChapter}화 ${i + 1}페이지" loading="lazy"
+                        style="width:100%;display:block;max-width:800px;margin:0 auto;"
+                        onerror="this.style.display='none'">`;
+        } else {
+            // 합본 이미지 (가로 나란히)
+            const imgs = page.urls.map(url =>
+                `<img src="${url}" alt="${currentChapter}화 ${i + 1}페이지" loading="lazy"
+                      style="width:${100 / page.urls.length}%;display:block;"
+                      onerror="this.style.display='none'">`
+            ).join('');
+            return `<div style="display:flex;max-width:800px;margin:0 auto;">${imgs}</div>`;
+        }
+    }).join('');
     wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 

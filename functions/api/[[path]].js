@@ -1065,12 +1065,22 @@ export async function onRequest(context) {
         if (!chapter) return new Response(JSON.stringify({ error: "Missing chapter" }), { status: 400, headers: corsHeaders });
         try {
             const { results } = await env.DB.prepare(
-                "SELECT url FROM manga_pages WHERE chapter = ? ORDER BY page_num ASC"
+                "SELECT page_num, url FROM manga_pages WHERE chapter = ? ORDER BY page_num ASC, url ASC"
             ).bind(chapter).all();
             if (results.length === 0) {
                 return new Response(JSON.stringify([]), { status: 200, headers: corsHeaders });
             }
-            return new Response(JSON.stringify(results.map(r => r.url)), { headers: corsHeaders });
+            // page_num이 같은 것들을 묶어서 반환 (0000_a, 0000_b → 같은 page_num)
+            const grouped = [];
+            const seen = new Map();
+            for (const row of results) {
+                if (!seen.has(row.page_num)) {
+                    seen.set(row.page_num, { page_num: row.page_num, urls: [] });
+                    grouped.push(seen.get(row.page_num));
+                }
+                seen.get(row.page_num).urls.push(row.url);
+            }
+            return new Response(JSON.stringify(grouped), { headers: corsHeaders });
         } catch (err) {
             return new Response(JSON.stringify([]), { headers: corsHeaders });
         }
@@ -1083,23 +1093,28 @@ export async function onRequest(context) {
             if (secret !== "9889") return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
             if (!chapter || !pages?.length) return new Response(JSON.stringify({ error: "Missing fields" }), { status: 400, headers: corsHeaders });
 
-            // 테이블 생성 (최초 1회)
             await env.DB.prepare(`
                 CREATE TABLE IF NOT EXISTS manga_pages (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     chapter INTEGER NOT NULL,
                     page_num INTEGER NOT NULL,
                     url TEXT NOT NULL,
-                    UNIQUE(chapter, page_num)
+                    UNIQUE(chapter, page_num, url)
                 )
             `).run();
 
-            // 해당 화 기존 데이터 삭제 후 재삽입 (덮어쓰기)
             await env.DB.prepare("DELETE FROM manga_pages WHERE chapter = ?").bind(chapter).run();
 
-            // 배치 삽입
-            const stmt = env.DB.prepare("INSERT INTO manga_pages (chapter, page_num, url) VALUES (?, ?, ?)");
-            await env.DB.batch(pages.map(p => stmt.bind(chapter, p.page, p.url)));
+            // 파일명에서 page_num 추출: 0001.jpg → 1, 0001_a.jpg → 1, 0001_b.jpg → 1
+            const parsePageNum = (p) => {
+                if (p.page !== undefined) return p.page;
+                const filename = p.url.split('/').pop().replace(/\.[^.]+$/, ''); // 확장자 제거
+                const base = filename.split('_')[0]; // _a, _b 접미사 제거
+                return parseInt(base, 10) || 0;
+            };
+
+            const stmt = env.DB.prepare("INSERT OR IGNORE INTO manga_pages (chapter, page_num, url) VALUES (?, ?, ?)");
+            await env.DB.batch(pages.map(p => stmt.bind(chapter, parsePageNum(p), p.url)));
 
             return new Response(JSON.stringify({ success: true, count: pages.length }), { headers: corsHeaders });
         } catch (err) {
