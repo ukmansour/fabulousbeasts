@@ -172,7 +172,7 @@ window.selectChapter = async function (chapterNum) {
     renderPages(pages);
 };
 
-// ===== 페이지 목록 생성 (api/r2 경유로 CORS 처리) =====
+// ===== 페이지 목록 생성 =====
 async function buildPageList(chapterNum) {
     const folderStart = Math.floor((chapterNum - 1) / 100) * 100 + 1;
     const folderEnd = folderStart + 99;
@@ -180,17 +180,25 @@ async function buildPageList(chapterNum) {
     const folderEndPad = String(folderEnd).padStart(4, '0');
     const paddedNum = String(chapterNum).padStart(4, '0');
 
-    // R2 경로: {0101화 ~ 0200화}/{0101화}.jpg
+    // 형식 1: 폴더 구조 (0101화 ~ 0200화/0101화.jpg)
     const folderName = `${folderStartPad}화 ~ ${folderEndPad}화`;
     const fileName = `${paddedNum}화`;
+    const base1 = `/api/r2/${encodeURIComponent(folderName)}/${encodeURIComponent(fileName)}`;
 
-    // /api/r2/ 경로 사용 (CORS 헤더 포함)
-    const encodedFolder = encodeURIComponent(folderName);
-    const encodedFile = encodeURIComponent(fileName);
-    const base = `/api/r2/${encodedFolder}/${encodedFile}`;
+    // 형식 2: 루트 직접 (0795화.jpg)
+    const base2 = `/api/r2/${encodeURIComponent(fileName)}`;
 
     return [
-        { page_num: 1, single: `${base}.jpg`, a: `${base}_a.jpg`, b: `${base}_b.jpg` }
+        {
+            page_num: 1,
+            // 형식1 단일, 형식2 단일, 형식1 합본, 형식2 합본 순서로 시도
+            single1: `${base1}.jpg`,
+            single2: `${base2}.jpg`,
+            a1: `${base1}_a.jpg`,
+            b1: `${base1}_b.jpg`,
+            a2: `${base2}_a.jpg`,
+            b2: `${base2}_b.jpg`,
+        }
     ];
 }
 
@@ -203,21 +211,29 @@ function renderPages(pages) {
     }
 
     wrap.innerHTML = pages.map((page) => {
-        // 단일 이미지: 로드 성공 시 그대로, 실패 시 _a를 표시
-        // _a 이미지: 로드 성공 시 _b도 나란히 표시
+        // 형식1 단일 → 형식2 단일 → 형식1 합본 → 형식2 합본 순으로 fallback
         return `
-            <div class="manga-page-row" data-single="${page.single}" data-a="${page.a}" data-b="${page.b}"
-                 style="max-width:800px;margin:0 auto;">
-                <img src="${page.single}"
+            <div class="manga-page-row" style="max-width:800px;margin:0 auto;">
+                <!-- 형식1 단일 -->
+                <img class="img-single1" src="${page.single1}"
                      style="width:100%;display:block;"
-                     crossorigin="anonymous"
-                     onload="this.parentElement.querySelector('.manga-ab-wrap').style.display='none';"
-                     onerror="this.style.display='none'; this.parentElement.querySelector('.manga-ab-wrap').style.display='flex';">
-                <div class="manga-ab-wrap" style="display:none; width:100%;">
-                    <img src="${page.a}" style="flex:1;width:50%;display:block;" crossorigin="anonymous"
-                         onerror="this.style.display='none';">
-                    <img src="${page.b}" style="flex:1;width:50%;display:block;" crossorigin="anonymous"
-                         onerror="this.style.display='none';">
+                     onload="
+                         this.closest('.manga-page-row').querySelectorAll('.img-single2,.manga-ab-wrap').forEach(e=>e.style.display='none');
+                     "
+                     onerror="this.style.display='none';">
+                <!-- 형식2 단일 (형식1 실패 시) -->
+                <img class="img-single2" src="${page.single2}"
+                     style="width:100%;display:block;"
+                     onload="
+                         this.closest('.manga-page-row').querySelectorAll('.manga-ab-wrap').forEach(e=>e.style.display='none');
+                     "
+                     onerror="this.style.display='none'; this.closest('.manga-page-row').querySelector('.manga-ab-wrap').style.display='flex';">
+                <!-- 합본 (두 단일 모두 실패 시) -->
+                <div class="manga-ab-wrap" style="display:none;width:100%;">
+                    <img src="${page.a1}" style="flex:1;width:50%;display:block;"
+                         onerror="this.src='${page.a2}'; this.onerror=null;">
+                    <img src="${page.b1}" style="flex:1;width:50%;display:block;"
+                         onerror="this.src='${page.b2}'; this.onerror=null;">
                 </div>
             </div>
         `;
