@@ -341,6 +341,32 @@ export async function onRequest(context) {
         return new Response(JSON.stringify(result || { role: "member" }), { headers: corsHeaders });
     }
 
+    // Firebase → D1 전체 필드 복구용 (name, nickname, email, avatar 포함 덮어쓰기)
+    if (request.method === "POST" && apiPath === "/user/sync") {
+        try {
+            const { uid, role, name, nickname, email, isBanned, avatar, secret } = await request.json();
+            if (secret !== "9889") return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: corsHeaders });
+            if (!uid) return new Response(JSON.stringify({ error: "Missing uid" }), { status: 400, headers: corsHeaders });
+
+            await env.DB.prepare(`
+                INSERT INTO users (uid, role, name, nickname, email, is_banned, avatar, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(uid) DO UPDATE SET
+                    role = excluded.role,
+                    name = excluded.name,
+                    nickname = excluded.nickname,
+                    email = excluded.email,
+                    is_banned = excluded.is_banned,
+                    avatar = CASE WHEN excluded.avatar IS NOT NULL THEN excluded.avatar ELSE avatar END,
+                    updated_at = CURRENT_TIMESTAMP
+            `).bind(uid, role || "member", name || nickname || "", nickname || name || "", email || "", isBanned ? 1 : 0, avatar || null).run();
+
+            return new Response(JSON.stringify({ success: true }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
     if (request.method === "POST" && apiPath === "/user/role") {
         try {
             const { uid, role, name, nickname, email, isBanned, avatar, secret } = await request.json();

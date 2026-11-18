@@ -1,4 +1,4 @@
-import { auth } from './firebase-config.js';
+import { db, auth } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // 툴바 버튼 이벤트 리스너 설정 (사용자 관리 페이지에서 필요하지 않다면 빈 함수로 두거나 제거)
@@ -125,7 +125,10 @@ async function renderAdminPage() {
             <div style="max-width:900px; margin:0 auto; padding:0; background:white; border:1px solid #ccc;">
                 <div style="display:flex; justify-content:space-between; align-items:center; padding:0.8rem 1rem; background:#f0f0f0; border-bottom:1px solid #ccc;">
                     <h2 style="font-size:1rem; font-weight:900; color:#111; margin:0;">사용자 관리 (${users.length})</h2>
-                    <button onclick="renderAdminPage()" style="font-size:0.7rem; color:#666; background:none; border:1px solid #ccc; padding:2px 8px; cursor:pointer; border-radius:3px;">새로고침</button>
+                    <div style="display:flex; gap:0.5rem;">
+                        <button onclick="window.importFirestoreUsers()" style="font-size:0.7rem; color:#fff; background:#e67700; border:none; padding:3px 10px; cursor:pointer; border-radius:3px; font-weight:700;">Firebase 복구</button>
+                        <button onclick="renderAdminPage()" style="font-size:0.7rem; color:#666; background:none; border:1px solid #ccc; padding:2px 8px; cursor:pointer; border-radius:3px;">새로고침</button>
+                    </div>
                 </div>
                 
                 <div style="display:flex; flex-direction:column;">
@@ -188,38 +191,50 @@ async function renderAdminPage() {
     }
 }
 
-// [추가] Firestore의 유저 데이터를 D1으로 동기화하는 함수
+// Firebase → D1 사용자 정보 복구 함수
 window.importFirestoreUsers = async () => {
-    const code = prompt("데이터 동기화를 위한 보안 코드를 입력하세요:");
+    const code = prompt("보안 코드를 입력하세요:");
     if (code !== "9889") { alert("보안 코드가 틀렸습니다."); return; }
-
-    if (!confirm("Firestore에 저장된 사용자들을 D1 데이터베이스로 가져오시겠습니까?")) return;
+    if (!confirm("Firebase에 저장된 사용자 정보를 D1으로 복구하시겠습니까?\n(이름, 이메일, 아바타 등이 복구됩니다)")) return;
 
     try {
         const { collection, getDocs } = await import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js");
         const snapshot = await getDocs(collection(db, "users"));
         
-        let count = 0;
+        if (snapshot.empty) {
+            alert("Firebase에 사용자 데이터가 없습니다.");
+            return;
+        }
+
+        let success = 0, failed = 0;
         for (const docSnap of snapshot.docs) {
             const u = docSnap.data();
-            await fetch('/api/user/role', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    uid: u.uid,
-                    role: u.role || 'member',
-                    nickname: u.nickname || '',
-                    email: u.email || '',
-                    secret: '9889'
-                })
-            });
-            count++;
+            try {
+                const res = await fetch('/api/user/sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        uid: u.uid,
+                        role: u.role || 'member',
+                        name: u.nickname || u.displayName || '',
+                        nickname: u.nickname || u.displayName || '',
+                        email: u.email || '',
+                        avatar: u.avatar || u.photoURL || null,
+                        isBanned: u.isBanned || false,
+                        secret: code
+                    })
+                });
+                if (res.ok) success++;
+                else failed++;
+            } catch (e) {
+                failed++;
+            }
         }
         
-        alert(`${count}명의 사용자를 성공적으로 동기화했습니다!`);
+        alert(`복구 완료!\n성공: ${success}명\n실패: ${failed}명`);
         renderAdminPage();
     } catch (e) {
-        alert("동기화 실패: " + e.message);
+        alert("복구 실패: " + e.message);
     }
 };
 
