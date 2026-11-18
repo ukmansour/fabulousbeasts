@@ -1,13 +1,4 @@
-import { db, auth } from './firebase-config.js';
-import { 
-    doc, 
-    updateDoc, 
-    serverTimestamp, 
-    collection, 
-    onSnapshot, 
-    query, 
-    orderBy 
-} from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { auth } from './firebase-config.js';
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // 툴바 버튼 이벤트 리스너 설정 (사용자 관리 페이지에서 필요하지 않다면 빈 함수로 두거나 제거)
@@ -62,40 +53,38 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     try {
-        // [읽기 최적화] 마스터 관리자 계정은 즉시 허용 (DB 읽기 0)
+        // 마스터 관리자 계정은 즉시 허용
         if (user.email === "hodu@youshouyan.wiki") {
             renderAdminPage();
-            renderWikiAdminPage(); // 초기 로드 시 둘 다 렌더링 준비
+            renderWikiAdminPage();
             return;
         }
 
-        // [권한 확인] 일반 사용자는 Firestore에서 역할 확인
-        const userSnap = await getDocSafe(doc(db, "users", user.uid));
-        if (userSnap.exists() && userSnap.data().role === 'admin') {
-            sessionStorage.setItem(`role_${user.uid}`, 'admin');
-            renderAdminPage();
-            renderWikiAdminPage();
+        // D1에서 역할 확인
+        const res = await fetch(`/api/user/${user.uid}`);
+        if (res.ok) {
+            const userData = await res.json();
+            if (userData && userData.role === 'admin') {
+                sessionStorage.setItem(`role_${user.uid}`, 'admin');
+                renderAdminPage();
+                renderWikiAdminPage();
+            } else {
+                document.body.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 2rem; text-align: center;">
+                        <h1 style="font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 0.5rem;">접근 권한이 없습니다</h1>
+                        <a href="index.html" style="padding: 0.8rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 6px; font-weight: 700;">홈으로 돌아가기</a>
+                    </div>
+                `;
+            }
         } else {
-            // 관리자가 아닌 경우 접근 차단
-            document.body.innerHTML = `
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 2rem; text-align: center;">
-                    <div style="font-size: 4rem; margin-bottom: 1rem;">🚫</div>
-                    <h1 style="font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 0.5rem;">접근 권한이 없습니다</h1>
-                    <p style="color: #666; font-size: 1rem; margin-bottom: 2rem;">이 페이지는 관리자만 접근할 수 있습니다.</p>
-                    <a href="index.html" style="padding: 0.8rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem;">홈으로 돌아가기</a>
-                </div>
-            `;
-            return;
+            throw new Error('권한 확인 실패');
         }
     } catch (e) {
         console.error(e);
-        // 오류 발생 시에도 접근 차단
         document.body.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; background: #f5f5f5; padding: 2rem; text-align: center;">
-                <div style="font-size: 4rem; margin-bottom: 1rem;">⚠️</div>
                 <h1 style="font-size: 2rem; font-weight: 900; color: #333; margin-bottom: 0.5rem;">오류가 발생했습니다</h1>
-                <p style="color: #666; font-size: 1rem; margin-bottom: 2rem;">권한을 확인할 수 없습니다.</p>
-                <a href="index.html" style="padding: 0.8rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 6px; font-weight: 700; font-size: 0.95rem;">홈으로 돌아가기</a>
+                <a href="index.html" style="padding: 0.8rem 2rem; background: var(--primary-color); color: white; text-decoration: none; border-radius: 6px; font-weight: 700;">홈으로 돌아가기</a>
             </div>
         `;
     }
@@ -290,7 +279,7 @@ window.changeUserRole = async (uid, newRole) => {
     }
 };
 
-// [추가] 유저 아바타 변경 함수
+// 유저 아바타 변경 함수
 window.changeUserAvatar = async (uid, displayName) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -300,7 +289,6 @@ window.changeUserAvatar = async (uid, displayName) => {
         const file = e.target.files[0];
         if (!file) return;
         
-        // 파일 크기 체크 (2MB 제한)
         if (file.size > 2 * 1024 * 1024) {
             alert('이미지 크기는 2MB 이하여야 합니다.');
             return;
@@ -313,7 +301,7 @@ window.changeUserAvatar = async (uid, displayName) => {
         }
         
         try {
-            // 이미지 업로드
+            // 1. 이미지 R2 업로드
             const formData = new FormData();
             formData.append('file', file);
             formData.append('folder', 'avatars');
@@ -323,55 +311,40 @@ window.changeUserAvatar = async (uid, displayName) => {
                 body: formData
             });
             
-            if (!uploadRes.ok) throw new Error('이미지 업로드 실패');
+            if (!uploadRes.ok) {
+                const err = await uploadRes.json();
+                throw new Error('이미지 업로드 실패: ' + (err.error || uploadRes.status));
+            }
             
-            const uploadData = await uploadRes.json();
-            const avatarUrl = uploadData.url;
+            const { url: avatarUrl } = await uploadRes.json();
             
-            // Firestore 업데이트
-            const userRef = doc(db, "users", uid);
-            await updateDoc(userRef, {
-                avatar: avatarUrl,
-                updatedAt: serverTimestamp()
-            });
-            
-            // D1에서 기존 유저 정보 가져오기
+            // 2. D1에서 기존 유저 정보 가져오기
             const userInfoRes = await fetch(`/api/user/${uid}`);
-            let role = 'member';
-            let name = displayName;
-            let email = '';
-            
+            let role = 'member', name = displayName, email = '';
             if (userInfoRes.ok) {
                 const userInfo = await userInfoRes.json();
                 role = userInfo.role || 'member';
-                name = userInfo.name || displayName;
+                name = userInfo.nickname || userInfo.name || displayName;
                 email = userInfo.email || '';
             }
             
-            // D1 동기화
+            // 3. D1 업데이트 (avatar 포함)
             const res = await fetch('/api/user/role', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    uid, 
-                    role: role,
-                    name: name,
-                    nickname: name,
-                    email: email,
-                    isBanned: false,
-                    avatar: avatarUrl,
-                    secret: code 
+                    uid, role, name, nickname: name, email,
+                    isBanned: false, avatar: avatarUrl, secret: code 
                 })
             });
             
             if (!res.ok) {
-                const errorData = await res.json();
-                console.error('D1 동기화 실패:', errorData);
-                throw new Error('D1 동기화 실패: ' + (errorData.error || '알 수 없는 오류'));
+                const err = await res.json();
+                throw new Error('저장 실패: ' + (err.error || '알 수 없는 오류'));
             }
             
             alert(`${displayName}의 프로필 사진이 변경되었습니다!`);
-            // onSnapshot이 실시간으로 화면을 갱신
+            renderAdminPage(); // 목록 새로고침
         } catch (e) {
             console.error(e);
             alert("프로필 사진 변경 실패: " + e.message);
