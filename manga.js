@@ -159,34 +159,37 @@ window.selectChapter = async function (chapterNum) {
     document.getElementById('manga-pages').innerHTML =
         `<div style="color:#888;padding:3rem;text-align:center;">이미지를 불러오는 중...</div>`;
 
-    // media.fabulousbeasts.kr/{화번호4자리}화.jpg 직접 생성
-    const paddedNum = String(chapterNum).padStart(4, '0');
-    const baseUrl = `https://media.fabulousbeasts.kr/${paddedNum}%ED%99%94`;
-    
-    // _a, _b 합본 여부 확인: 단일 → [{page_num:1, urls:[url]}]
-    // 먼저 단일 파일 시도, 없으면 _a/_b 시도
-    const pages = await buildPageList(chapterNum, baseUrl);
+    const pages = await buildPageList(chapterNum);
     chapterPages[chapterNum] = pages;
     renderPages(pages);
 };
 
 // ===== 페이지 목록 생성 (media.fabulousbeasts.kr 직접 접근) =====
 async function buildPageList(chapterNum, baseUrl) {
-    // 단일 파일 존재 여부 확인
-    const singleUrl = `${baseUrl}.jpg`;
-    const singleRes = await fetch(singleUrl, { method: 'HEAD' }).catch(() => null);
+    // 폴더 구조: {시작화4자리}화 ~ {끝화4자리}화/{화번호4자리}화.jpg
+    // 예: 0101화 ~ 0200화/0101화.jpg
+    const folderStart = Math.floor((chapterNum - 1) / 100) * 100 + 1;
+    const folderEnd = folderStart + 99;
+    const folderStartPad = String(folderStart).padStart(4, '0');
+    const folderEndPad = String(folderEnd).padStart(4, '0');
+    const paddedNum = String(chapterNum).padStart(4, '0');
 
+    const folder = `${folderStartPad}%ED%99%94%20~%20${folderEndPad}%ED%99%94`;
+    const filename = `${paddedNum}%ED%99%94`;
+    const base = `https://media.fabulousbeasts.kr/${folder}/${filename}`;
+
+    // 단일 파일 시도
+    const singleUrl = `${base}.jpg`;
+    const singleRes = await fetch(singleUrl, { method: 'HEAD' }).catch(() => null);
     if (singleRes && singleRes.ok) {
-        // 단일 파일만 있는 경우
         return [{ page_num: 1, urls: [singleUrl] }];
     }
 
     // _a, _b 합본 시도
-    const aUrl = `${baseUrl}_a.jpg`;
-    const bUrl = `${baseUrl}_b.jpg`;
+    const aUrl = `${base}_a.jpg`;
     const aRes = await fetch(aUrl, { method: 'HEAD' }).catch(() => null);
-
     if (aRes && aRes.ok) {
+        const bUrl = `${base}_b.jpg`;
         const bRes = await fetch(bUrl, { method: 'HEAD' }).catch(() => null);
         if (bRes && bRes.ok) {
             return [{ page_num: 1, urls: [aUrl, bUrl] }];
@@ -194,7 +197,6 @@ async function buildPageList(chapterNum, baseUrl) {
         return [{ page_num: 1, urls: [aUrl] }];
     }
 
-    // 없는 화
     return [];
 }
 
