@@ -136,6 +136,7 @@ authForm.addEventListener('submit', async (e) => {
                     uid: user.uid,
                     email: signupEmail,
                     name: nickname || "이름 없음",
+                    nickname: nickname || "이름 없음",
                     role: 'member',
                     isBanned: false,
                     createdAt: serverTimestamp(),
@@ -145,7 +146,7 @@ authForm.addEventListener('submit', async (e) => {
 
                 // [선택] Cloudflare D1 동기화
                 try {
-                    await fetch('/api/user/role', {
+                    await fetch('/api/user/sync', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({

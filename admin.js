@@ -209,25 +209,30 @@ window.importFirestoreUsers = async () => {
         let success = 0, failed = 0;
         for (const docSnap of snapshot.docs) {
             const u = docSnap.data();
+            // Firestore 필드명: name (nickname 없음), uid, email, role, isBanned
+            const nickname = u.nickname || u.name || u.displayName || '';
+            const email = u.email || '';
+            const uid = u.uid || docSnap.id; // uid 필드 없으면 문서 ID 사용
             try {
                 const res = await fetch('/api/user/sync', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        uid: u.uid,
+                        uid: uid,
                         role: u.role || 'member',
-                        name: u.nickname || u.displayName || '',
-                        nickname: u.nickname || u.displayName || '',
-                        email: u.email || '',
+                        name: nickname,
+                        nickname: nickname,
+                        email: email,
                         avatar: u.avatar || u.photoURL || null,
                         isBanned: u.isBanned || false,
                         secret: code
                     })
                 });
                 if (res.ok) success++;
-                else failed++;
+                else { failed++; console.error('sync 실패:', uid, await res.text()); }
             } catch (e) {
                 failed++;
+                console.error('sync 오류:', uid, e);
             }
         }
         
