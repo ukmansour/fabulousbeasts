@@ -1052,23 +1052,42 @@ export async function onRequest(context) {
         try {
             const uploadedSet = new Set();
             // R2 버킷에서 manga 관련 파일 목록 조회 (폴더별)
-            // 파일명 패턴: {폴더}/{0001화}.jpg 또는 {0001화_a}.jpg
+            // 파일명 패턴: 
+            // 1. "0101화 ~ 0200화/0101화.jpg" (폴더 구조)
+            // 2. "0795화.jpg" (4자리 패딩)
+            // 3. "1207.jpg" (패딩 없음)
             let cursor = undefined;
             do {
                 const listResult = await env.BUCKET.list({ limit: 1000, cursor });
                 for (const obj of listResult.objects) {
-                    // 파일명에서 화 번호 추출: "0101화 ~ 0200화/0101화.jpg" → 101
-                    const filename = obj.key.split('/').pop(); // "0101화.jpg"
-                    const match = filename.match(/^(\d{4})화/);
+                    const key = obj.key;
+                    
+                    // manga/ 폴더 내부의 파일만 처리
+                    if (!key.startsWith('manga/')) continue;
+                    
+                    const filename = key.split('/').pop(); // 마지막 파일명만
+                    
+                    // 패턴 1: 0101화.jpg (4자리 + "화")
+                    let match = filename.match(/^(\d{4})화\.jpg$/);
                     if (match) {
                         uploadedSet.add(parseInt(match[1], 10));
+                        continue;
+                    }
+                    
+                    // 패턴 2: 1207.jpg (패딩 없음, 1~4자리 숫자)
+                    match = filename.match(/^(\d{1,4})\.jpg$/);
+                    if (match) {
+                        uploadedSet.add(parseInt(match[1], 10));
+                        continue;
                     }
                 }
                 cursor = listResult.truncated ? listResult.cursor : undefined;
             } while (cursor);
 
+            console.log('[Manga Chapters] 감지된 화:', [...uploadedSet].sort((a,b) => a-b));
             return new Response(JSON.stringify([...uploadedSet].sort((a,b) => a-b)), { headers: corsHeaders });
         } catch (err) {
+            console.error('[Manga Chapters Error]', err);
             return new Response(JSON.stringify([]), { headers: corsHeaders });
         }
     }
