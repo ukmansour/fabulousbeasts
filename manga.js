@@ -146,13 +146,20 @@ window.selectChapter = async function (chapterNum) {
     document.getElementById('manga-placeholder').style.display = 'none';
     document.getElementById('manga-pages').style.display = 'block';
     document.getElementById('manga-nav-bar').style.display = 'flex';
+    document.getElementById('manga-nav-bar-bottom').style.display = 'flex';
     document.getElementById('manga-info').style.display = 'block';
     document.getElementById('manga-comments').style.display = 'block';
     document.getElementById('manga-chapter-title').textContent = `제${chapterNum}화`;
     document.getElementById('page-indicator').textContent = `${chapterNum}화`;
+    document.getElementById('page-indicator-bottom').textContent = `${chapterNum}화`;
 
+    // 상단 버튼
     document.getElementById('btn-prev-ch').disabled = chapterNum <= 1;
     document.getElementById('btn-next-ch').disabled = chapterNum >= TOTAL_CHAPTERS;
+    
+    // 하단 버튼
+    document.getElementById('btn-prev-ch-bottom').disabled = chapterNum <= 1;
+    document.getElementById('btn-next-ch-bottom').disabled = chapterNum >= TOTAL_CHAPTERS;
 
     // 댓글 갱신
     updateCommentForm();

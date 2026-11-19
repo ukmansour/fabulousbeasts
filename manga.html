@@ -244,6 +244,13 @@
                 <p id="manga-chapter-desc"></p>
             </div>
 
+            <!-- 하단 네비게이션 -->
+            <div class="manga-nav-bar" id="manga-nav-bar-bottom" style="display:none; position:static; margin-top:1rem; border-radius:8px;">
+                <button class="manga-nav-btn" id="btn-prev-ch-bottom" onclick="changeChapter(-1)">◀ 이전화</button>
+                <span class="manga-page-indicator" id="page-indicator-bottom">-</span>
+                <button class="manga-nav-btn" id="btn-next-ch-bottom" onclick="changeChapter(1)">다음화 ▶</button>
+            </div>
+
             <!-- 댓글 영역 -->
             <div class="manga-comments" id="manga-comments" style="display:none;">
                 <h3>댓글 <span id="manga-comments-count" style="color:var(--primary-color);">0</span></h3>
