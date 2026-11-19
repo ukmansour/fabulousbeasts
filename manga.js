@@ -158,12 +158,7 @@ window.selectChapter = async function (chapterNum) {
     updateCommentForm();
     loadComments(chapterNum);
 
-    // 이미지 (캐시 우선)
-    if (chapterPages[chapterNum]) {
-        renderPages(chapterPages[chapterNum]);
-        return;
-    }
-
+    // 이미지 (캐시 무효화 - 항상 새로 불러오기)
     document.getElementById('manga-pages').innerHTML =
         `<div style="color:#888;padding:3rem;text-align:center;">이미지를 불러오는 중...</div>`;
 
@@ -180,6 +175,9 @@ async function buildPageList(chapterNum) {
     const folderEndPad = String(folderEnd).padStart(4, '0');
     const paddedNum = String(chapterNum).padStart(4, '0');
 
+    // 캐시 무효화를 위한 타임스탬프 (매번 새로 불러오기)
+    const timestamp = Date.now();
+
     // 형식 1: 폴더 구조 (0101화 ~ 0200화/0101화.jpg)
     const folderName = `${folderStartPad}화 ~ ${folderEndPad}화`;
     const fileName = `${paddedNum}화`;
@@ -191,7 +189,7 @@ async function buildPageList(chapterNum) {
     // 형식 3: 루트 패딩 없음 (1207.jpg)
     const base3 = `/api/r2/${chapterNum}`;
 
-    return [{ page_num: 1, base1, base2, base3 }];
+    return [{ page_num: 1, base1, base2, base3, timestamp }];
 }
 
 // ===== 이미지 렌더링 =====
@@ -203,23 +201,24 @@ function renderPages(pages) {
     }
 
     wrap.innerHTML = pages.map((page) => {
-        const { base1, base2, base3 } = page;
+        const { base1, base2, base3, timestamp } = page;
+        const v = timestamp ? `?v=${timestamp}` : '';
         return `
             <div class="manga-page-row" style="max-width:800px;margin:0 auto;">
-                <img class="img-s1" src="${base1}.jpg" style="width:100%;display:block;"
+                <img class="img-s1" src="${base1}.jpg${v}" style="width:100%;display:block;"
                      onload="this.closest('.manga-page-row').querySelectorAll('.img-s2,.img-s3,.manga-ab-wrap').forEach(e=>e.style.display='none');"
                      onerror="this.style.display='none';">
-                <img class="img-s2" src="${base2}.jpg" style="width:100%;display:block;"
+                <img class="img-s2" src="${base2}.jpg${v}" style="width:100%;display:block;"
                      onload="this.closest('.manga-page-row').querySelectorAll('.img-s3,.manga-ab-wrap').forEach(e=>e.style.display='none');"
                      onerror="this.style.display='none';">
-                <img class="img-s3" src="${base3}.jpg" style="width:100%;display:block;"
+                <img class="img-s3" src="${base3}.jpg${v}" style="width:100%;display:block;"
                      onload="this.closest('.manga-page-row').querySelector('.manga-ab-wrap').style.display='none';"
                      onerror="this.style.display='none'; this.closest('.manga-page-row').querySelector('.manga-ab-wrap').style.display='flex';">
                 <div class="manga-ab-wrap" style="display:none;width:100%;display:flex;">
-                    <img src="${base1}_a.jpg" style="flex:1;width:50%;display:block;"
-                         onerror="this.src='${base2}_a.jpg'; this.onerror=function(){this.src='${base3}_a.jpg';this.onerror=null;};">
-                    <img src="${base1}_b.jpg" style="flex:1;width:50%;display:block;"
-                         onerror="this.src='${base2}_b.jpg'; this.onerror=function(){this.src='${base3}_b.jpg';this.onerror=null;};">
+                    <img src="${base1}_a.jpg${v}" style="flex:1;width:50%;display:block;"
+                         onerror="this.src='${base2}_a.jpg${v}'; this.onerror=function(){this.src='${base3}_a.jpg${v}';this.onerror=null;};">
+                    <img src="${base1}_b.jpg${v}" style="flex:1;width:50%;display:block;"
+                         onerror="this.src='${base2}_b.jpg${v}'; this.onerror=function(){this.src='${base3}_b.jpg${v}';this.onerror=null;};">
                 </div>
             </div>
         `;
