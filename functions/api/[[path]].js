@@ -1071,19 +1071,24 @@ export async function onRequest(context) {
     if (request.method === "GET" && apiPath === "/manga/chapters") {
         try {
             const uploadedSet = new Set();
-            // R2 버킷에서 manga 관련 파일 목록 조회 (폴더별)
+            // R2 버킷에서 만화 파일 목록 조회
             // 파일명 패턴: 
             // 1. "0101화 ~ 0200화/0101화.jpg" (폴더 구조)
             // 2. "0795화.jpg" (4자리 패딩)
             // 3. "1207.jpg" (패딩 없음)
             let cursor = undefined;
+            let scanned = 0;
             do {
                 const listResult = await env.BUCKET.list({ limit: 1000, cursor });
                 for (const obj of listResult.objects) {
                     const key = obj.key;
+                    scanned++;
                     
-                    // manga/ 폴더 내부의 파일만 처리
-                    if (!key.startsWith('manga/')) continue;
+                    // 만화 관련 파일만 (characters/, avatars/ 등 제외)
+                    if (key.startsWith('characters/') || key.startsWith('avatars/') || 
+                        key.startsWith('gallery/') || key.startsWith('community/')) {
+                        continue;
+                    }
                     
                     const filename = key.split('/').pop(); // 마지막 파일명만
                     
@@ -1097,14 +1102,18 @@ export async function onRequest(context) {
                     // 패턴 2: 1207.jpg (패딩 없음, 1~4자리 숫자)
                     match = filename.match(/^(\d{1,4})\.jpg$/);
                     if (match) {
-                        uploadedSet.add(parseInt(match[1], 10));
+                        const num = parseInt(match[1], 10);
+                        // 만화 화수 범위 (1~1300)만 감지
+                        if (num >= 1 && num <= 1300) {
+                            uploadedSet.add(num);
+                        }
                         continue;
                     }
                 }
                 cursor = listResult.truncated ? listResult.cursor : undefined;
             } while (cursor);
 
-            console.log('[Manga Chapters] 감지된 화:', [...uploadedSet].sort((a,b) => a-b));
+            console.log('[Manga Chapters] 스캔:', scanned, '감지:', uploadedSet.size);
             return new Response(JSON.stringify([...uploadedSet].sort((a,b) => a-b)), { headers: corsHeaders });
         } catch (err) {
             console.error('[Manga Chapters Error]', err);
