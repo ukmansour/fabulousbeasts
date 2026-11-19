@@ -1047,6 +1047,26 @@ export async function onRequest(context) {
 
     // === 만화 API ===
 
+    // GET /api/manga/debug - R2 전체 파일 목록 확인 (디버깅용)
+    if (request.method === "GET" && apiPath === "/manga/debug") {
+        try {
+            const files = [];
+            let cursor = undefined;
+            do {
+                const listResult = await env.BUCKET.list({ limit: 100, cursor });
+                files.push(...listResult.objects.map(o => o.key));
+                cursor = listResult.truncated ? listResult.cursor : undefined;
+            } while (cursor && files.length < 200); // 최대 200개까지만
+            
+            return new Response(JSON.stringify({ 
+                total: files.length,
+                files: files.slice(0, 50) // 처음 50개만 반환
+            }), { headers: corsHeaders });
+        } catch (err) {
+            return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: corsHeaders });
+        }
+    }
+
     // GET /api/manga/chapters - 업로드된 화 번호 목록 (R2 직접 조회)
     if (request.method === "GET" && apiPath === "/manga/chapters") {
         try {
