@@ -185,21 +185,13 @@ async function buildPageList(chapterNum) {
     const fileName = `${paddedNum}화`;
     const base1 = `/api/r2/${encodeURIComponent(folderName)}/${encodeURIComponent(fileName)}`;
 
-    // 형식 2: 루트 직접 (0795화.jpg)
+    // 형식 2: 루트 4자리 (0795화.jpg)
     const base2 = `/api/r2/${encodeURIComponent(fileName)}`;
 
-    return [
-        {
-            page_num: 1,
-            // 형식1 단일, 형식2 단일, 형식1 합본, 형식2 합본 순서로 시도
-            single1: `${base1}.jpg`,
-            single2: `${base2}.jpg`,
-            a1: `${base1}_a.jpg`,
-            b1: `${base1}_b.jpg`,
-            a2: `${base2}_a.jpg`,
-            b2: `${base2}_b.jpg`,
-        }
-    ];
+    // 형식 3: 루트 패딩 없음 (1207.jpg)
+    const base3 = `/api/r2/${chapterNum}`;
+
+    return [{ page_num: 1, base1, base2, base3 }];
 }
 
 // ===== 이미지 렌더링 =====
@@ -211,29 +203,23 @@ function renderPages(pages) {
     }
 
     wrap.innerHTML = pages.map((page) => {
-        // 형식1 단일 → 형식2 단일 → 형식1 합본 → 형식2 합본 순으로 fallback
+        const { base1, base2, base3 } = page;
         return `
             <div class="manga-page-row" style="max-width:800px;margin:0 auto;">
-                <!-- 형식1 단일 -->
-                <img class="img-single1" src="${page.single1}"
-                     style="width:100%;display:block;"
-                     onload="
-                         this.closest('.manga-page-row').querySelectorAll('.img-single2,.manga-ab-wrap').forEach(e=>e.style.display='none');
-                     "
+                <img class="img-s1" src="${base1}.jpg" style="width:100%;display:block;"
+                     onload="this.closest('.manga-page-row').querySelectorAll('.img-s2,.img-s3,.manga-ab-wrap').forEach(e=>e.style.display='none');"
                      onerror="this.style.display='none';">
-                <!-- 형식2 단일 (형식1 실패 시) -->
-                <img class="img-single2" src="${page.single2}"
-                     style="width:100%;display:block;"
-                     onload="
-                         this.closest('.manga-page-row').querySelectorAll('.manga-ab-wrap').forEach(e=>e.style.display='none');
-                     "
+                <img class="img-s2" src="${base2}.jpg" style="width:100%;display:block;"
+                     onload="this.closest('.manga-page-row').querySelectorAll('.img-s3,.manga-ab-wrap').forEach(e=>e.style.display='none');"
+                     onerror="this.style.display='none';">
+                <img class="img-s3" src="${base3}.jpg" style="width:100%;display:block;"
+                     onload="this.closest('.manga-page-row').querySelector('.manga-ab-wrap').style.display='none';"
                      onerror="this.style.display='none'; this.closest('.manga-page-row').querySelector('.manga-ab-wrap').style.display='flex';">
-                <!-- 합본 (두 단일 모두 실패 시) -->
-                <div class="manga-ab-wrap" style="display:none;width:100%;">
-                    <img src="${page.a1}" style="flex:1;width:50%;display:block;"
-                         onerror="this.src='${page.a2}'; this.onerror=null;">
-                    <img src="${page.b1}" style="flex:1;width:50%;display:block;"
-                         onerror="this.src='${page.b2}'; this.onerror=null;">
+                <div class="manga-ab-wrap" style="display:none;width:100%;display:flex;">
+                    <img src="${base1}_a.jpg" style="flex:1;width:50%;display:block;"
+                         onerror="this.src='${base2}_a.jpg'; this.onerror=function(){this.src='${base3}_a.jpg';this.onerror=null;};">
+                    <img src="${base1}_b.jpg" style="flex:1;width:50%;display:block;"
+                         onerror="this.src='${base2}_b.jpg'; this.onerror=function(){this.src='${base3}_b.jpg';this.onerror=null;};">
                 </div>
             </div>
         `;
