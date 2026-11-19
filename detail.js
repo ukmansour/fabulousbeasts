@@ -339,7 +339,7 @@ function applyInline(text) {
             }
             return `<a href="detail.html#${encodeURIComponent(p1.trim())}">${p1.trim()}</a>`;
         })
-        // 만화 화수 자동 링크: "1207화", "제1207화", "0001화", "첫 등장", "주요 등장화" 등
+        // 만화 화수 자동 링크: "1207화", "제1207화", "0001화" 등
         .replace(/(\d{1,4})\s*화/g, (match, chapterNum) => {
             const num = parseInt(chapterNum, 10);
             // 1~1300 범위의 화수만 링크로 변환
@@ -348,13 +348,12 @@ function applyInline(text) {
             }
             return match;
         })
-        // 숫자만 있는 경우도 링크로 (콤마/공백으로 구분되거나 단독으로 있는 경우)
-        .replace(/(?:^|[,\s])(\d{1,4})(?=[,\s]|$)/g, (match, chapterNum) => {
+        // 숫자만 있는 경우도 링크로 (단어 경계로 구분)
+        .replace(/\b(\d{1,4})\b/g, (match, chapterNum) => {
             const num = parseInt(chapterNum, 10);
             // 1~1300 범위의 화수만 링크로 변환
             if (num >= 1 && num <= 1300) {
-                const prefix = match.startsWith(',') || match.startsWith(' ') ? match[0] : '';
-                return `${prefix}<a href="manga.html?chapter=${num}" style="color:#e74636;font-weight:bold;text-decoration:none;border-bottom:1px dashed #e74636;" title="만화 ${num}화 보기">${chapterNum}</a>`;
+                return `<a href="manga.html?chapter=${num}" style="color:#e74636;font-weight:bold;text-decoration:none;border-bottom:1px dashed #e74636;" title="만화 ${num}화 보기">${chapterNum}</a>`;
             }
             return match;
         });
