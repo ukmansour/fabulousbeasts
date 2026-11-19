@@ -339,7 +339,7 @@ function applyInline(text) {
             }
             return `<a href="detail.html#${encodeURIComponent(p1.trim())}">${p1.trim()}</a>`;
         })
-        // 만화 화수 자동 링크: "1207화", "제1207화", "0001화" 등을 감지
+        // 만화 화수 자동 링크: "1207화", "제1207화", "0001화", "첫 등장", "주요 등장화" 등
         .replace(/(\d{1,4})\s*화/g, (match, chapterNum) => {
             const num = parseInt(chapterNum, 10);
             // 1~1300 범위의 화수만 링크로 변환
