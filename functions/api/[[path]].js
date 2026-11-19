@@ -1092,15 +1092,15 @@ export async function onRequest(context) {
                     
                     const filename = key.split('/').pop(); // 마지막 파일명만
                     
-                    // 패턴 1: 0101화.jpg (4자리 + "화")
-                    let match = filename.match(/^(\d{4})화\.jpg$/);
+                    // 패턴 1: 0101화.jpg 또는 0101화_a.jpg (4자리 + "화")
+                    let match = filename.match(/^(\d{4})화(_[ab])?\.jpg$/);
                     if (match) {
                         uploadedSet.add(parseInt(match[1], 10));
                         continue;
                     }
                     
-                    // 패턴 2: 1207.jpg (패딩 없음, 1~4자리 숫자)
-                    match = filename.match(/^(\d{1,4})\.jpg$/);
+                    // 패턴 2: 1207.jpg 또는 1207_a.jpg (패딩 없음, 1~4자리 숫자)
+                    match = filename.match(/^(\d{1,4})(_[ab])?\.jpg$/);
                     if (match) {
                         const num = parseInt(match[1], 10);
                         // 만화 화수 범위 (1~1300)만 감지
