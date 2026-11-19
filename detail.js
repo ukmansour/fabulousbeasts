@@ -347,6 +347,16 @@ function applyInline(text) {
                 return `<a href="manga.html?chapter=${num}" style="color:#e74636;font-weight:bold;text-decoration:none;border-bottom:1px dashed #e74636;" title="만화 ${num}화 보기">${match}</a>`;
             }
             return match;
+        })
+        // 숫자만 있는 경우도 링크로 (콤마/공백으로 구분되거나 단독으로 있는 경우)
+        .replace(/(?:^|[,\s])(\d{1,4})(?=[,\s]|$)/g, (match, chapterNum) => {
+            const num = parseInt(chapterNum, 10);
+            // 1~1300 범위의 화수만 링크로 변환
+            if (num >= 1 && num <= 1300) {
+                const prefix = match.startsWith(',') || match.startsWith(' ') ? match[0] : '';
+                return `${prefix}<a href="manga.html?chapter=${num}" style="color:#e74636;font-weight:bold;text-decoration:none;border-bottom:1px dashed #e74636;" title="만화 ${num}화 보기">${chapterNum}</a>`;
+            }
+            return match;
         });
 }
 
