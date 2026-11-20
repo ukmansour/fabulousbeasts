@@ -358,13 +358,26 @@ function applyInlineWithChapterLinks(text) {
         return match;
     });
     
-    // 숫자만 있는 경우 (단, 이미 링크 안에 있는 숫자는 제외)
-    result = result.replace(/(?<!href="manga\.html\?chapter=)(?<!">)\b(\d{1,4})\b(?!<)/g, (match, chapterNum) => {
+    // 숫자만 있는 경우: HTML 태그 밖에 있는 숫자만 처리
+    // <a> 태그를 임시로 보호
+    const links = [];
+    result = result.replace(/<a[^>]*>.*?<\/a>/g, (match) => {
+        links.push(match);
+        return `__LINK_${links.length - 1}__`;
+    });
+    
+    // 이제 안전하게 숫자를 링크로 변환
+    result = result.replace(/\b(\d{1,4})\b/g, (match, chapterNum) => {
         const num = parseInt(chapterNum, 10);
         if (num >= 1 && num <= 1300) {
             return `<a href="manga.html?chapter=${num}" style="color:#e74636;font-weight:bold;text-decoration:none;border-bottom:1px dashed #e74636;" title="만화 ${num}화 보기">${chapterNum}</a>`;
         }
         return match;
+    });
+    
+    // 보호했던 링크 복원
+    result = result.replace(/__LINK_(\d+)__/g, (match, index) => {
+        return links[parseInt(index)];
     });
     
     return result;
