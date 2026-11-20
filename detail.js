@@ -312,7 +312,7 @@ function renderInfobox(data) {
                         birthdayHtml += `</td></tr>`;
                         return birthdayHtml;
                     })()}
-                    ${data.customInfo && Array.isArray(data.customInfo) ? data.customInfo.map(field => `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">${field.key.replace(/</g, '&lt;')}</th><td style="padding:5px; border:1px solid #eee;">${applyInline(field.value)}</td></tr>`).join('') : ''}
+                    ${data.customInfo && Array.isArray(data.customInfo) ? data.customInfo.map(field => `<tr><th style="background:#f4f4f4; padding:5px; border:1px solid #eee; text-align:left;">${field.key.replace(/</g, '&lt;')}</th><td style="padding:5px; border:1px solid #eee;">${applyInlineWithChapterLinks(field.value)}</td></tr>`).join('') : ''}
                 </table>
                 ${galleryHTML}
             </div>
@@ -338,7 +338,13 @@ function applyInline(text) {
                 return `<a href="detail.html#${encodeURIComponent(parts[0].trim())}">${parts[1].trim()}</a>`;
             }
             return `<a href="detail.html#${encodeURIComponent(p1.trim())}">${p1.trim()}</a>`;
-        })
+        });
+}
+
+// 인포박스 전용: 화수를 만화 링크로 변환 (숫자만 있어도 링크)
+function applyInlineWithChapterLinks(text) {
+    if (!text) return '';
+    return applyInline(text)
         // 만화 화수 자동 링크: "1207화", "제1207화", "0001화" 등
         .replace(/(\d{1,4})\s*화/g, (match, chapterNum) => {
             const num = parseInt(chapterNum, 10);
