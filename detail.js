@@ -341,7 +341,7 @@ function applyInline(text) {
         });
 }
 
-// 인포박스 전용: 화수를 만화 링크로 변환 (숫자만 있어도 링크)
+// 인포박스 전용: 화수를 만화 링크로 변환 ("N화" 형식 + 숫자만)
 function applyInlineWithChapterLinks(text) {
     if (!text) return '';
     return applyInline(text)
