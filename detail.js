@@ -345,33 +345,26 @@ function applyInline(text) {
 function applyInlineWithChapterLinks(text) {
     if (!text) return '';
     
-    // 먼저 화수를 만화 링크로 변환 (텍스트 단계에서)
-    let result = text;
+    // 먼저 일반 마크다운 처리
+    let result = applyInline(text);
     
+    // 그 다음 화수를 만화 링크로 변환
     // "1207화", "제1207화", "0001화" 등
     result = result.replace(/(\d{1,4})\s*화/g, (match, chapterNum) => {
         const num = parseInt(chapterNum, 10);
         if (num >= 1 && num <= 1300) {
-            return `[MANGA_LINK:${num}:${match}]`; // 임시 마커
+            return `<a href="manga.html?chapter=${num}" style="color:#e74636;font-weight:bold;text-decoration:none;border-bottom:1px dashed #e74636;" title="만화 ${num}화 보기">${match}</a>`;
         }
         return match;
     });
     
-    // 숫자만 있는 경우
-    result = result.replace(/\b(\d{1,4})\b/g, (match, chapterNum) => {
+    // 숫자만 있는 경우 (단, 이미 링크 안에 있는 숫자는 제외)
+    result = result.replace(/(?<!href="manga\.html\?chapter=)(?<!">)\b(\d{1,4})\b(?!<)/g, (match, chapterNum) => {
         const num = parseInt(chapterNum, 10);
         if (num >= 1 && num <= 1300) {
-            return `[MANGA_LINK:${num}:${chapterNum}]`; // 임시 마커
+            return `<a href="manga.html?chapter=${num}" style="color:#e74636;font-weight:bold;text-decoration:none;border-bottom:1px dashed #e74636;" title="만화 ${num}화 보기">${chapterNum}</a>`;
         }
         return match;
-    });
-    
-    // 그 다음 일반 마크다운 처리
-    result = applyInline(result);
-    
-    // 마지막으로 임시 마커를 실제 링크로 변환
-    result = result.replace(/\[MANGA_LINK:(\d+):([^\]]+)\]/g, (match, num, text) => {
-        return `<a href="manga.html?chapter=${num}" style="color:#e74636;font-weight:bold;text-decoration:none;border-bottom:1px dashed #e74636;" title="만화 ${num}화 보기">${text}</a>`;
     });
     
     return result;
