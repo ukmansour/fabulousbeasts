@@ -403,7 +403,14 @@ function renderContent(details) {
         }
 
         // 블록 태그 처리
-        if (/^\[spoiler\]$/i.test(line.trim())) { closeAll(); html += '<details class="wiki-spoiler"><summary>스포일러 (클릭하여 펼치기)</summary><div class="spoiler-content">'; continue; }
+        // [spoiler] 또는 [spoiler/커스텀 제목]
+        const spoilerMatch = line.trim().match(/^\[spoiler(?:\/(.+))?\]$/i);
+        if (spoilerMatch) { 
+            closeAll(); 
+            const title = spoilerMatch[1] || '스포일러 (클릭하여 펼치기)';
+            html += `<details class="wiki-spoiler"><summary>${title}</summary><div class="spoiler-content">`; 
+            continue; 
+        }
         if (/^\[\/spoiler\]$/i.test(line.trim())) { closeAll(); html += '</div></details>'; continue; }
         if (/^\[center\]$/i.test(line.trim())) { closeAll(); html += '<div style="text-align:center">'; continue; }
         if (/^\[\/center\]$/i.test(line.trim())) { closeAll(); html += '</div>'; continue; }
