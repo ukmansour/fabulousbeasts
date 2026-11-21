@@ -474,17 +474,19 @@ body {
     font-size: 0.9rem;
 }
 .wiki-table th {
-    background: var(--primary-color);
-    color: white;
+    background: #f8f9fa;
+    color: #333;
     padding: 0.5rem 0.8rem;
-    border: 1px solid var(--primary-dark);
+    border: 1px solid var(--border-color);
     text-align: left;
+    font-weight: 700;
 }
 .wiki-table td {
     padding: 0.5rem 0.8rem;
     border: 1px solid var(--border-color);
+    background: white;
 }
-.wiki-table tr:nth-child(even) td { background: var(--primary-light); }
+.wiki-table tr:nth-child(even) td { background: white; }
 
 .wiki-spoiler {
     border-top: 1px solid var(--border-color);
